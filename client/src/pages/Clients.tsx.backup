@@ -1,0 +1,737 @@
+
+import { useState, useEffect } from 'react';
+
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { toast } from 'sonner';
+import { trpc } from '@/lib/trpc';
+import { Plus, Edit2, AlertCircle, Calendar } from 'lucide-react';
+import { useAppData } from '@/context/AppDataContext';
+
+const STATUSES = [
+  { value: 'prospect', label: 'Prospecção' },
+  { value: 'budget', label: 'Orçamento' },
+  { value: 'remarketing', label: 'Remarketing' },
+  { value: 'lost', label: 'Perdido' },
+  { value: 'work', label: 'Obra' },
+];
+
+const ARCHITECTS = [
+  { value: 'Arquiteto 01', label: 'Arquiteto 01' },
+  { value: 'Arquiteto 02', label: 'Arquiteto 02' },
+];
+
+const RESPONSIBLE = [
+  { value: 'Renato Araújo', label: 'Renato Araújo' },
+  { value: 'Rodrigo Silva', label: 'Rodrigo Silva' },
+];
+
+const ORIGINS = [
+  { value: 'architect', label: 'Arquiteto' },
+  { value: 'google', label: 'Google' },
+  { value: 'instagram', label: 'Instagram' },
+  { value: 'facebook', label: 'Facebook' },
+  { value: 'indication', label: 'Indicação' },
+];
+
+// Helper para abrir seletor de data
+const openDatePicker = (inputId: string) => {
+  const input = document.getElementById(inputId) as HTMLInputElement;
+  if (!input) return;
+  
+  input.focus();
+  
+  // Tentar showPicker() para Chrome moderno
+  if (typeof (input as any).showPicker === 'function') {
+    try {
+      (input as any).showPicker();
+      return;
+    } catch (e) {
+      // Fallback se showPicker falhar
+    }
+  }
+  
+  // Fallback: click() para outros navegadores
+  input.click();
+};
+
+// Formatadores
+const formatPhone = (value: string) => {
+  const cleaned = value.replace(/\D/g, '');
+  if (cleaned.length <= 2) return cleaned;
+  if (cleaned.length <= 7) return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2)}`;
+  return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7, 11)}`;
+};
+
+const formatDate = (value: string) => {
+  const cleaned = value.replace(/\D/g, '');
+  if (cleaned.length <= 2) return cleaned;
+  if (cleaned.length <= 4) return `${cleaned.slice(0, 2)}/${cleaned.slice(2)}`;
+  return `${cleaned.slice(0, 2)}/${cleaned.slice(2, 4)}/${cleaned.slice(4, 8)}`;
+};
+
+const formatCurrency = (value: string) => {
+  const cleaned = value.replace(/\D/g, '');
+  const number = parseInt(cleaned || '0', 10);
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(number / 100);
+};
+
+// Dados de teste
+const TEST_CLIENTS = [
+  {
+    id: 1,
+    name: 'Lead 01',
+    fullName: 'João Silva',
+    status: 'prospect',
+    phone: '(11) 98765-4321',
+    birthDate: '15/05/1990',
+    address: 'Rua A, 123',
+    origin: 'google',
+    contact: 'Google',
+    responsible: 'Renato Araújo',
+    conversion: 'yes',
+    workName: 'Casa Moderna',
+    workValue: 'R$ 150.000,00',
+    startDate: '01/03/2026',
+    endDate: '30/06/2026',
+    reminder: true,
+    convertedToWork: false,
+  },
+  {
+    id: 2,
+    name: 'Lead 03',
+    fullName: 'Maria Santos',
+    status: 'budget',
+    phone: '(21) 99876-5432',
+    birthDate: '20/03/1985',
+    address: 'Avenida B, 456',
+    origin: 'indication',
+    contact: 'João Pereira',
+    responsible: 'Rodrigo Silva',
+    conversion: 'no',
+    workName: '',
+    workValue: '',
+    startDate: '',
+    endDate: '',
+    reminder: false,
+    convertedToWork: false,
+  },
+  {
+    id: 3,
+    name: 'Lead 02',
+    fullName: 'Pedro Costa',
+    status: 'remarketing',
+    phone: '(31) 97654-3210',
+    birthDate: '10/07/1992',
+    address: 'Rua C, 789',
+    origin: 'google',
+    contact: 'Google',
+    responsible: 'Renato Araújo',
+    conversion: 'no',
+    workName: '',
+    workValue: '',
+    startDate: '',
+    endDate: '',
+    reminder: true,
+    convertedToWork: false,
+  },
+  {
+    id: 4,
+    name: 'Lead 04',
+    fullName: 'Ana Oliveira',
+    status: 'lost',
+    phone: '',
+    birthDate: '',
+    address: '',
+    origin: 'facebook',
+    contact: 'Facebook',
+    responsible: 'Renato Araújo',
+    conversion: 'no',
+    workName: '',
+    workValue: '',
+    startDate: '',
+    endDate: '',
+    reminder: false,
+    convertedToWork: false,
+  },
+];
+
+// Dados de teste para Obras
+const TEST_WORKS = [
+  {
+    id: 1,
+    name: 'Obra 01',
+    workName: 'Casa Moderna',
+    clientName: 'Joao Silva',
+    status: 'waiting',
+    workValue: 'R$ 150.000,00',
+    startDate: '01/03/2026',
+    endDate: '30/06/2026',
+    responsible: 'Renato Araújo',
+  },
+];
+
+export default function Clients() {
+  // Carregar dados do localStorage ou usar dados de teste
+  const [clients, setClients] = useState(() => {
+    const saved = localStorage.getItem('ppga_clients');
+    return saved ? JSON.parse(saved) : TEST_CLIENTS;
+  });
+  
+  const [works, setWorks] = useState(() => {
+    const saved = localStorage.getItem('ppga_works');
+    return saved ? JSON.parse(saved) : TEST_WORKS;
+  });
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingClient, setEditingClient] = useState<(typeof TEST_CLIENTS)[0] | null>(null);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationName, setCelebrationName] = useState('');
+
+  const [formData, setFormData] = useState({
+    fullName: '',
+    status: 'prospect',
+    phone: '',
+    birthDate: '',
+    address: '',
+    origin: '',
+    contact: '',
+    responsible: '',
+    commission: '',
+    workName: '',
+    workValue: '',
+    startDate: '',
+    endDate: '',
+    reminder: false,
+  });
+
+  // Salvar clientes no localStorage quando mudar
+  useEffect(() => {
+    localStorage.setItem('ppga_clients', JSON.stringify(clients));
+  }, [clients]);
+
+  // Salvar obras no localStorage quando mudar
+  useEffect(() => {
+    localStorage.setItem('ppga_works', JSON.stringify(works));
+  }, [works]);
+
+  // Listen for custom event from header button
+  useEffect(() => {
+    const handleOpenAddModal = () => {
+      openAddModal();
+    };
+    window.addEventListener('openAddClientModal', handleOpenAddModal);
+    return () => {
+      window.removeEventListener('openAddClientModal', handleOpenAddModal);
+    };
+  }, []);
+
+
+  const openAddModal = () => {
+    setEditingClient(null);
+    setFormData({
+      fullName: '',
+      status: 'prospect',
+      phone: '',
+      birthDate: '',
+      address: '',
+      origin: '',
+      contact: '',
+      responsible: '',
+      conversion: 'no',
+      workName: '',
+      workValue: '',
+      startDate: '',
+      endDate: '',
+      reminder: false,
+    });
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (client: (typeof TEST_CLIENTS)[0]) => {
+    setEditingClient(client);
+    setFormData({
+      fullName: client.fullName,
+      status: client.status,
+      phone: client.phone,
+      birthDate: client.birthDate,
+      address: client.address,
+      origin: client.origin,
+      contact: client.contact,
+      responsible: client.responsible,
+      conversion: client.conversion,
+      workName: client.workName,
+      workValue: client.workValue,
+      startDate: client.startDate,
+      endDate: client.endDate,
+      reminder: client.reminder,
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleSave = () => {
+    if (!formData.fullName.trim()) {
+      toast.error('Nome completo é obrigatório');
+      return;
+    }
+    if (!formData.status) {
+      toast.error('Status é obrigatório');
+      return;
+    }
+    if (!formData.responsible) {
+      toast.error('Responsável é obrigatório');
+      return;
+    }
+    if (!formData.origin) {
+      toast.error('Origem é obrigatória');
+      return;
+    }
+    if (!formData.contact) {
+      toast.error('Contato é obrigatório');
+      return;
+    }
+
+    // Validar campos de obra se status = Obra
+    if (formData.status === 'work') {
+      if (!formData.workName.trim()) {
+        toast.error('Nome da obra é obrigatório');
+        return;
+      }
+      if (!formData.workValue.trim()) {
+        toast.error('Valor da obra é obrigatório');
+        return;
+      }
+      if (!formData.startDate.trim()) {
+        toast.error('Data de início é obrigatória');
+        return;
+      }
+      if (!formData.endDate.trim()) {
+        toast.error('Data de término é obrigatória');
+        return;
+      }
+    }
+
+    if (editingClient) {
+      // Se estava marcado como convertido e agora desmarcou, remover da lista de obras
+      if (editingClient.convertedToWork && formData.status !== 'work') {
+        setWorks(works.filter(w => w.clientName !== editingClient.fullName));
+      }
+      // Se agora marca como convertido, criar obra
+      if (!editingClient.convertedToWork && formData.status === 'work') {
+        const newWork = {
+          id: Math.max(...works.map(w => w.id), 0) + 1,
+          name: `Obra ${Math.max(...works.map(w => w.id), 0) + 1}`,
+          workName: formData.workName,
+          clientName: formData.fullName,
+          status: 'waiting',
+          workValue: formData.workValue,
+          startDate: formData.startDate,
+          endDate: formData.endDate,
+          responsible: formData.responsible,
+        };
+        setWorks([...works, newWork]);
+      }
+      
+      const updatedClient = { ...editingClient, ...formData, convertedToWork: formData.status === 'work' };
+      setClients(clients.map(c => c.id === editingClient.id ? updatedClient : c));
+      toast.success('Cliente atualizado com sucesso!');
+    } else {
+      const newClient = {
+        id: Math.max(...clients.map(c => c.id), 0) + 1,
+        name: `Lead ${Math.max(...clients.map(c => c.id), 0) + 1}`,
+        ...formData,
+        convertedToWork: formData.status === 'work',
+      };
+      setClients([...clients, newClient]);
+      
+      // Se status = Obra, criar obra com status "Aguardando"
+      if (formData.status === 'work') {
+        const newWork = {
+          id: Math.max(...works.map(w => w.id), 0) + 1,
+          name: `Obra ${Math.max(...works.map(w => w.id), 0) + 1}`,
+          workName: formData.workName,
+          clientName: formData.fullName,
+          status: 'waiting',
+          workValue: formData.workValue,
+          startDate: formData.startDate,
+          endDate: formData.endDate,
+          responsible: formData.responsible,
+        };
+        setWorks([...works, newWork]);
+        
+        setCelebrationName(formData.fullName);
+        setShowCelebration(true);
+        setTimeout(() => setShowCelebration(false), 3000);
+      } else {
+        toast.success('Cliente criado com sucesso!');
+      }
+    }
+
+    setIsModalOpen(false);
+  };
+
+  const handleDeleteClient = (id: number) => {
+    setClients(clients.filter(c => c.id !== id));
+    toast.success('Cliente removido com sucesso!');
+  };
+
+  // Agrupar clientes por status, filtrando convertidos (status !== 'work')
+  const groupedClients = {
+    prospect: clients.filter(c => c.status === 'prospect' && c.status !== 'work'),
+    budget: clients.filter(c => c.status === 'budget' && c.status !== 'work'),
+    remarketing: clients.filter(c => c.status === 'remarketing' && c.status !== 'work'),
+    lost: clients.filter(c => c.status === 'lost' && c.status !== 'work'),
+  };
+
+  return (
+    <>
+      <div className="grid grid-cols-4 gap-6">
+        {Object.entries(groupedClients).map(([status, statusClients]) => (
+          <div key={status}>
+            <h2 className="font-semibold text-gray-900 mb-4">
+              {status === 'prospect' && `Prospecção (${statusClients.length})`}
+              {status === 'budget' && `Orçamento (${statusClients.length})`}
+              {status === 'remarketing' && `Remarketing (${statusClients.length})`}
+              {status === 'lost' && `Perdido (${statusClients.length})`}
+            </h2>
+
+            <div className="space-y-3">
+              {statusClients.map((client) => (
+                <div key={client.id}>
+                  <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow relative">
+                    {/* Ações do Card - Lado a lado */}
+                    <div className="absolute top-3 right-3 flex items-center gap-2">
+                      {client.reminder && (
+                        <AlertCircle size={14} className="text-red-500 flex-shrink-0" />
+                      )}
+                      <button
+                        onClick={() => openEditModal(client)}
+                        title="Editar cliente"
+                        className="text-gray-400 hover:text-gray-600 flex-shrink-0"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                    </div>
+
+                    {/* Conteúdo do Card */}
+                    <div className="flex flex-col pr-6">
+                      {/* Nome Completo - Título Principal */}
+                      <p className="font-semibold text-gray-900 text-sm">
+                        {client.fullName}
+                      </p>
+
+                      {/* Contact - Subtítulo */}
+                      <p className="text-gray-600 text-xs mt-1">
+                        {client.contact}
+                      </p>
+
+                      {/* Responsável - Subtítulo */}
+                      <p className="text-gray-500 text-xs mt-1">
+                        {client.responsible}
+                      </p>
+                    </div>
+                  </Card>
+                </div>
+              ))}
+
+              {statusClients.length === 0 && (
+                <Card className="p-4 text-center text-gray-400 text-sm">
+                  Nenhum cliente
+                </Card>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Modal */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {editingClient ? 'Editar cliente' : 'Novo cliente'}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-5 py-4">
+            {/* Linha 1: Nome completo | Status */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="fullName" className="text-sm font-medium mb-2 block">Nome completo *</Label>
+                <Input
+                  id="fullName"
+                  placeholder="Digite o nome completo"
+                  value={formData.fullName}
+                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                  className="w-full bg-white border border-gray-300"
+                />
+              </div>
+              <div>
+                <Label htmlFor="status" className="text-sm font-medium mb-2 block">Status *</Label>
+                <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+                  <SelectTrigger id="status" className="w-full bg-white border border-gray-300">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATUSES.map((s) => (
+                      <SelectItem key={s.value} value={s.value}>
+                        {s.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Linha 2: Telefone | Data de nascimento */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="phone" className="text-sm font-medium mb-2 block">Telefone</Label>
+                <Input
+                  id="phone"
+                  placeholder="(00) 99999-9999"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: formatPhone(e.target.value) })}
+                  className="w-full bg-white border border-gray-300"
+                />
+              </div>
+              <div>
+                <Label htmlFor="birthDate" className="text-sm font-medium mb-2 block">Data de nascimento</Label>
+                <div className="relative">
+                  <Input
+                    id="birthDate"
+                    type="date"
+                    value={formData.birthDate}
+                    onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
+                    className="w-full bg-white border border-gray-300"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => openDatePicker('birthDate')}
+                    className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 pointer-events-auto"
+                  >
+                    <Calendar size={16} />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Linha 3: Endereço completo (linha inteira) */}
+            <div>
+              <Label htmlFor="address" className="text-sm font-medium mb-2 block">Endereço completo</Label>
+              <Input
+                id="address"
+                placeholder="Digite o endereço"
+                value={formData.address}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                className="w-full bg-white border border-gray-300"
+              />
+            </div>
+
+            {/* Linha 4: Origem | Contato (condicional) */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="origin" className="text-sm font-medium mb-2 block">Origem *</Label>
+                <Select value={formData.origin} onValueChange={(value) => {
+                  setFormData({ ...formData, origin: value, contact: '' });
+                }}>
+                  <SelectTrigger id="origin" className="w-full bg-white border border-gray-300">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ORIGINS.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>
+                        {o.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="contact" className="text-sm font-medium mb-2 block">Contato *</Label>
+                {formData.origin === 'architect' ? (
+                  <Select value={formData.contact} onValueChange={(value) => setFormData({ ...formData, contact: value })}>
+                    <SelectTrigger id="contact" className="w-full bg-white border border-gray-300">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ARCHITECTS.map((a) => (
+                        <SelectItem key={a.value} value={a.value}>
+                          {a.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    id="contact"
+                    placeholder="Nome do contato"
+                    value={formData.contact}
+                    onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
+                    className="w-full bg-white border border-gray-300"
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* Linha 5: Responsável | Conversão de obra */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="responsible" className="text-sm font-medium mb-2 block">Responsável *</Label>
+                <Select value={formData.responsible} onValueChange={(value) => setFormData({ ...formData, responsible: value })}>
+                  <SelectTrigger id="responsible" className="w-full bg-white border border-gray-300">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {RESPONSIBLE.map((r) => (
+                      <SelectItem key={r.value} value={r.value}>
+                        {r.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="conversion" className="text-sm font-medium mb-2 block">Conversão de obra</Label>
+                <Select value={formData.conversion} onValueChange={(value) => setFormData({ ...formData, conversion: value })}>
+                  <SelectTrigger id="conversion" className="w-full bg-white border border-gray-300">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="no">Não</SelectItem>
+                    <SelectItem value="yes">Sim</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Linha 6: Nome da obra | Valor total da obra (somente se conversão = sim) */}
+            {formData.conversion === 'yes' && (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="workName" className="text-sm font-medium mb-2 block">Nome da obra *</Label>
+                  <Input
+                    id="workName"
+                    placeholder="Digite o nome da obra"
+                    value={formData.workName}
+                    onChange={(e) => setFormData({ ...formData, workName: e.target.value })}
+                    className="w-full bg-white border border-gray-300"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="workValue" className="text-sm font-medium mb-2 block">Valor total da obra *</Label>
+                  <Input
+                    id="workValue"
+                    placeholder="R$ 0,00"
+                    value={formData.workValue}
+                    onChange={(e) => setFormData({ ...formData, workValue: formatCurrency(e.target.value) })}
+                    className="w-full bg-white border border-gray-300"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Linha 7: Data de início | Data de término (somente se conversão = sim) */}
+            {formData.conversion === 'yes' && (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="startDate" className="text-sm font-medium mb-2 block">Data de início *</Label>
+                  <div className="relative">
+                    <Input
+                      id="startDate"
+                      type="date"
+                      value={formData.startDate}
+                      onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                      className="w-full bg-white border border-gray-300"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => openDatePicker('startDate')}
+                      className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 pointer-events-auto"
+                    >
+                      <Calendar size={16} />
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="endDate" className="text-sm font-medium mb-2 block">Data de término *</Label>
+                  <div className="relative">
+                    <Input
+                      id="endDate"
+                      type="date"
+                      value={formData.endDate}
+                      onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                      className="w-full bg-white border border-gray-300"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => openDatePicker('endDate')}
+                      className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 pointer-events-auto"
+                    >
+                      <Calendar size={16} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Lembrete */}
+            <div className="flex items-center gap-2 pt-2">
+              <Checkbox
+                id="reminder"
+                checked={formData.reminder}
+                onCheckedChange={(checked) => setFormData({ ...formData, reminder: checked as boolean })}
+              />
+              <Label htmlFor="reminder" className="cursor-pointer text-sm">
+                Lembrete
+              </Label>
+            </div>
+          </div>
+
+          {/* Rodapé do Modal */}
+          <DialogFooter className="flex justify-end gap-3 mt-6">
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSave} className="bg-gray-900 hover:bg-gray-800 text-white">
+              {editingClient ? 'Salvar' : 'Adicionar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Celebration Modal */}
+      {showCelebration && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50">
+          <div className="bg-white rounded-lg p-8 text-center max-w-sm shadow-lg animate-in fade-in zoom-in duration-300">
+            <div className="text-5xl mb-4">🎉</div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">Parabéns!</h3>
+            <p className="text-gray-600 mb-4">
+              Você fechou a obra de <strong>{celebrationName}</strong>!
+            </p>
+            <Button 
+              onClick={() => setShowCelebration(false)}
+              className="w-full bg-gray-900 hover:bg-gray-800 text-white"
+            >
+              OK
+            </Button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
