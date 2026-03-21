@@ -6,7 +6,7 @@
   },
   "deploy": {
     "numReplicas": 1,
-    "startCommand": "timeout 30 pnpm run migrate:silent || true && node dist/index.js",
+    "startCommand": "node dist/index.js",
     "restartPolicyMaxRetries": 10,
     "healthchecks": {
       "readiness": "/health",
