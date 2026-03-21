@@ -88,10 +88,16 @@ async function startServer() {
         `CREATE TABLE IF NOT EXISTS \`providers\` (
           \`id\` int AUTO_INCREMENT NOT NULL,
           \`fullName\` varchar(255) NOT NULL,
+          \`status\` varchar(50) DEFAULT 'active',
+          \`cpf\` varchar(20),
+          \`birthDate\` varchar(10),
+          \`address\` text,
           \`category\` varchar(100),
           \`observation\` text,
           \`remuneration\` varchar(100),
           \`baseValue\` varchar(100),
+          \`uniformSize\` varchar(50),
+          \`shoeSize\` varchar(50),
           \`createdAt\` timestamp NOT NULL DEFAULT (now()),
           \`updatedAt\` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
           CONSTRAINT \`providers_id\` PRIMARY KEY(\`id\`)
