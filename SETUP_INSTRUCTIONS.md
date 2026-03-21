@@ -12,7 +12,7 @@
 Após o deploy ser concluído (status "Completed"), acesse a rota de setup:
 
 ```
-https://web-production-efc02.up.railway.app/api/setup.db
+https://web-production-efc02.up.railway.app/api/setup-db
 ```
 
 Você verá uma resposta JSON:
@@ -20,8 +20,7 @@ Você verá uma resposta JSON:
 {
   "success": true,
   "message": "Database synced successfully"
-}
-```
+}````
 
 ## ✅ Passo 3: Verificar se Funcionou
 

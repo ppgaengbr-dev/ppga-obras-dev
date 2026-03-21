@@ -35,6 +35,21 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
+  
+  // Setup database route
+  app.get('/api/setup-db', async (req, res) => {
+    try {
+      const { execSync } = require('child_process');
+      console.log('[setup-db] Starting database migration...');
+      execSync('pnpm run db:push -- --force', { stdio: 'inherit' });
+      console.log('[setup-db] Migration completed successfully');
+      res.json({ success: true, message: 'Database synced successfully' });
+    } catch (error: any) {
+      console.error('[setup-db] Error:', error.message);
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+  
   // tRPC API
   app.use(
     "/api/trpc",

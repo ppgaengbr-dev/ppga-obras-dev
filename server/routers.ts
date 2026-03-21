@@ -5,19 +5,6 @@ import { publicProcedure, router } from "./_core/trpc";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
-  setup: router({
-    db: publicProcedure.query(async () => {
-      try {
-        const { execSync } = require('child_process');
-        // Execute drizzle migrations
-        execSync('pnpm run db:push -- --force', { stdio: 'inherit' });
-        return { success: true, message: 'Database synced successfully' };
-      } catch (error: any) {
-        console.error('[setup.db] Error:', error.message);
-        return { success: false, message: error.message };
-      }
-    }),
-  }),
   system: systemRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
