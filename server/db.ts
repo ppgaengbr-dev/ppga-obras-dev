@@ -455,16 +455,21 @@ export async function createProvider(data: any) {
   try {
     const { providers: providersTable } = await import('../drizzle/schema');
     // Convert data types correctly
+    // Remove currency formatting from baseValue (e.g., "R$ 15,00" -> "15.00")
+    const baseValueClean = data.baseValue 
+      ? String(data.baseValue).replace(/[R$\s]/g, '').replace(',', '.') 
+      : null;
+    
     const cleanData = {
       fullName: data.fullName,
       status: data.status || 'active',
       cpf: data.cpf,
-      birthDate: data.birthDate,
+      birthDate: data.birthDate || null,
       address: data.address,
       category: data.category,
       observation: data.observation,
       remuneration: data.remuneration,
-      baseValue: data.baseValue,
+      baseValue: baseValueClean,
       uniformSize: data.uniformSize,
       shoeSize: data.shoeSize,
     };
@@ -518,7 +523,7 @@ export async function createArchitect(data: any) {
       address: data.address,
       architectName: data.architectName,
       phone: data.phone,
-      birthDate: data.birthDate,
+      birthDate: data.birthDate || null,
       commission: data.commission || 'no',
       observation: data.observation,
       reminder: data.reminder ? 1 : 0,
