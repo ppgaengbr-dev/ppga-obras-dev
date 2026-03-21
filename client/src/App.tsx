@@ -52,6 +52,7 @@ function InternalRouter() {
         <Route path={"/architects"} component={Architects} />
 
         <Route path={"/prestadores"} component={Prestadores} />
+        <Route path={"/providers"} component={Prestadores} />
         <Route path={"/allocations"} component={Allocations} />
         <Route path={"/reports"} component={Reports} />
         <Route path={"/budgets"} component={Budgets} />
