@@ -454,7 +454,21 @@ export async function createProvider(data: any) {
   if (!db) throw new Error('Database not available');
   try {
     const { providers: providersTable } = await import('../drizzle/schema');
-    const result = await db.insert(providersTable).values(data);
+    // Convert data types correctly
+    const cleanData = {
+      fullName: data.fullName,
+      status: data.status || 'active',
+      cpf: data.cpf,
+      birthDate: data.birthDate,
+      address: data.address,
+      category: data.category,
+      observation: data.observation,
+      remuneration: data.remuneration,
+      baseValue: data.baseValue,
+      uniformSize: data.uniformSize,
+      shoeSize: data.shoeSize,
+    };
+    const result = await db.insert(providersTable).values(cleanData);
     return result;
   } catch (error) {
     console.error('[Database] Failed to create provider:', error);
@@ -497,7 +511,19 @@ export async function createArchitect(data: any) {
   if (!db) throw new Error('Database not available');
   try {
     const { architects: architectsTable } = await import('../drizzle/schema');
-    const result = await db.insert(architectsTable).values(data);
+    // Convert data types correctly
+    const cleanData = {
+      officeNameName: data.officeNameName,
+      status: data.status || 'active',
+      address: data.address,
+      architectName: data.architectName,
+      phone: data.phone,
+      birthDate: data.birthDate,
+      commission: data.commission || 'no',
+      observation: data.observation,
+      reminder: data.reminder ? 1 : 0,
+    };
+    const result = await db.insert(architectsTable).values(cleanData);
     return result;
   } catch (error) {
     console.error('[Database] Failed to create architect:', error);
