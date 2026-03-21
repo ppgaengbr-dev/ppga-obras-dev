@@ -144,6 +144,22 @@ async function startServer() {
           \`reminder\` int DEFAULT 0,
           \`createdAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
           \`updatedAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        )`,
+        // Migration 4: Create categories table
+        `CREATE TABLE IF NOT EXISTS \`categories\` (
+          \`id\` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+          \`name\` varchar(100) NOT NULL UNIQUE,
+          \`description\` text,
+          \`createdAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          \`updatedAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        )`,
+        // Migration 5: Create remunerations table
+        `CREATE TABLE IF NOT EXISTS \`remunerations\` (
+          \`id\` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+          \`name\` varchar(100) NOT NULL UNIQUE,
+          \`description\` text,
+          \`createdAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          \`updatedAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         )`
       ];
       
