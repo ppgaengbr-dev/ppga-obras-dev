@@ -109,8 +109,7 @@ async function startServer() {
         // Migration 2: Create architects table and add architectId to works
         `CREATE TABLE IF NOT EXISTS \`architects\` (
           \`id\` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
-          \`name\` varchar(255) NOT NULL,
-          \`officeNameName\` varchar(255),
+          \`officeNameName\` varchar(255) NOT NULL,
           \`status\` varchar(50) DEFAULT 'active',
           \`address\` text,
           \`architectName\` varchar(255),

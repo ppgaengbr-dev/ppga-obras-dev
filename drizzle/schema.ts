@@ -28,8 +28,7 @@ export type InsertUser = typeof users.$inferInsert;
 // Architects table
 export const architects = mysqlTable("architects", {
   id: int("id").autoincrement().primaryKey(),
-  name: varchar("name", { length: 255 }),
-  officeNameName: varchar("officeNameName", { length: 255 }),
+  officeNameName: varchar("officeNameName", { length: 255 }).notNull(),
   status: varchar("status", { length: 50 }).default("active"),
   address: text("address"),
   architectName: varchar("architectName", { length: 255 }),
