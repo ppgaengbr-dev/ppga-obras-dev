@@ -353,6 +353,18 @@ export async function createClient(data: any) {
   try {
     const { clients: clientsTable } = await import('../drizzle/schema');
     const { id, ...dataWithoutId } = data;
+    // Clean workValue: remove R$, spaces, and convert comma to dot
+    if (dataWithoutId.workValue) {
+      const cleaned = String(dataWithoutId.workValue)
+        .replace(/R\$\s*/g, '')
+        .replace(/\./g, '')
+        .replace(/,/g, '.')
+        .trim();
+      dataWithoutId.workValue = parseFloat(cleaned) || 0;
+    } else {
+      // If workValue is empty or undefined, set to 0
+      dataWithoutId.workValue = 0;
+    }
     const result = await db.insert(clientsTable).values(dataWithoutId);
     return result;
   } catch (error) {
@@ -464,6 +476,15 @@ export async function createProvider(data: any) {
     const { providers: providersTable } = await import('../drizzle/schema');
     // Remove id field to let the database auto-generate it
     const { id, ...dataWithoutId } = data;
+    // Clean baseValue: remove R$, spaces, and convert comma to dot
+    if (dataWithoutId.baseValue) {
+      const cleaned = String(dataWithoutId.baseValue)
+        .replace(/R\$\s*/g, '')
+        .replace(/\./g, '')
+        .replace(/,/g, '.')
+        .trim();
+      dataWithoutId.baseValue = parseFloat(cleaned) || 0;
+    }
     const result = await db.insert(providersTable).values(dataWithoutId);
     return result;
   } catch (error) {
