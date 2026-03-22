@@ -7,6 +7,7 @@ import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import { runMigrations } from "../migrations";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -36,20 +37,46 @@ async function startServer() {
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
   
-  // Setup database route - executes migrations using Drizzle
-  app.get('/api/setup-db', async (req, res) => {
+  // Migrations are now manual - run via endpoint or CLI script
+  // See /api/migrate-once endpoint or pnpm migrate command
+  
+  // Health check endpoint
+  app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+  
+  // Temporary migration endpoint - execute once then remove
+  app.get('/api/migrate-once', async (req, res) => {
     try {
-      const { getDb } = await import('../db');
-      const db = await getDb();
-      
-      if (!db) {
-        return res.status(500).json({ success: false, message: 'Database connection failed' });
-      }
-      
-      console.log('[setup-db] Starting database migration...');
-      
-      // Execute migrations using raw SQL queries
-      const migrations = [
+      console.log('[Migrate-Once] Starting database migrations...');
+      await runMigrations();
+      console.log('[Migrate-Once] Migrations completed successfully');
+      res.json({ 
+        success: true, 
+        message: 'Migrations executed successfully',
+        info: 'IMPORTANT: Remove this endpoint from code after first execution',
+        timestamp: new Date().toISOString()
+      });
+    } catch (error: any) {
+      console.error('[Migrate-Once] Error:', error.message);
+      res.status(500).json({ 
+        success: false, 
+        message: error.message
+      });
+    }
+  });
+  
+  // Legacy setup-db endpoint (deprecated)
+  app.get('/api/setup-db', (req, res) => {
+    res.json({ 
+      success: false, 
+      message: 'This endpoint is deprecated. Use /api/migrate-once instead.'
+    });
+  });
+  
+  // Old migrations code (commented out - no longer needed)
+  /*
+  const migrations = [
         // Migration 0: Create users table
         `CREATE TABLE IF NOT EXISTS \`users\` (
           \`id\` int AUTO_INCREMENT NOT NULL,
@@ -151,29 +178,7 @@ async function startServer() {
           \`updatedAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         )`
       ];
-      
-      // Execute each migration
-      for (const migration of migrations) {
-        try {
-          await db.execute(migration as any);
-          console.log('[setup-db] Executed migration successfully');
-        } catch (error: any) {
-          // Table might already exist, continue
-          if (error.message && error.message.includes('already exists')) {
-            console.log('[setup-db] Table already exists, skipping');
-          } else {
-            console.warn('[setup-db] Migration warning:', error.message);
-          }
-        }
-      }
-      
-      console.log('[setup-db] All migrations completed');
-      res.json({ success: true, message: 'Database synced successfully' });
-    } catch (error: any) {
-      console.error('[setup-db] Error:', error.message);
-      res.status(500).json({ success: false, message: error.message });
-    }
-  });
+  */
   
   // tRPC API
   app.use(

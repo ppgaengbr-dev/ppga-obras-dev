@@ -1,0 +1,6 @@
+{
+  "scripts": {
+    "migrate": "node -r dotenv/config -r esbuild-register server/migrations.ts",
+    "migrate:prod": "NODE_ENV=production node -r dotenv/config -r esbuild-register server/migrations.ts"
+  }
+}
