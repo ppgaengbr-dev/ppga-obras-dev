@@ -96,7 +96,7 @@ var init_schema = __esm({
     });
     allocations = mysqlTable("allocations", {
       id: int("id").autoincrement().primaryKey(),
-      workId: int("workId").notNull().references(() => clients.id, { onDelete: "cascade" }),
+      workId: int("workId").notNull().references(() => works.id, { onDelete: "cascade" }),
       providerId: int("providerId").notNull().references(() => providers.id, { onDelete: "cascade" }),
       providerName: varchar("providerName", { length: 255 }).notNull(),
       service: text("service"),
@@ -327,7 +327,12 @@ async function getAllAllocations() {
   if (!db) return [];
   try {
     const { allocations: allocationsTable } = await Promise.resolve().then(() => (init_schema(), schema_exports));
-    return await db.select().from(allocationsTable);
+    const allocations2 = await db.select().from(allocationsTable);
+    return allocations2.map((a) => ({
+      ...a,
+      workId: Number(a.workId),
+      providerId: Number(a.providerId)
+    }));
   } catch (error) {
     console.error("[Database] Failed to get allocations:", error);
     return [];
@@ -576,7 +581,8 @@ async function createProvider(data) {
   if (!db) throw new Error("Database not available");
   try {
     const { providers: providersTable } = await Promise.resolve().then(() => (init_schema(), schema_exports));
-    const result = await db.insert(providersTable).values(data);
+    const { id, ...dataWithoutId } = data;
+    const result = await db.insert(providersTable).values(dataWithoutId);
     return result;
   } catch (error) {
     console.error("[Database] Failed to create provider:", error);
@@ -611,7 +617,12 @@ async function createArchitect(data) {
   if (!db) throw new Error("Database not available");
   try {
     const { architects: architectsTable } = await Promise.resolve().then(() => (init_schema(), schema_exports));
-    const result = await db.insert(architectsTable).values(data);
+    const { id, ...dataWithoutId } = data;
+    const cleanData = {
+      ...dataWithoutId,
+      name: dataWithoutId.name || dataWithoutId.officeNameName || "Unnamed"
+    };
+    const result = await db.insert(architectsTable).values(cleanData);
     return result;
   } catch (error) {
     console.error("[Database] Failed to create architect:", error);
@@ -1555,7 +1566,30 @@ async function startServer() {
           CONSTRAINT \`users_id\` PRIMARY KEY(\`id\`),
           CONSTRAINT \`users_openId_unique\` UNIQUE(\`openId\`)
         )`,
-        // Migration 1: Create allocations, providers, works tables
+        // Migration 1: Create providers table (required before allocations)
+        `CREATE TABLE IF NOT EXISTS \`providers\` (
+          \`id\` int AUTO_INCREMENT NOT NULL,
+          \`fullName\` varchar(255) NOT NULL,
+          \`category\` varchar(100),
+          \`observation\` text,
+          \`remuneration\` varchar(100),
+          \`baseValue\` varchar(100),
+          \`createdAt\` timestamp NOT NULL DEFAULT (now()),
+          \`updatedAt\` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+          CONSTRAINT \`providers_id\` PRIMARY KEY(\`id\`)
+        )`,
+        // Migration 2: Create works table (required before allocations)
+        `CREATE TABLE IF NOT EXISTS \`works\` (
+          \`id\` int AUTO_INCREMENT NOT NULL,
+          \`workName\` varchar(255) NOT NULL,
+          \`architectName\` varchar(255),
+          \`responsible\` varchar(255),
+          \`status\` varchar(50) NOT NULL DEFAULT 'active',
+          \`createdAt\` timestamp NOT NULL DEFAULT (now()),
+          \`updatedAt\` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+          CONSTRAINT \`works_id\` PRIMARY KEY(\`id\`)
+        )`,
+        // Migration 3: Create allocations table (after works and providers)
         `CREATE TABLE IF NOT EXISTS \`allocations\` (
           \`id\` int AUTO_INCREMENT NOT NULL,
           \`workId\` int NOT NULL,
@@ -1574,33 +1608,14 @@ async function startServer() {
           \`baseValue\` varchar(100),
           \`createdAt\` timestamp NOT NULL DEFAULT (now()),
           \`updatedAt\` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
-          CONSTRAINT \`allocations_id\` PRIMARY KEY(\`id\`)
+          CONSTRAINT \`allocations_id\` PRIMARY KEY(\`id\`),
+          CONSTRAINT \`allocations_workId_fk\` FOREIGN KEY(\`workId\`) REFERENCES \`works\`(\`id\`) ON DELETE CASCADE,
+          CONSTRAINT \`allocations_providerId_fk\` FOREIGN KEY(\`providerId\`) REFERENCES \`providers\`(\`id\`) ON DELETE CASCADE
         )`,
-        `CREATE TABLE IF NOT EXISTS \`providers\` (
-          \`id\` int AUTO_INCREMENT NOT NULL,
-          \`fullName\` varchar(255) NOT NULL,
-          \`category\` varchar(100),
-          \`observation\` text,
-          \`remuneration\` varchar(100),
-          \`baseValue\` varchar(100),
-          \`createdAt\` timestamp NOT NULL DEFAULT (now()),
-          \`updatedAt\` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
-          CONSTRAINT \`providers_id\` PRIMARY KEY(\`id\`)
-        )`,
-        `CREATE TABLE IF NOT EXISTS \`works\` (
-          \`id\` int AUTO_INCREMENT NOT NULL,
-          \`workName\` varchar(255) NOT NULL,
-          \`architectName\` varchar(255),
-          \`responsible\` varchar(255),
-          \`status\` varchar(50) NOT NULL DEFAULT 'active',
-          \`createdAt\` timestamp NOT NULL DEFAULT (now()),
-          \`updatedAt\` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
-          CONSTRAINT \`works_id\` PRIMARY KEY(\`id\`)
-        )`,
-        // Migration 2: Create architects table and add architectId to works
+        // Migration 4: Create architects table
         `CREATE TABLE IF NOT EXISTS \`architects\` (
           \`id\` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
-          \`name\` varchar(255) NOT NULL,
+          \`name\` varchar(255),
           \`officeNameName\` varchar(255),
           \`status\` varchar(50) DEFAULT 'active',
           \`address\` text,

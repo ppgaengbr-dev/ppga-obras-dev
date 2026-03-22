@@ -460,7 +460,9 @@ export async function createProvider(data: any) {
   if (!db) throw new Error('Database not available');
   try {
     const { providers: providersTable } = await import('../drizzle/schema');
-    const result = await db.insert(providersTable).values(data);
+    // Remove id field to let the database auto-generate it
+    const { id, ...dataWithoutId } = data;
+    const result = await db.insert(providersTable).values(dataWithoutId);
     return result;
   } catch (error) {
     console.error('[Database] Failed to create provider:', error);
