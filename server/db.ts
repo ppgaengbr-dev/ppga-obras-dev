@@ -346,7 +346,34 @@ export async function createClient(data: any) {
   if (!db) throw new Error('Database not available');
   try {
     const { clients: clientsTable } = await import('../drizzle/schema');
-    const result = await db.insert(clientsTable).values(data);
+    
+    // Convert data types correctly
+    const birthDateClean = data.birthDate && String(data.birthDate).trim() ? data.birthDate : null;
+    const startDateClean = data.startDate && String(data.startDate).trim() ? data.startDate : null;
+    const endDateClean = data.endDate && String(data.endDate).trim() ? data.endDate : null;
+    const workValueClean = data.workValue 
+      ? parseFloat(String(data.workValue).replace(/[R$\s]/g, '').replace(',', '.')) 
+      : null;
+    
+    const cleanData = {
+      fullName: data.fullName,
+      status: data.status || 'prospect',
+      phone: data.phone || null,
+      birthDate: birthDateClean,
+      address: data.address || null,
+      origin: data.origin || null,
+      contact: data.contact || null,
+      responsible: data.responsible || null,
+      commission: data.commission || null,
+      workName: data.workName || null,
+      workValue: workValueClean,
+      startDate: startDateClean,
+      endDate: endDateClean,
+      workStatus: data.workStatus || 'waiting',
+      reminder: data.reminder ? 1 : 0,
+    };
+    
+    const result = await db.insert(clientsTable).values(cleanData);
     return result;
   } catch (error) {
     console.error('[Database] Failed to create client:', error);
@@ -457,21 +484,24 @@ export async function createProvider(data: any) {
     // Convert data types correctly
     // Remove currency formatting from baseValue (e.g., "R$ 15,00" -> "15.00")
     const baseValueClean = data.baseValue 
-      ? String(data.baseValue).replace(/[R$\s]/g, '').replace(',', '.') 
+      ? parseFloat(String(data.baseValue).replace(/[R$\s]/g, '').replace(',', '.')) 
       : null;
+    
+    // Convert empty date strings to null
+    const birthDateClean = data.birthDate && data.birthDate.trim() ? data.birthDate : null;
     
     const cleanData = {
       fullName: data.fullName,
       status: data.status || 'active',
-      cpf: data.cpf,
-      birthDate: data.birthDate || null,
-      address: data.address,
-      category: data.category,
-      observation: data.observation,
-      remuneration: data.remuneration,
+      cpf: data.cpf || null,
+      birthDate: birthDateClean,
+      address: data.address || null,
+      category: data.category || null,
+      observation: data.observation || null,
+      remuneration: data.remuneration || null,
       baseValue: baseValueClean,
-      uniformSize: data.uniformSize,
-      shoeSize: data.shoeSize,
+      uniformSize: data.uniformSize || null,
+      shoeSize: data.shoeSize || null,
     };
     const result = await db.insert(providersTable).values(cleanData);
     return result;
@@ -517,15 +547,18 @@ export async function createArchitect(data: any) {
   try {
     const { architects: architectsTable } = await import('../drizzle/schema');
     // Convert data types correctly
+    // Convert empty date strings to null
+    const birthDateClean = data.birthDate && data.birthDate.trim() ? data.birthDate : null;
+    
     const cleanData = {
       officeNameName: data.officeNameName,
       status: data.status || 'active',
-      address: data.address,
-      architectName: data.architectName,
-      phone: data.phone,
-      birthDate: data.birthDate || null,
+      address: data.address || null,
+      architectName: data.architectName || null,
+      phone: data.phone || null,
+      birthDate: birthDateClean,
       commission: data.commission || 'no',
-      observation: data.observation,
+      observation: data.observation || null,
       reminder: data.reminder ? 1 : 0,
     };
     const result = await db.insert(architectsTable).values(cleanData);
