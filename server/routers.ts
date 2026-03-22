@@ -96,8 +96,7 @@ export const appRouter = router({
       .input((data: any) => data)
       .mutation(async ({ input }) => {
         const { createArchitect } = await import('./db');
-        const { id, ...dataWithoutId } = input;
-        return createArchitect(dataWithoutId);
+        return createArchitect(input);
       }),
     update: publicProcedure
       .input((data: any) => data)
@@ -124,8 +123,7 @@ export const appRouter = router({
       .input((data: any) => data)
       .mutation(async ({ input }) => {
         const { createProvider } = await import('./db');
-        const { id, ...dataWithoutId } = input;
-        return createProvider(dataWithoutId);
+        return createProvider(input);
       }),
     update: publicProcedure
       .input((data: any) => data)
@@ -152,8 +150,7 @@ export const appRouter = router({
       .input((data: any) => data)
       .mutation(async ({ input }) => {
         const { createCategory } = await import('./db');
-        const { id, ...dataWithoutId } = input;
-        return createCategory(dataWithoutId);
+        return createCategory(input);
       }),
     update: publicProcedure
       .input((data: any) => data)
@@ -180,8 +177,7 @@ export const appRouter = router({
       .input((data: any) => data)
       .mutation(async ({ input }) => {
         const { createRemuneration } = await import('./db');
-        const { id, ...dataWithoutId } = input;
-        return createRemuneration(dataWithoutId);
+        return createRemuneration(input);
       }),
     update: publicProcedure
       .input((data: any) => data)
@@ -226,8 +222,7 @@ export const appRouter = router({
         console.log('[Router] allocations.create input:', JSON.stringify(input, null, 2));
         try {
           const { createAllocation } = await import('./db');
-          const { id, ...dataWithoutId } = input;
-          const result = await createAllocation(dataWithoutId);
+          const result = await createAllocation(input);
           console.log('[Router] allocations.create result:', result);
           return result;
         } catch (error: any) {

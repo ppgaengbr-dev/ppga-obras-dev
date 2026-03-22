@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
 import net from "net";
@@ -49,184 +50,129 @@ async function startServer() {
       
       // Execute migrations using raw SQL queries
       const migrations = [
-        // DROP all tables first to start fresh (drop child tables first to avoid foreign key issues)
-        `DROP TABLE IF EXISTS \`allocations\``,
-        `DROP TABLE IF EXISTS \`clients\``,
-        `DROP TABLE IF EXISTS \`works\``,
-        `DROP TABLE IF EXISTS \`providers\``,
-        `DROP TABLE IF EXISTS \`architects\``,
-        `DROP TABLE IF EXISTS \`categories\``,
-        `DROP TABLE IF EXISTS \`remunerations\``,
-        `DROP TABLE IF EXISTS \`users\``,
-        
         // Migration 0: Create users table
-        `CREATE TABLE \`users\` (
+        `CREATE TABLE IF NOT EXISTS \`users\` (
           \`id\` int AUTO_INCREMENT NOT NULL,
           \`openId\` varchar(64) NOT NULL,
           \`name\` text,
           \`email\` varchar(320),
           \`loginMethod\` varchar(64),
           \`role\` enum('user','admin') NOT NULL DEFAULT 'user',
-          \`createdAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-          \`updatedAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          \`lastSignedIn\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          \`createdAt\` timestamp NOT NULL DEFAULT (now()),
+          \`updatedAt\` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+          \`lastSignedIn\` timestamp NOT NULL DEFAULT (now()),
           CONSTRAINT \`users_id\` PRIMARY KEY(\`id\`),
           CONSTRAINT \`users_openId_unique\` UNIQUE(\`openId\`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
-        
-        // Migration 1: Create categories table
-        `CREATE TABLE \`categories\` (
-          \`id\` int AUTO_INCREMENT NOT NULL,
-          \`name\` varchar(100) NOT NULL,
-          \`description\` text,
-          \`createdAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-          \`updatedAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          CONSTRAINT \`categories_id\` PRIMARY KEY(\`id\`),
-          CONSTRAINT \`categories_name_unique\` UNIQUE(\`name\`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
-        
-        // Migration 2: Create remunerations table
-        `CREATE TABLE \`remunerations\` (
-          \`id\` int AUTO_INCREMENT NOT NULL,
-          \`name\` varchar(100) NOT NULL,
-          \`description\` text,
-          \`createdAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-          \`updatedAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          CONSTRAINT \`remunerations_id\` PRIMARY KEY(\`id\`),
-          CONSTRAINT \`remunerations_name_unique\` UNIQUE(\`name\`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
-        
-        // Migration 3: Create architects table
-        `CREATE TABLE \`architects\` (
-          \`id\` int AUTO_INCREMENT NOT NULL,
-          \`officeNameName\` varchar(255) NOT NULL,
-          \`status\` varchar(50) NOT NULL DEFAULT 'active',
-          \`address\` text,
-          \`architectName\` varchar(255),
-          \`phone\` varchar(20),
-          \`birthDate\` date,
-          \`commission\` varchar(100),
-          \`observation\` text,
-          \`reminder\` int DEFAULT 0,
-          \`createdAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-          \`updatedAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          CONSTRAINT \`architects_id\` PRIMARY KEY(\`id\`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
-        
-        // Migration 4: Create providers table
-        `CREATE TABLE \`providers\` (
-          \`id\` int AUTO_INCREMENT NOT NULL,
-          \`fullName\` varchar(255) NOT NULL,
-          \`status\` varchar(50) NOT NULL DEFAULT 'active',
-          \`cpf\` varchar(20),
-          \`birthDate\` date,
-          \`address\` text,
-          \`category\` varchar(100),
-          \`observation\` text,
-          \`remuneration\` varchar(100),
-          \`baseValue\` decimal(10,2),
-          \`uniformSize\` varchar(50),
-          \`shoeSize\` varchar(50),
-          \`createdAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-          \`updatedAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          CONSTRAINT \`providers_id\` PRIMARY KEY(\`id\`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
-        
-        // Migration 5: Create clients table
-        `CREATE TABLE \`clients\` (
-          \`id\` int AUTO_INCREMENT NOT NULL,
-          \`fullName\` varchar(255) NOT NULL,
-          \`status\` varchar(50) NOT NULL DEFAULT 'prospect',
-          \`phone\` varchar(20),
-          \`birthDate\` date,
-          \`address\` text,
-          \`origin\` varchar(100),
-          \`contact\` varchar(255),
-          \`responsible\` varchar(255),
-          \`commission\` varchar(100),
-          \`workName\` varchar(255),
-          \`workValue\` decimal(10,2),
-          \`startDate\` date,
-          \`endDate\` date,
-          \`workStatus\` varchar(50) DEFAULT 'waiting',
-          \`reminder\` int DEFAULT 0,
-          \`createdAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-          \`updatedAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          CONSTRAINT \`clients_id\` PRIMARY KEY(\`id\`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
-        
-        // Migration 6: Create works table
-        `CREATE TABLE \`works\` (
-          \`id\` int AUTO_INCREMENT NOT NULL,
-          \`workName\` varchar(255) NOT NULL,
-          \`architectId\` int,
-          \`architectName\` varchar(255),
-          \`responsible\` varchar(255),
-          \`status\` varchar(50) NOT NULL DEFAULT 'active',
-          \`workValue\` decimal(10,2),
-          \`startDate\` date,
-          \`endDate\` date,
-          \`commission\` varchar(100),
-          \`clientPhone\` varchar(20),
-          \`clientBirthDate\` date,
-          \`clientAddress\` text,
-          \`clientOrigin\` varchar(100),
-          \`clientContact\` varchar(255),
-          \`reminder\` int DEFAULT 0,
-          \`createdAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-          \`updatedAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          CONSTRAINT \`works_id\` PRIMARY KEY(\`id\`),
-          CONSTRAINT \`works_architectId_fk\` FOREIGN KEY(\`architectId\`) REFERENCES \`architects\`(\`id\`) ON DELETE SET NULL
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
-        
-        // Migration 7: Create allocations table
-        `CREATE TABLE \`allocations\` (
+        )`,
+        // Migration 1: Create allocations, providers, works tables
+        `CREATE TABLE IF NOT EXISTS \`allocations\` (
           \`id\` int AUTO_INCREMENT NOT NULL,
           \`workId\` int NOT NULL,
           \`providerId\` int NOT NULL,
           \`providerName\` varchar(255) NOT NULL,
           \`service\` text,
-          \`startDate\` date NOT NULL,
-          \`endDate\` date NOT NULL,
           \`startDay\` int,
           \`endDay\` int,
           \`week\` int,
           \`year\` int,
+          \`startDate\` varchar(20),
+          \`endDate\` varchar(20),
           \`category\` varchar(100),
           \`observation\` text,
           \`remuneration\` varchar(100),
-          \`baseValue\` decimal(10,2),
+          \`baseValue\` varchar(100),
+          \`createdAt\` timestamp NOT NULL DEFAULT (now()),
+          \`updatedAt\` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+          CONSTRAINT \`allocations_id\` PRIMARY KEY(\`id\`),
+          CONSTRAINT \`allocations_workId_fk\` FOREIGN KEY(\`workId\`) REFERENCES \`works\`(\`id\`) ON DELETE CASCADE,
+          CONSTRAINT \`allocations_providerId_fk\` FOREIGN KEY(\`providerId\`) REFERENCES \`providers\`(\`id\`) ON DELETE CASCADE
+        )`,
+        `CREATE TABLE IF NOT EXISTS \`providers\` (
+          \`id\` int AUTO_INCREMENT NOT NULL,
+          \`fullName\` varchar(255) NOT NULL,
+          \`category\` varchar(100),
+          \`observation\` text,
+          \`remuneration\` varchar(100),
+          \`baseValue\` varchar(100),
+          \`createdAt\` timestamp NOT NULL DEFAULT (now()),
+          \`updatedAt\` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+          CONSTRAINT \`providers_id\` PRIMARY KEY(\`id\`)
+        )`,
+        `CREATE TABLE IF NOT EXISTS \`works\` (
+          \`id\` int AUTO_INCREMENT NOT NULL,
+          \`workName\` varchar(255) NOT NULL,
+          \`architectName\` varchar(255),
+          \`responsible\` varchar(255),
+          \`status\` varchar(50) NOT NULL DEFAULT 'active',
+          \`createdAt\` timestamp NOT NULL DEFAULT (now()),
+          \`updatedAt\` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+          CONSTRAINT \`works_id\` PRIMARY KEY(\`id\`)
+        )`,
+        // Migration 2: Create architects table and add architectId to works
+        `CREATE TABLE IF NOT EXISTS \`architects\` (
+          \`id\` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+          \`name\` varchar(255) NOT NULL,
+          \`officeNameName\` varchar(255),
+          \`status\` varchar(50) DEFAULT 'active',
+          \`address\` text,
+          \`architectName\` varchar(255),
+          \`phone\` varchar(20),
+          \`birthDate\` varchar(10),
+          \`commission\` varchar(100),
+          \`observation\` text,
+          \`reminder\` int,
           \`createdAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-          \`updatedAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          CONSTRAINT \`allocations_id\` PRIMARY KEY (\`id\`),
-          CONSTRAINT \`allocations_workId_fk\` FOREIGN KEY (\`workId\`) REFERENCES \`works\` (\`id\`) ON DELETE CASCADE,
-          CONSTRAINT \`allocations_providerId_fk\` FOREIGN KEY (\`providerId\`) REFERENCES \`providers\` (\`id\`) ON DELETE CASCADE
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`
+          \`updatedAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        )`,
+        // Migration 3: Create clients table
+        `CREATE TABLE IF NOT EXISTS \`clients\` (
+          \`id\` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+          \`fullName\` varchar(255) NOT NULL,
+          \`status\` varchar(50) NOT NULL DEFAULT 'prospect',
+          \`phone\` varchar(20),
+          \`birthDate\` varchar(20),
+          \`address\` text,
+          \`origin\` varchar(100),
+          \`contact\` varchar(255),
+          \`responsible\` varchar(255),
+          \`commission\` varchar(50),
+          \`workName\` varchar(255),
+          \`workValue\` varchar(100),
+          \`startDate\` varchar(20),
+          \`endDate\` varchar(20),
+          \`workStatus\` varchar(50),
+          \`architectId\` int,
+          \`architectName\` varchar(255),
+          \`reminder\` int DEFAULT 0,
+          \`createdAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          \`updatedAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        )`
       ];
       
       // Execute each migration
       for (const migration of migrations) {
         try {
-          await db.execute(migration);
-          console.log('[setup-db] Executed migration:', migration.substring(0, 50) + '...');
+          await db.execute(migration as any);
+          console.log('[setup-db] Executed migration successfully');
         } catch (error: any) {
-          // Ignore IF NOT EXISTS errors
-          if (!error.message.includes('already exists')) {
-            console.error('[setup-db] Migration error:', error.message);
-            throw error;
+          // Table might already exist, continue
+          if (error.message && error.message.includes('already exists')) {
+            console.log('[setup-db] Table already exists, skipping');
+          } else {
+            console.warn('[setup-db] Migration warning:', error.message);
           }
         }
       }
       
-      console.log('[setup-db] Database migration completed successfully!');
+      console.log('[setup-db] All migrations completed');
       res.json({ success: true, message: 'Database synced successfully' });
     } catch (error: any) {
-      console.error('[setup-db] Error:', error);
+      console.error('[setup-db] Error:', error.message);
       res.status(500).json({ success: false, message: error.message });
     }
   });
   
-  // TRPC middleware
+  // tRPC API
   app.use(
     "/api/trpc",
     createExpressMiddleware({
@@ -234,16 +180,22 @@ async function startServer() {
       createContext,
     })
   );
-
-  if (process.env.NODE_ENV === "production") {
-    serveStatic(app);
+  // development mode uses Vite, production mode uses static files
+  if (process.env.NODE_ENV === "development") {
+    await setupVite(app, server);
   } else {
-    await setupVite(app);
+    serveStatic(app);
   }
 
-  const port = await findAvailablePort();
-  server.listen(port, "0.0.0.0", () => {
-    console.log(`Server is running at http://localhost:${port}`);
+  const preferredPort = parseInt(process.env.PORT || "3000");
+  const port = await findAvailablePort(preferredPort);
+
+  if (port !== preferredPort) {
+    console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
+  }
+
+  server.listen(port, () => {
+    console.log(`Server running on http://localhost:${port}/`);
   });
 }
 

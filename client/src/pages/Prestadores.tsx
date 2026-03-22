@@ -239,8 +239,12 @@ export default function Prestadores() {
       // Call tRPC mutation to update - don't update local state
       updatePrestadorMutation.mutate(updatedPrestador);
     } else {
+      const newPrestador = {
+        id: 0,
+        ...formData,
+      };
       // Call tRPC mutation to create - don't update local state
-      createPrestadorMutation.mutate(formData);
+      createPrestadorMutation.mutate(newPrestador);
     }
   };
 

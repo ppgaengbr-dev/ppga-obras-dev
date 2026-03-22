@@ -167,9 +167,9 @@ export default function Architects() {
       // Call tRPC mutation to update - don't update local state
       updateArchitectMutation.mutate(updatedArchitect);
     } else {
-      const { id, ...newArchitectData } = formData;
+      const newArchitect = { ...formData, id: 0 };
       // Call tRPC mutation to create - don't update local state
-      createArchitectMutation.mutate(newArchitectData);
+      createArchitectMutation.mutate(newArchitect);
     }
   };
 

@@ -28,7 +28,8 @@ export type InsertUser = typeof users.$inferInsert;
 // Architects table
 export const architects = mysqlTable("architects", {
   id: int("id").autoincrement().primaryKey(),
-  officeNameName: varchar("officeNameName", { length: 255 }).notNull(),
+  name: varchar("name", { length: 255 }),
+  officeNameName: varchar("officeNameName", { length: 255 }),
   status: varchar("status", { length: 50 }).default("active"),
   address: text("address"),
   architectName: varchar("architectName", { length: 255 }),
@@ -95,7 +96,7 @@ export type InsertProvider = typeof providers.$inferInsert;
 // Allocations table
 export const allocations = mysqlTable("allocations", {
   id: int("id").autoincrement().primaryKey(),
-  workId: int("workId").notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  workId: int("workId").notNull().references(() => works.id, { onDelete: 'cascade' }),
   providerId: int("providerId").notNull().references(() => providers.id, { onDelete: 'cascade' }),
   providerName: varchar("providerName", { length: 255 }).notNull(),
   service: text("service"),
