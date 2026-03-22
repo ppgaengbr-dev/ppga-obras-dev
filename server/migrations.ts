@@ -1,30 +1,54 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { getDb } from "./db";
 import mysql from "mysql2/promise";
+
+/**
+ * Parse DATABASE_URL to extract connection parameters
+ * Format: mysql://user:password@host:port/database
+ */
+function parseDatabaseUrl(url: string) {
+  const match = url.match(
+    /mysql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)/
+  );
+  if (!match) {
+    throw new Error(`Invalid DATABASE_URL format: ${url}`);
+  }
+  return {
+    user: match[1],
+    password: match[2],
+    host: match[3],
+    port: parseInt(match[4]),
+    database: match[5],
+  };
+}
 
 /**
  * Run all pending migrations from drizzle/migrations folder
  * Tracks executed migrations in a migrations_log table
  */
 export async function runMigrations() {
-  const db = await getDb();
-  if (!db) {
-    console.error("[Migrations] Database not available");
-    return false;
-  }
-
   try {
+    const databaseUrl = process.env.DATABASE_URL;
+    if (!databaseUrl) {
+      console.error("[Migrations] DATABASE_URL not set");
+      return false;
+    }
+
     console.log("[Migrations] Starting migration process...");
 
-    // Get raw connection for migrations
+    // Parse DATABASE_URL
+    const config = parseDatabaseUrl(databaseUrl);
+
+    // Create connection
     const connection = await mysql.createConnection({
-      host: process.env.DB_HOST || "localhost",
-      port: parseInt(process.env.DB_PORT || "3306"),
-      user: process.env.DB_USER || "root",
-      password: process.env.DB_PASSWORD || "",
-      database: process.env.DB_NAME || "railway",
+      host: config.host,
+      port: config.port,
+      user: config.user,
+      password: config.password,
+      database: config.database,
     });
+
+    console.log(`[Migrations] Connected to ${config.host}:${config.port}/${config.database}`);
 
     // Create migrations_log table if it doesn't exist
     await connection.execute(`
