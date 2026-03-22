@@ -64,7 +64,30 @@ async function startServer() {
           CONSTRAINT \`users_id\` PRIMARY KEY(\`id\`),
           CONSTRAINT \`users_openId_unique\` UNIQUE(\`openId\`)
         )`,
-        // Migration 1: Create allocations, providers, works tables
+        // Migration 1: Create providers table (required before allocations)
+        `CREATE TABLE IF NOT EXISTS \`providers\` (
+          \`id\` int AUTO_INCREMENT NOT NULL,
+          \`fullName\` varchar(255) NOT NULL,
+          \`category\` varchar(100),
+          \`observation\` text,
+          \`remuneration\` varchar(100),
+          \`baseValue\` varchar(100),
+          \`createdAt\` timestamp NOT NULL DEFAULT (now()),
+          \`updatedAt\` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+          CONSTRAINT \`providers_id\` PRIMARY KEY(\`id\`)
+        )`,
+        // Migration 2: Create works table (required before allocations)
+        `CREATE TABLE IF NOT EXISTS \`works\` (
+          \`id\` int AUTO_INCREMENT NOT NULL,
+          \`workName\` varchar(255) NOT NULL,
+          \`architectName\` varchar(255),
+          \`responsible\` varchar(255),
+          \`status\` varchar(50) NOT NULL DEFAULT 'active',
+          \`createdAt\` timestamp NOT NULL DEFAULT (now()),
+          \`updatedAt\` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+          CONSTRAINT \`works_id\` PRIMARY KEY(\`id\`)
+        )`,
+        // Migration 3: Create allocations table (after works and providers)
         `CREATE TABLE IF NOT EXISTS \`allocations\` (
           \`id\` int AUTO_INCREMENT NOT NULL,
           \`workId\` int NOT NULL,
@@ -86,27 +109,6 @@ async function startServer() {
           CONSTRAINT \`allocations_id\` PRIMARY KEY(\`id\`),
           CONSTRAINT \`allocations_workId_fk\` FOREIGN KEY(\`workId\`) REFERENCES \`works\`(\`id\`) ON DELETE CASCADE,
           CONSTRAINT \`allocations_providerId_fk\` FOREIGN KEY(\`providerId\`) REFERENCES \`providers\`(\`id\`) ON DELETE CASCADE
-        )`,
-        `CREATE TABLE IF NOT EXISTS \`providers\` (
-          \`id\` int AUTO_INCREMENT NOT NULL,
-          \`fullName\` varchar(255) NOT NULL,
-          \`category\` varchar(100),
-          \`observation\` text,
-          \`remuneration\` varchar(100),
-          \`baseValue\` varchar(100),
-          \`createdAt\` timestamp NOT NULL DEFAULT (now()),
-          \`updatedAt\` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
-          CONSTRAINT \`providers_id\` PRIMARY KEY(\`id\`)
-        )`,
-        `CREATE TABLE IF NOT EXISTS \`works\` (
-          \`id\` int AUTO_INCREMENT NOT NULL,
-          \`workName\` varchar(255) NOT NULL,
-          \`architectName\` varchar(255),
-          \`responsible\` varchar(255),
-          \`status\` varchar(50) NOT NULL DEFAULT 'active',
-          \`createdAt\` timestamp NOT NULL DEFAULT (now()),
-          \`updatedAt\` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
-          CONSTRAINT \`works_id\` PRIMARY KEY(\`id\`)
         )`,
         // Migration 2: Create architects table and add architectId to works
         `CREATE TABLE IF NOT EXISTS \`architects\` (
