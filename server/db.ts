@@ -503,7 +503,14 @@ export async function createArchitect(data: any) {
   if (!db) throw new Error('Database not available');
   try {
     const { architects: architectsTable } = await import('../drizzle/schema');
-    const result = await db.insert(architectsTable).values(data);
+    // Remove id to let database auto-generate it
+    const { id, ...dataWithoutId } = data;
+    // Set name to officeNameName if not provided
+    const cleanData = {
+      ...dataWithoutId,
+      name: dataWithoutId.name || dataWithoutId.officeNameName || 'Unnamed',
+    };
+    const result = await db.insert(architectsTable).values(cleanData);
     return result;
   } catch (error) {
     console.error('[Database] Failed to create architect:', error);
