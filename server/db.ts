@@ -387,21 +387,30 @@ export async function updateClient(id: number, data: any) {
   if (!db) throw new Error('Database not available');
   try {
     const { clients: clientsTable } = await import('../drizzle/schema');
+    
+    // Convert data types correctly
+    const birthDateClean = data.birthDate && String(data.birthDate).trim() ? data.birthDate : null;
+    const startDateClean = data.startDate && String(data.startDate).trim() ? data.startDate : null;
+    const endDateClean = data.endDate && String(data.endDate).trim() ? data.endDate : null;
+    const workValueClean = data.workValue 
+      ? parseFloat(String(data.workValue).replace(/[R$\s]/g, '').replace(',', '.')) 
+      : null;
+    
     // Only update valid fields from clients table
     const validFields: any = {
       fullName: data.fullName,
       status: data.status,
       phone: data.phone,
-      birthDate: data.birthDate,
+      birthDate: birthDateClean,
       address: data.address,
       origin: data.origin,
       contact: data.contact,
       responsible: data.responsible,
       commission: data.commission,
       workName: data.workName,
-      workValue: data.workValue,
-      startDate: data.startDate,
-      endDate: data.endDate,
+      workValue: workValueClean,
+      startDate: startDateClean,
+      endDate: endDateClean,
       workStatus: data.workStatus,
       reminder: data.reminder ? parseInt(data.reminder) : 0,
     };
