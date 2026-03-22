@@ -152,7 +152,13 @@ export async function getAllAllocations() {
   if (!db) return [];
   try {
     const { allocations: allocationsTable } = await import('../drizzle/schema');
-    return await db.select().from(allocationsTable);
+    const allocations = await db.select().from(allocationsTable);
+    // Convert workId and providerId to numbers to ensure type consistency
+    return allocations.map(a => ({
+      ...a,
+      workId: Number(a.workId),
+      providerId: Number(a.providerId),
+    }));
   } catch (error) {
     console.error('[Database] Failed to get allocations:', error);
     return [];

@@ -127,7 +127,7 @@ async function startServer() {
           \`updatedAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         )`,
         // Migration 5: Add missing name column to architects if it doesn't exist
-        `ALTER TABLE \`architects\` ADD COLUMN IF NOT EXISTS \`name\` varchar(255)`,
+        `ALTER TABLE \`architects\` ADD COLUMN \`name\` varchar(255) NULL`,
         // Migration 3: Create clients table
         `CREATE TABLE IF NOT EXISTS \`clients\` (
           \`id\` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
