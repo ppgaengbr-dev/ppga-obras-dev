@@ -198,9 +198,9 @@ async function startServer() {
           \`baseValue\` decimal(10,2),
           \`createdAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
           \`updatedAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          CONSTRAINT \`allocations_id\` PRIMARY KEY(\`id\`),
-          CONSTRAINT \`allocations_workId_fk\` FOREIGN KEY(\`workId\`) REFERENCES \`works\`(\`id\`) ON DELETE CASCADE,
-          CONSTRAINT \`allocations_providerId_fk\` FOREIGN KEY(\`providerId\`) REFERENCES \`providers\`(\`id\`) ON DELETE CASCADE
+          CONSTRAINT \`allocations_id\` PRIMARY KEY (\`id\`),
+          CONSTRAINT \`allocations_workId_fk\` FOREIGN KEY (\`workId\`) REFERENCES \`works\` (\`id\`) ON DELETE CASCADE,
+          CONSTRAINT \`allocations_providerId_fk\` FOREIGN KEY (\`providerId\`) REFERENCES \`providers\` (\`id\`) ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`
       ];
       
