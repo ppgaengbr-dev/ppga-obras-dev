@@ -352,7 +352,8 @@ export async function createClient(data: any) {
   if (!db) throw new Error('Database not available');
   try {
     const { clients: clientsTable } = await import('../drizzle/schema');
-    const result = await db.insert(clientsTable).values(data);
+    const { id, ...dataWithoutId } = data;
+    const result = await db.insert(clientsTable).values(dataWithoutId);
     return result;
   } catch (error) {
     console.error('[Database] Failed to create client:', error);
@@ -455,6 +456,7 @@ export async function deleteWork(id: number) {
 }
 
 // Providers mutations
+// Force rebuild - v3
 export async function createProvider(data: any) {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
