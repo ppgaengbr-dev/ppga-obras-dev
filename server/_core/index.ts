@@ -49,12 +49,12 @@ async function startServer() {
       
       // Execute migrations using raw SQL queries
       const migrations = [
-        // DROP all tables first to start fresh
+        // DROP all tables first to start fresh (drop child tables first to avoid foreign key issues)
         `DROP TABLE IF EXISTS \`allocations\``,
+        `DROP TABLE IF EXISTS \`clients\``,
+        `DROP TABLE IF EXISTS \`works\``,
         `DROP TABLE IF EXISTS \`providers\``,
         `DROP TABLE IF EXISTS \`architects\``,
-        `DROP TABLE IF EXISTS \`works\``,
-        `DROP TABLE IF EXISTS \`clients\``,
         `DROP TABLE IF EXISTS \`categories\``,
         `DROP TABLE IF EXISTS \`remunerations\``,
         `DROP TABLE IF EXISTS \`users\``,
