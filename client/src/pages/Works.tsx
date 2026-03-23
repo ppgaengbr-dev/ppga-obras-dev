@@ -18,10 +18,10 @@ import { SquarePen, Trash2, Bell, Calendar, ChevronDown } from 'lucide-react';
 import { formatPhone } from '@/lib/formatters';
 
 const WORK_STATUSES = [
-  { value: 'waiting', label: 'Aguardando' },
-  { value: 'in_progress', label: 'Em andamento' },
-  { value: 'interrupted', label: 'Interrompido' },
-  { value: 'completed', label: 'Finalizado' },
+  { value: 'Aguardando', label: 'Aguardando' },
+  { value: 'Em andamento', label: 'Em andamento' },
+  { value: 'Interrompido', label: 'Interrompido' },
+  { value: 'Finalizado', label: 'Finalizado' },
   { value: 'back_to_client', label: 'Voltar para Cliente' },
 ];
 
@@ -157,7 +157,7 @@ export default function Works() {
 
   const [formData, setFormData] = useState({
     clientName: '',
-    status: 'waiting',
+    status: 'Aguardando',
     workName: '',
     workValue: '',
     startDate: '',
@@ -191,7 +191,7 @@ export default function Works() {
     setEditClientDetails(false);
     setFormData({
       clientName: '',
-      status: 'waiting',
+      status: 'Aguardando',
       workName: '',
       workValue: '',
       startDate: '',
@@ -331,7 +331,7 @@ export default function Works() {
           workValue: formData.workValue || '',
           startDate: formData.startDate || '',
           endDate: formData.endDate || '',
-          workStatus: formData.status === 'back_to_client' ? 'waiting' : formData.status,
+          workStatus: formData.status === 'back_to_client' ? 'Aguardando' : formData.status,
           commission: formData.clientCommission || '',
           reminder: 0,
           createdAt: new Date(),
@@ -404,10 +404,10 @@ export default function Works() {
 
   // Agrupar obras por status
   const groupedWorks = {
-    waiting: works.filter((w: Work) => w.status === 'waiting'),
-    in_progress: works.filter((w: Work) => w.status === 'in_progress'),
-    interrupted: works.filter((w: Work) => w.status === 'interrupted'),
-    completed: works.filter((w: Work) => w.status === 'completed'),
+    waiting: works.filter((w: Work) => w.status === 'Aguardando'),
+    in_progress: works.filter((w: Work) => w.status === 'Em andamento'),
+    interrupted: works.filter((w: Work) => w.status === 'Interrompido'),
+    completed: works.filter((w: Work) => w.status === 'Finalizado'),
   };
 
   return (
