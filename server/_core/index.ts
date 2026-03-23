@@ -44,7 +44,27 @@ async function startServer() {
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
-
+  
+  // Temporary migration endpoint - execute once then remove
+  app.get('/api/migrate-once', async (req, res) => {
+    try {
+      console.log('[Migrate-Once] Starting database migrations...');
+      await runMigrations();
+      console.log('[Migrate-Once] Migrations completed successfully');
+      res.json({ 
+        success: true, 
+        message: 'Migrations executed successfully',
+        info: 'IMPORTANT: Remove this endpoint from code after first execution',
+        timestamp: new Date().toISOString()
+      });
+    } catch (error: any) {
+      console.error('[Migrate-Once] Error:', error.message);
+      res.status(500).json({ 
+        success: false, 
+        message: error.message
+      });
+    }
+  });
   
   // Legacy setup-db endpoint (deprecated)
   app.get('/api/setup-db', (req, res) => {

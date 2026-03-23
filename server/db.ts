@@ -378,7 +378,8 @@ export async function updateClient(id: number, data: any) {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
   try {
-    const { clients: clientsTable } = await import('../drizzle/schema');
+    const { clients: clientsTable, works: worksTable } = await import('../drizzle/schema');
+    
     // Only update valid fields from clients table
     const validFields: any = {
       fullName: data.fullName,
@@ -397,8 +398,54 @@ export async function updateClient(id: number, data: any) {
       workStatus: data.workStatus,
       reminder: data.reminder ? parseInt(data.reminder) : 0,
     };
+    
     // Remove undefined fields
     Object.keys(validFields).forEach(key => validFields[key] === undefined && delete validFields[key]);
+    
+    // If status is changing to 'work', create a work record
+    if (data.status === 'work') {
+      console.log('[DB] Creating work record for client:', id);
+      
+      // Get current client data
+      const currentClient = await db.select().from(clientsTable).where(eq(clientsTable.id, id)).limit(1);
+      
+      if (currentClient.length > 0) {
+        const client = currentClient[0];
+        
+        // Check if work already exists for this client
+        const existingWork = await db.select().from(worksTable).where(eq(worksTable.clientId, id)).limit(1);
+        
+        if (existingWork.length === 0) {
+          // Create new work record
+          const workData = {
+            clientId: id,
+            clientName: client.fullName,
+            name: data.workName || client.workName || client.fullName,
+            workName: data.workName || client.workName,
+            architectId: client.architectId,
+            responsible: data.responsible || client.responsible,
+            status: data.workStatus || 'Aguardando',
+            workValue: data.workValue || client.workValue,
+            startDate: data.startDate || client.startDate,
+            endDate: data.endDate || client.endDate,
+            commission: data.commission || client.commission,
+            clientPhone: client.phone,
+            clientBirthDate: client.birthDate,
+            clientAddress: client.address,
+            clientOrigin: client.origin,
+            clientContact: client.contact,
+            reminder: data.reminder ? parseInt(data.reminder) : client.reminder,
+          };
+          
+          console.log('[DB] Inserting work record:', workData);
+          await db.insert(worksTable).values(workData);
+        } else {
+          console.log('[DB] Work already exists for client:', id);
+        }
+      }
+    }
+    
+    // Update client
     await db.update(clientsTable).set(validFields).where(eq(clientsTable.id, id));
   } catch (error) {
     console.error('[Database] Failed to update client:', error);
