@@ -2,8 +2,10 @@ import { eq } from 'drizzle-orm';
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
+import mysql from 'mysql2/promise';
 
 let _db: ReturnType<typeof drizzle> | null = null;
+let _pool: mysql.Pool | null = null;
 
 // Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
@@ -16,6 +18,29 @@ export async function getDb() {
     }
   }
   return _db;
+}
+
+// Get raw MySQL connection pool for transactions
+export async function getPool() {
+  if (!_pool && process.env.DATABASE_URL) {
+    try {
+      const url = new URL(process.env.DATABASE_URL);
+      _pool = mysql.createPool({
+        host: url.hostname,
+        user: url.username,
+        password: url.password,
+        database: url.pathname.slice(1),
+        port: parseInt(url.port || '3306'),
+        waitForConnections: true,
+        connectionLimit: 10,
+        queueLimit: 0,
+      });
+    } catch (error) {
+      console.warn("[Database] Failed to create pool:", error);
+      _pool = null;
+    }
+  }
+  return _pool;
 }
 
 export async function upsertUser(user: InsertUser): Promise<void> {
@@ -89,43 +114,13 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// Works queries
+// Works queries - WORKS IS PRIMARY
 export async function getAllWorks() {
   const db = await getDb();
   if (!db) return [];
   try {
-    const { clients: clientsTable } = await import('../drizzle/schema');
-    
-    // SOURCE OF TRUTH: clients table with status 'work'
-    // The clients table IS the works table - when status='work', it's a work
-    const clientWorks = await db.select().from(clientsTable).where(
-      eq(clientsTable.status, 'work')
-    );
-    
-    // Convert clients with status 'work' to work format
-    const works = clientWorks.map((client: any) => ({
-      id: client.id,
-      name: client.fullName,
-      workName: client.workName || client.fullName,
-      clientName: client.fullName,
-      clientId: client.id,
-      status: client.workStatus || 'waiting',
-      workValue: client.workValue || 0,
-      startDate: client.startDate,
-      endDate: client.endDate,
-      responsible: client.responsible,
-      clientPhone: client.phone,
-      clientBirthDate: client.birthDate,
-      clientAddress: client.address,
-      clientOrigin: client.origin,
-      clientContact: client.contact,
-      commission: client.commission,
-      reminder: client.reminder,
-      createdAt: client.createdAt,
-      updatedAt: client.updatedAt,
-    }));
-    
-    return works;
+    const { works: worksTable } = await import('../drizzle/schema');
+    return await db.select().from(worksTable);
   } catch (error) {
     console.error('[Database] Failed to get all works:', error);
     return [];
@@ -136,43 +131,24 @@ export async function getWorkById(id: number) {
   const db = await getDb();
   if (!db) return null;
   try {
-    const { clients: clientsTable } = await import('../drizzle/schema');
-    
-    // Get client with status 'work' and id matching
-    const result = await db.select().from(clientsTable).where(
-      eq(clientsTable.id, id)
-    ).limit(1);
-    
-    if (result.length === 0) return null;
-    
-    const client = result[0];
-    
-    // Only return if status is 'work'
-    if (client.status !== 'work') return null;
-    
-    return {
-      id: client.id,
-      name: client.fullName,
-      workName: client.workName || client.fullName,
-      clientName: client.fullName,
-      clientId: client.id,
-      status: client.workStatus || 'waiting',
-      workValue: client.workValue || 0,
-      startDate: client.startDate,
-      endDate: client.endDate,
-      responsible: client.responsible,
-      clientPhone: client.phone,
-      clientBirthDate: client.birthDate,
-      clientAddress: client.address,
-      clientOrigin: client.origin,
-      clientContact: client.contact,
-      commission: client.commission,
-      reminder: client.reminder,
-      createdAt: client.createdAt,
-      updatedAt: client.updatedAt,
-    };
+    const { works: worksTable } = await import('../drizzle/schema');
+    const result = await db.select().from(worksTable).where(eq(worksTable.id, id)).limit(1);
+    return result.length > 0 ? result[0] : null;
   } catch (error) {
     console.error('[Database] Failed to get work by id:', error);
+    return null;
+  }
+}
+
+export async function getWorkByClientId(clientId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  try {
+    const { works: worksTable } = await import('../drizzle/schema');
+    const result = await db.select().from(worksTable).where(eq(worksTable.clientId, clientId)).limit(1);
+    return result.length > 0 ? result[0] : null;
+  } catch (error) {
+    console.error('[Database] Failed to get work by client id:', error);
     return null;
   }
 }
@@ -261,9 +237,16 @@ export async function createClient(data: any) {
 export async function updateClient(id: number, data: any) {
   console.log('[DB] updateClient called with:', { id, data });
   const db = await getDb();
-  if (!db) throw new Error('Database not available');
+  const pool = await getPool();
+  
+  if (!db || !pool) throw new Error('Database not available');
+  
+  const connection = await pool.getConnection();
+  
   try {
-    const { clients: clientsTable } = await import('../drizzle/schema');
+    await connection.beginTransaction();
+    
+    const { clients: clientsTable, works: worksTable } = await import('../drizzle/schema');
     
     // Clean workValue: remove "R$", spaces, and convert comma to dot
     let cleanWorkValue = data.workValue;
@@ -297,13 +280,84 @@ export async function updateClient(id: number, data: any) {
     Object.keys(validFields).forEach(key => validFields[key] === undefined && delete validFields[key]);
     
     // Update client
-    // NOTE: The 'clients' table is the SOURCE OF TRUTH for works
-    // When status='work', the client ID IS the work ID
-    // No separate work records needed
     await db.update(clientsTable).set(validFields).where(eq(clientsTable.id, id));
+    
+    // If status is changing to 'work', ensure work record exists
+    if (data.status === 'work') {
+      console.log('[DB] Status changed to work, checking work record for client:', id);
+      
+      // Get current client data
+      const currentClient = await db.select().from(clientsTable).where(eq(clientsTable.id, id)).limit(1);
+      
+      if (currentClient.length > 0) {
+        const client = currentClient[0];
+        
+        // Check if work already exists for this client
+        const existingWork = await db.select().from(worksTable).where(eq(worksTable.clientId, id)).limit(1);
+        
+        if (existingWork.length === 0) {
+          // Create new work record
+          const workData = {
+            clientId: id,
+            clientName: client.fullName,
+            name: data.workName || client.workName || client.fullName,
+            workName: data.workName || client.workName,
+            architectId: client.architectId,
+            responsible: data.responsible || client.responsible,
+            status: data.workStatus || 'Aguardando',
+            workValue: cleanWorkValue || client.workValue,
+            startDate: data.startDate || client.startDate,
+            endDate: data.endDate || client.endDate,
+            commission: data.commission || client.commission,
+            clientPhone: client.phone,
+            clientBirthDate: client.birthDate,
+            clientAddress: client.address,
+            clientOrigin: client.origin,
+            clientContact: client.contact,
+            reminder: data.reminder ? parseInt(data.reminder) : client.reminder,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+          
+          console.log('[DB] Creating work record:', workData);
+          await db.insert(worksTable).values(workData);
+        } else {
+          // Update existing work record
+          console.log('[DB] Work already exists for client:', id, '- updating it');
+          const workUpdateData: any = {
+            clientName: client.fullName,
+            name: data.workName || client.workName || client.fullName,
+            workName: data.workName || client.workName,
+            responsible: data.responsible || client.responsible,
+            status: data.workStatus || 'Aguardando',
+            workValue: cleanWorkValue || client.workValue,
+            startDate: data.startDate || client.startDate,
+            endDate: data.endDate || client.endDate,
+            commission: data.commission || client.commission,
+            clientPhone: client.phone,
+            clientBirthDate: client.birthDate,
+            clientAddress: client.address,
+            clientOrigin: client.origin,
+            clientContact: client.contact,
+            reminder: data.reminder ? parseInt(data.reminder) : client.reminder,
+            updatedAt: new Date(),
+          };
+          
+          Object.keys(workUpdateData).forEach(key => workUpdateData[key] === undefined && delete workUpdateData[key]);
+          
+          await db.update(worksTable).set(workUpdateData).where(eq(worksTable.id, existingWork[0].id));
+        }
+      }
+    }
+    
+    await connection.commit();
+    console.log('[DB] updateClient transaction completed successfully');
   } catch (error) {
+    await connection.rollback();
     console.error('[Database] Failed to update client:', error);
     throw error;
+  } finally {
+    connection.release();
   }
 }
 
@@ -618,7 +672,7 @@ export async function createAllocation(data: any) {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
   try {
-    const { allocations: allocationsTable } = await import('../drizzle/schema');
+    const { allocations: allocationsTable, works: worksTable } = await import('../drizzle/schema');
     
     // Clean baseValue: remove "R$", spaces, and convert comma to dot
     let cleanBaseValue = data.baseValue;
@@ -629,8 +683,23 @@ export async function createAllocation(data: any) {
         .replace(',', '.');
     }
     
+    console.log('[Database] createAllocation input:', data);
+    
+    // Verify that work exists before creating allocation
+    let workId = data.workId;
+    
+    // If workId is provided, verify it exists
+    if (workId) {
+      const workExists = await db.select().from(worksTable).where(eq(worksTable.id, workId)).limit(1);
+      if (workExists.length === 0) {
+        throw new Error(`Work with ID ${workId} does not exist`);
+      }
+    } else {
+      throw new Error('workId is required');
+    }
+    
     const allocationData = {
-      workId: data.workId,
+      workId: workId,
       providerId: data.providerId,
       providerName: data.providerName,
       service: data.service,
@@ -644,7 +713,7 @@ export async function createAllocation(data: any) {
       updatedAt: new Date(),
     };
     
-    console.log('[Database] createAllocation input:', data);
+    console.log('[Database] Inserting allocation with workId:', workId);
     const result = await db.insert(allocationsTable).values(allocationData);
     return result;
   } catch (error) {
