@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm';
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, clients, works, providers, architects, allocations, categories, remunerations } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import mysql from 'mysql2/promise';
 
@@ -119,8 +119,7 @@ export async function getAllWorks() {
   const db = await getDb();
   if (!db) return [];
   try {
-    const { works: worksTable } = await import('../drizzle/schema');
-    return await db.select().from(worksTable);
+    return await db.select().from(works);
   } catch (error) {
     console.error('[Database] Failed to get all works:', error);
     return [];
@@ -131,8 +130,7 @@ export async function getWorkById(id: number) {
   const db = await getDb();
   if (!db) return null;
   try {
-    const { works: worksTable } = await import('../drizzle/schema');
-    const result = await db.select().from(worksTable).where(eq(worksTable.id, id)).limit(1);
+    const result = await db.select().from(works).where(eq(works.id, id)).limit(1);
     return result.length > 0 ? result[0] : null;
   } catch (error) {
     console.error('[Database] Failed to get work by id:', error);
@@ -144,8 +142,7 @@ export async function getWorkByClientId(clientId: number) {
   const db = await getDb();
   if (!db) return null;
   try {
-    const { works: worksTable } = await import('../drizzle/schema');
-    const result = await db.select().from(worksTable).where(eq(worksTable.clientId, clientId)).limit(1);
+    const result = await db.select().from(works).where(eq(works.clientId, clientId)).limit(1);
     return result.length > 0 ? result[0] : null;
   } catch (error) {
     console.error('[Database] Failed to get work by client id:', error);
@@ -158,8 +155,7 @@ export async function getAllClients() {
   const db = await getDb();
   if (!db) return [];
   try {
-    const { clients: clientsTable } = await import('../drizzle/schema');
-    return await db.select().from(clientsTable);
+    return await db.select().from(clients);
   } catch (error) {
     console.error('[Database] Failed to get all clients:', error);
     return [];
@@ -170,8 +166,7 @@ export async function getClientById(id: number) {
   const db = await getDb();
   if (!db) return null;
   try {
-    const { clients: clientsTable } = await import('../drizzle/schema');
-    const result = await db.select().from(clientsTable).where(eq(clientsTable.id, id)).limit(1);
+    const result = await db.select().from(clients).where(eq(clients.id, id)).limit(1);
     return result.length > 0 ? result[0] : null;
   } catch (error) {
     console.error('[Database] Failed to get client by id:', error);
@@ -183,8 +178,7 @@ export async function getClientsByStatus(status: string) {
   const db = await getDb();
   if (!db) return [];
   try {
-    const { clients: clientsTable } = await import('../drizzle/schema');
-    return await db.select().from(clientsTable).where(eq(clientsTable.status, status));
+    return await db.select().from(clients).where(eq(clients.status, status));
   } catch (error) {
     console.error('[Database] Failed to get clients by status:', error);
     return [];
@@ -196,7 +190,6 @@ export async function createClient(data: any) {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
   try {
-    const { clients: clientsTable } = await import('../drizzle/schema');
     
     // Clean workValue: remove "R$", spaces, and convert comma to dot
     let cleanWorkValue = data.workValue;
@@ -226,7 +219,7 @@ export async function createClient(data: any) {
       reminder: data.reminder ? parseInt(data.reminder) : 0,
     };
     
-    const result = await db.insert(clientsTable).values(clientData);
+    const result = await db.insert(clients).values(clientData);
     return result;
   } catch (error) {
     console.error('[Database] Failed to create client:', error);
@@ -245,8 +238,6 @@ export async function updateClient(id: number, data: any) {
   
   try {
     await connection.beginTransaction();
-    
-    const { clients: clientsTable, works: worksTable } = await import('../drizzle/schema');
     
     // Clean workValue: remove "R$", spaces, and convert comma to dot
     let cleanWorkValue = data.workValue;
@@ -280,20 +271,20 @@ export async function updateClient(id: number, data: any) {
     Object.keys(validFields).forEach(key => validFields[key] === undefined && delete validFields[key]);
     
     // Update client
-    await db.update(clientsTable).set(validFields).where(eq(clientsTable.id, id));
+    await db.update(clients).set(validFields).where(eq(clients.id, id));
     
     // If status is changing to 'work', ensure work record exists
     if (data.status === 'work') {
       console.log('[DB] Status changed to work, checking work record for client:', id);
       
       // Get current client data
-      const currentClient = await db.select().from(clientsTable).where(eq(clientsTable.id, id)).limit(1);
+      const currentClient = await db.select().from(clients).where(eq(clients.id, id)).limit(1);
       
       if (currentClient.length > 0) {
         const client = currentClient[0];
         
         // Check if work already exists for this client
-        const existingWork = await db.select().from(worksTable).where(eq(worksTable.clientId, id)).limit(1);
+        const existingWork = await db.select().from(works).where(eq(works.clientId, id)).limit(1);
         
         if (existingWork.length === 0) {
           // Create new work record
@@ -320,7 +311,7 @@ export async function updateClient(id: number, data: any) {
           };
           
           console.log('[DB] Creating work record:', workData);
-          await db.insert(worksTable).values(workData);
+          await db.insert(works).values(workData);
         } else {
           // Update existing work record
           console.log('[DB] Work already exists for client:', id, '- updating it');
@@ -345,7 +336,7 @@ export async function updateClient(id: number, data: any) {
           
           Object.keys(workUpdateData).forEach(key => workUpdateData[key] === undefined && delete workUpdateData[key]);
           
-          await db.update(worksTable).set(workUpdateData).where(eq(worksTable.id, existingWork[0].id));
+          await db.update(works).set(workUpdateData).where(eq(works.id, existingWork[0].id));
         }
       }
     }
@@ -365,8 +356,7 @@ export async function deleteClient(id: number) {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
   try {
-    const { clients: clientsTable } = await import('../drizzle/schema');
-    await db.delete(clientsTable).where(eq(clientsTable.id, id));
+    await db.delete(clients).where(eq(clients.id, id));
   } catch (error) {
     console.error('[Database] Failed to delete client:', error);
     throw error;
@@ -378,8 +368,7 @@ export async function createWork(data: any) {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
   try {
-    const { works: worksTable } = await import('../drizzle/schema');
-    const result = await db.insert(worksTable).values(data);
+    const result = await db.insert(works).values(data);
     return result;
   } catch (error) {
     console.error('[Database] Failed to create work:', error);
@@ -391,7 +380,6 @@ export async function updateWork(id: number, data: any) {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
   try {
-    const { works: worksTable } = await import('../drizzle/schema');
     // Filtrar apenas campos válidos da tabela works
     const validFields = ['name', 'workName', 'clientName', 'clientId', 'architectId', 'responsible', 'status', 'workValue', 'startDate', 'endDate', 'commission', 'clientPhone', 'clientBirthDate', 'clientAddress', 'clientOrigin', 'clientContact', 'reminder'];
     const filteredData = Object.keys(data)
@@ -402,7 +390,7 @@ export async function updateWork(id: number, data: any) {
       }, {} as any);
     
     console.log('[Database] Updating work with filtered data:', filteredData);
-    await db.update(worksTable).set(filteredData).where(eq(worksTable.id, id));
+    await db.update(works).set(filteredData).where(eq(works.id, id));
   } catch (error) {
     console.error('[Database] Failed to update work:', error);
     throw error;
@@ -413,8 +401,7 @@ export async function deleteWork(id: number) {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
   try {
-    const { works: worksTable } = await import('../drizzle/schema');
-    await db.delete(worksTable).where(eq(worksTable.id, id));
+    await db.delete(works).where(eq(works.id, id));
   } catch (error) {
     console.error('[Database] Failed to delete work:', error);
     throw error;
@@ -426,8 +413,7 @@ export async function getAllProviders() {
   const db = await getDb();
   if (!db) return [];
   try {
-    const { providers: providersTable } = await import('../drizzle/schema');
-    return await db.select().from(providersTable);
+    return await db.select().from(providers);
   } catch (error) {
     console.error('[Database] Failed to get all providers:', error);
     return [];
@@ -438,8 +424,7 @@ export async function getProviderById(id: number) {
   const db = await getDb();
   if (!db) return null;
   try {
-    const { providers: providersTable } = await import('../drizzle/schema');
-    const result = await db.select().from(providersTable).where(eq(providersTable.id, id)).limit(1);
+    const result = await db.select().from(providers).where(eq(providers.id, id)).limit(1);
     return result.length > 0 ? result[0] : null;
   } catch (error) {
     console.error('[Database] Failed to get provider by id:', error);
@@ -452,7 +437,6 @@ export async function createProvider(data: any) {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
   try {
-    const { providers: providersTable } = await import('../drizzle/schema');
     
     // Clean baseValue: remove "R$", spaces, and convert comma to dot
     let cleanBaseValue = data.baseValue;
@@ -477,7 +461,7 @@ export async function createProvider(data: any) {
       updatedAt: new Date(),
     };
     
-    const result = await db.insert(providersTable).values(providerData);
+    const result = await db.insert(providers).values(providerData);
     return result;
   } catch (error) {
     console.error('[Database] Failed to create provider:', error);
@@ -489,7 +473,6 @@ export async function updateProvider(id: number, data: any) {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
   try {
-    const { providers: providersTable } = await import('../drizzle/schema');
     
     // Clean baseValue: remove "R$", spaces, and convert comma to dot
     let cleanBaseValue = data.baseValue;
@@ -514,7 +497,7 @@ export async function updateProvider(id: number, data: any) {
     
     Object.keys(validFields).forEach(key => validFields[key] === undefined && delete validFields[key]);
     
-    await db.update(providersTable).set(validFields).where(eq(providersTable.id, id));
+    await db.update(providers).set(validFields).where(eq(providers.id, id));
   } catch (error) {
     console.error('[Database] Failed to update provider:', error);
     throw error;
@@ -525,8 +508,7 @@ export async function deleteProvider(id: number) {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
   try {
-    const { providers: providersTable } = await import('../drizzle/schema');
-    await db.delete(providersTable).where(eq(providersTable.id, id));
+    await db.delete(providers).where(eq(providers.id, id));
   } catch (error) {
     console.error('[Database] Failed to delete provider:', error);
     throw error;
@@ -538,8 +520,7 @@ export async function getAllArchitects() {
   const db = await getDb();
   if (!db) return [];
   try {
-    const { architects: architectsTable } = await import('../drizzle/schema');
-    return await db.select().from(architectsTable);
+    return await db.select().from(architects);
   } catch (error) {
     console.error('[Database] Failed to get all architects:', error);
     return [];
@@ -550,8 +531,7 @@ export async function getArchitectById(id: number) {
   const db = await getDb();
   if (!db) return null;
   try {
-    const { architects: architectsTable } = await import('../drizzle/schema');
-    const result = await db.select().from(architectsTable).where(eq(architectsTable.id, id)).limit(1);
+    const result = await db.select().from(architects).where(eq(architects.id, id)).limit(1);
     return result.length > 0 ? result[0] : null;
   } catch (error) {
     console.error('[Database] Failed to get architect by id:', error);
@@ -564,7 +544,6 @@ export async function createArchitect(data: any) {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
   try {
-    const { architects: architectsTable } = await import('../drizzle/schema');
     
     const architectData = {
       name: data.name,
@@ -581,7 +560,7 @@ export async function createArchitect(data: any) {
       updatedAt: new Date(),
     };
     
-    const result = await db.insert(architectsTable).values(architectData);
+    const result = await db.insert(architects).values(architectData);
     return result;
   } catch (error) {
     console.error('[Database] Failed to create architect:', error);
@@ -593,7 +572,6 @@ export async function updateArchitect(id: number, data: any) {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
   try {
-    const { architects: architectsTable } = await import('../drizzle/schema');
     
     const validFields: any = {
       name: data.name,
@@ -610,7 +588,7 @@ export async function updateArchitect(id: number, data: any) {
     
     Object.keys(validFields).forEach(key => validFields[key] === undefined && delete validFields[key]);
     
-    await db.update(architectsTable).set(validFields).where(eq(architectsTable.id, id));
+    await db.update(architects).set(validFields).where(eq(architects.id, id));
   } catch (error) {
     console.error('[Database] Failed to update architect:', error);
     throw error;
@@ -621,8 +599,7 @@ export async function deleteArchitect(id: number) {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
   try {
-    const { architects: architectsTable } = await import('../drizzle/schema');
-    await db.delete(architectsTable).where(eq(architectsTable.id, id));
+    await db.delete(architects).where(eq(architects.id, id));
   } catch (error) {
     console.error('[Database] Failed to delete architect:', error);
     throw error;
@@ -634,8 +611,7 @@ export async function getAllAllocations() {
   const db = await getDb();
   if (!db) return [];
   try {
-    const { allocations: allocationsTable } = await import('../drizzle/schema');
-    return await db.select().from(allocationsTable);
+    return await db.select().from(allocations);
   } catch (error) {
     console.error('[Database] Failed to get all allocations:', error);
     return [];
@@ -646,8 +622,7 @@ export async function getAllocationsByWorkId(workId: number) {
   const db = await getDb();
   if (!db) return [];
   try {
-    const { allocations: allocationsTable } = await import('../drizzle/schema');
-    return await db.select().from(allocationsTable).where(eq(allocationsTable.workId, workId));
+    return await db.select().from(allocations).where(eq(allocations.workId, workId));
   } catch (error) {
     console.error('[Database] Failed to get allocations by work id:', error);
     return [];
@@ -658,8 +633,7 @@ export async function getAllocationById(id: number) {
   const db = await getDb();
   if (!db) return null;
   try {
-    const { allocations: allocationsTable } = await import('../drizzle/schema');
-    const result = await db.select().from(allocationsTable).where(eq(allocationsTable.id, id)).limit(1);
+    const result = await db.select().from(allocations).where(eq(allocations.id, id)).limit(1);
     return result.length > 0 ? result[0] : null;
   } catch (error) {
     console.error('[Database] Failed to get allocation by id:', error);
@@ -672,7 +646,6 @@ export async function createAllocation(data: any) {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
   try {
-    const { allocations: allocationsTable, works: worksTable } = await import('../drizzle/schema');
     
     // Clean baseValue: remove "R$", spaces, and convert comma to dot
     let cleanBaseValue = data.baseValue;
@@ -690,7 +663,7 @@ export async function createAllocation(data: any) {
     
     // If workId is provided, verify it exists
     if (workId) {
-      const workExists = await db.select().from(worksTable).where(eq(worksTable.id, workId)).limit(1);
+      const workExists = await db.select().from(works).where(eq(works.id, workId)).limit(1);
       if (workExists.length === 0) {
         throw new Error(`Work with ID ${workId} does not exist`);
       }
@@ -714,7 +687,7 @@ export async function createAllocation(data: any) {
     };
     
     console.log('[Database] Inserting allocation with workId:', workId);
-    const result = await db.insert(allocationsTable).values(allocationData);
+    const result = await db.insert(allocations).values(allocationData);
     return result;
   } catch (error) {
     console.error('[Database] Failed to create allocation:', error);
@@ -726,7 +699,6 @@ export async function updateAllocation(id: number, data: any) {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
   try {
-    const { allocations: allocationsTable } = await import('../drizzle/schema');
     
     // Clean baseValue: remove "R$", spaces, and convert comma to dot
     let cleanBaseValue = data.baseValue;
@@ -752,7 +724,7 @@ export async function updateAllocation(id: number, data: any) {
     
     Object.keys(validFields).forEach(key => validFields[key] === undefined && delete validFields[key]);
     
-    await db.update(allocationsTable).set(validFields).where(eq(allocationsTable.id, id));
+    await db.update(allocations).set(validFields).where(eq(allocations.id, id));
   } catch (error) {
     console.error('[Database] Failed to update allocation:', error);
     throw error;
@@ -763,10 +735,79 @@ export async function deleteAllocation(id: number) {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
   try {
-    const { allocations: allocationsTable } = await import('../drizzle/schema');
-    await db.delete(allocationsTable).where(eq(allocationsTable.id, id));
+    await db.delete(allocations).where(eq(allocations.id, id));
   } catch (error) {
     console.error('[Database] Failed to delete allocation:', error);
+    throw error;
+  }
+}
+
+// Categories queries
+export async function getAllCategories() {
+  const db = await getDb();
+  if (!db) return [];
+  try {
+    return await db.select().from(categories);
+  } catch (error) {
+    console.error('[Database] Failed to get all categories:', error);
+    return [];
+  }
+}
+
+export async function createCategory(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  try {
+    const result = await db.insert(categories).values(data);
+    return result;
+  } catch (error) {
+    console.error('[Database] Failed to create category:', error);
+    throw error;
+  }
+}
+
+export async function deleteCategory(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  try {
+    await db.delete(categories).where(eq(categories.id, id));
+  } catch (error) {
+    console.error('[Database] Failed to delete category:', error);
+    throw error;
+  }
+}
+
+// Remunerations queries
+export async function getAllRemunerations() {
+  const db = await getDb();
+  if (!db) return [];
+  try {
+    return await db.select().from(remunerations);
+  } catch (error) {
+    console.error('[Database] Failed to get all remunerations:', error);
+    return [];
+  }
+}
+
+export async function createRemuneration(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  try {
+    const result = await db.insert(remunerations).values(data);
+    return result;
+  } catch (error) {
+    console.error('[Database] Failed to create remuneration:', error);
+    throw error;
+  }
+}
+
+export async function deleteRemuneration(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  try {
+    await db.delete(remunerations).where(eq(remunerations.id, id));
+  } catch (error) {
+    console.error('[Database] Failed to delete remuneration:', error);
     throw error;
   }
 }
