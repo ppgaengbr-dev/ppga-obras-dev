@@ -29,13 +29,6 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 }
 
 async function startServer() {
-  // LOG DATABASE_URL FOR DEBUGGING
-  console.log('\n=== SERVER STARTUP ===');
-  console.log('[ENV] DATABASE_URL:', process.env.DATABASE_URL);
-  console.log('[ENV] NODE_ENV:', process.env.NODE_ENV);
-  console.log('[ENV] PORT:', process.env.PORT);
-  console.log('======================\n');
-  
   const app = express();
   const server = createServer(app);
   // Configure body parser with larger size limit for file uploads
