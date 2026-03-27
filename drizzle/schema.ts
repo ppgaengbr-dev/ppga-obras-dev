@@ -12,18 +12,35 @@ export const users = mysqlTable("users", {
    */
   id: int("id").autoincrement().primaryKey(),
   /** Manus OAuth identifier (openId) returned from the OAuth callback. Unique per user. */
-  openId: varchar("openId", { length: 64 }).notNull().unique(),
+  openId: varchar("openId", { length: 64 }).unique(),
   name: text("name"),
-  email: varchar("email", { length: 320 }),
+  email: varchar("email", { length: 320 }).unique(),
+  password: text("password"), // bcrypt hashed password
   loginMethod: varchar("loginMethod", { length: 64 }),
-  role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  role: mysqlEnum("role", ["ADMIN", "CLIENTE", "ARQUITETO", "PRESTADOR"]).default("CLIENTE").notNull(),
+  status: mysqlEnum("status", ["PENDING", "APPROVED", "BLOCKED"]).default("PENDING").notNull(),
+  linkedType: mysqlEnum("linkedType", ["CLIENTE", "ARQUITETO", "PRESTADOR"]),
+  linkedId: int("linkedId"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-  lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
+  lastSignedIn: timestamp("lastSignedIn"),
 });
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
+
+// Password requests table for password change flow
+export const passwordRequests = mysqlTable("passwordRequests", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  newPassword: text("newPassword").notNull(), // bcrypt hashed
+  status: mysqlEnum("status", ["PENDING", "APPROVED", "REJECTED"]).default("PENDING").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PasswordRequest = typeof passwordRequests.$inferSelect;
+export type InsertPasswordRequest = typeof passwordRequests.$inferInsert;
 
 // Architects table
 export const architects = mysqlTable("architects", {

@@ -1,8 +1,9 @@
-import { eq } from 'drizzle-orm';
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, clients, works, providers, architects, allocations, categories, remunerations } from "../drizzle/schema";
+import { InsertUser, users, clients, works, providers, architects, allocations, categories, remunerations, passwordRequests } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import mysql from 'mysql2/promise';
+import { eq, and } from 'drizzle-orm';
+import bcrypt from 'bcryptjs';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 let _pool: mysql.Pool | null = null;
@@ -808,6 +809,207 @@ export async function deleteRemuneration(id: number) {
     await db.delete(remunerations).where(eq(remunerations.id, id));
   } catch (error) {
     console.error('[Database] Failed to delete remuneration:', error);
+    throw error;
+  }
+}
+
+}
+
+// ============================================
+// AUTHENTICATION FUNCTIONS
+// ============================================
+
+export async function getUserByEmail(email: string) {
+  const db = await getDb();
+  if (!db) return null;
+  try {
+    const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    return result.length > 0 ? result[0] : null;
+  } catch (error) {
+    console.error('[Database] Failed to get user by email:', error);
+    return null;
+  }
+}
+
+export async function getUserById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  try {
+    const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
+    return result.length > 0 ? result[0] : null;
+  } catch (error) {
+    console.error('[Database] Failed to get user by id:', error);
+    return null;
+  }
+}
+
+export async function createUser(data: {
+  name: string;
+  email: string;
+  password: string;
+  role?: string;
+  status?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  
+  try {
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+    
+    const result = await db.insert(users).values({
+      name: data.name,
+      email: data.email,
+      password: hashedPassword,
+      role: (data.role || 'CLIENTE') as any,
+      status: (data.status || 'PENDING') as any,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    
+    return result;
+  } catch (error) {
+    console.error('[Database] Failed to create user:', error);
+    throw error;
+  }
+}
+
+export async function verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
+  try {
+    return await bcrypt.compare(password, hashedPassword);
+  } catch (error) {
+    console.error('[Database] Failed to verify password:', error);
+    return false;
+  }
+}
+
+export async function updateUserStatus(userId: number, status: string, role?: string, linkedType?: string | null, linkedId?: number | null) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  
+  try {
+    const updateData: any = {
+      status: status as any,
+      updatedAt: new Date(),
+    };
+    
+    if (role) updateData.role = role as any;
+    if (linkedType) updateData.linkedType = linkedType as any;
+    if (linkedId) updateData.linkedId = linkedId;
+    
+    await db.update(users).set(updateData).where(eq(users.id, userId));
+  } catch (error) {
+    console.error('[Database] Failed to update user status:', error);
+    throw error;
+  }
+}
+
+export async function getAllUsers() {
+  const db = await getDb();
+  if (!db) return [];
+  try {
+    return await db.select().from(users);
+  } catch (error) {
+    console.error('[Database] Failed to get all users:', error);
+    return [];
+  }
+}
+
+export async function getPendingUsers() {
+  const db = await getDb();
+  if (!db) return [];
+  try {
+    return await db.select().from(users).where(eq(users.status, 'PENDING'));
+  } catch (error) {
+    console.error('[Database] Failed to get pending users:', error);
+    return [];
+  }
+}
+
+export async function createPasswordRequest(userId: number, newPassword: string) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  
+  try {
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    
+    const result = await db.insert(passwordRequests).values({
+      userId,
+      newPassword: hashedPassword,
+      status: 'PENDING' as any,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    
+    return result;
+  } catch (error) {
+    console.error('[Database] Failed to create password request:', error);
+    throw error;
+  }
+}
+
+export async function getPasswordRequestsByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  try {
+    return await db.select().from(passwordRequests).where(eq(passwordRequests.userId, userId));
+  } catch (error) {
+    console.error('[Database] Failed to get password requests:', error);
+    return [];
+  }
+}
+
+export async function getPendingPasswordRequests() {
+  const db = await getDb();
+  if (!db) return [];
+  try {
+    return await db.select().from(passwordRequests).where(eq(passwordRequests.status, 'PENDING'));
+  } catch (error) {
+    console.error('[Database] Failed to get pending password requests:', error);
+    return [];
+  }
+}
+
+export async function approvePasswordRequest(requestId: number) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  
+  try {
+    const request = await db.select().from(passwordRequests).where(eq(passwordRequests.id, requestId)).limit(1);
+    
+    if (request.length === 0) {
+      throw new Error('Password request not found');
+    }
+    
+    const req = request[0];
+    
+    // Update password request status
+    await db.update(passwordRequests).set({
+      status: 'APPROVED' as any,
+      updatedAt: new Date(),
+    }).where(eq(passwordRequests.id, requestId));
+    
+    // Update user password
+    await db.update(users).set({
+      password: req.newPassword,
+      updatedAt: new Date(),
+    }).where(eq(users.id, req.userId));
+  } catch (error) {
+    console.error('[Database] Failed to approve password request:', error);
+    throw error;
+  }
+}
+
+export async function rejectPasswordRequest(requestId: number) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  
+  try {
+    await db.update(passwordRequests).set({
+      status: 'REJECTED' as any,
+      updatedAt: new Date(),
+    }).where(eq(passwordRequests.id, requestId));
+  } catch (error) {
+    console.error('[Database] Failed to reject password request:', error);
     throw error;
   }
 }

@@ -7,7 +7,7 @@ import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
-
+import { runMigrations } from "../migrations";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -29,13 +29,6 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 }
 
 async function startServer() {
-  // LOG DATABASE_URL FOR DEBUGGING
-  console.log('\n=== SERVER STARTUP ===');
-  console.log('[ENV] DATABASE_URL:', process.env.DATABASE_URL);
-  console.log('[ENV] NODE_ENV:', process.env.NODE_ENV);
-  console.log('[ENV] PORT:', process.env.PORT);
-  console.log('======================\n');
-  
   const app = express();
   const server = createServer(app);
   // Configure body parser with larger size limit for file uploads
@@ -44,9 +37,41 @@ async function startServer() {
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
   
+  // Migrations are now manual - run via endpoint or CLI script
+  // See /api/migrate-once endpoint or pnpm migrate command
+  
   // Health check endpoint
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+  
+  // Temporary migration endpoint - execute once then remove
+  app.get('/api/migrate-once', async (req, res) => {
+    try {
+      console.log('[Migrate-Once] Starting database migrations...');
+      await runMigrations();
+      console.log('[Migrate-Once] Migrations completed successfully');
+      res.json({ 
+        success: true, 
+        message: 'Migrations executed successfully',
+        info: 'IMPORTANT: Remove this endpoint from code after first execution',
+        timestamp: new Date().toISOString()
+      });
+    } catch (error: any) {
+      console.error('[Migrate-Once] Error:', error.message);
+      res.status(500).json({ 
+        success: false, 
+        message: error.message
+      });
+    }
+  });
+  
+  // Legacy setup-db endpoint (deprecated)
+  app.get('/api/setup-db', (req, res) => {
+    res.json({ 
+      success: false, 
+      message: 'This endpoint is deprecated. Use /api/migrate-once instead.'
+    });
   });
   
   // Old migrations code (commented out - no longer needed)

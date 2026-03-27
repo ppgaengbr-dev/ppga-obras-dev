@@ -1,8 +1,11 @@
 import { z } from "zod";
 import { notifyOwner } from "./notification";
 import { adminProcedure, publicProcedure, router } from "./trpc";
+import { VERSION_INFO } from "./version";
 
 export const systemRouter = router({
+  version: publicProcedure.query(() => VERSION_INFO),
+
   health: publicProcedure
     .input(
       z.object({
