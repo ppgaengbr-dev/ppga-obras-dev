@@ -49,7 +49,7 @@ function InternalRouter() {
       actionButton={getActionButton()}
     >
       <Switch>
-        <Route path={"/("} component={Dashboard} />
+        <Route path={"/"} component={Dashboard} />
         <Route path={"/clients"} component={Clients} />
         <Route path={"/clients-summary"} component={ClientsSummary} />
         <Route path={"/architects"} component={Architects} />
@@ -75,7 +75,7 @@ function Router() {
     <Switch>
       <Route path={"/login"} component={LoginPage} />
       <Route path={"/register"} component={RegisterPage} />
-      <Route path={"/(.*)"}  component={InternalRouter} />
+       <Route path={"/:rest*"} component={InternalRouter} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>
