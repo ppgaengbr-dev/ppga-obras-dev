@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'wouter';
-import { trpc } from '../_core/trpc';
+import { trpc } from '@/lib/trpc';
 
 export function RegisterPage() {
   const [, navigate] = useNavigate();

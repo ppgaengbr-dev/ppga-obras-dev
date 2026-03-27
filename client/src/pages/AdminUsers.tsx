@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { trpc } from '../_core/trpc';
+import { trpc } from '@/lib/trpc';
 
 export function AdminUsersPage() {
   const [selectedUser, setSelectedUser] = useState<any>(null);
