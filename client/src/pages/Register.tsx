@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link } from 'wouter';
 import { trpc } from '../_core/trpc';
 
 export function RegisterPage() {
-  const navigate = useNavigate();
+  const [, navigate] = useNavigate();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -178,7 +178,7 @@ export function RegisterPage() {
           <div className="text-center">
             <p className="text-gray-600 text-sm">
               Já tem uma conta?{' '}
-              <Link to="/login" className="text-blue-600 hover:text-blue-700 font-semibold">
+              <Link href="/login" className="text-blue-600 hover:text-blue-700 font-semibold">
                 Fazer login
               </Link>
             </p>
