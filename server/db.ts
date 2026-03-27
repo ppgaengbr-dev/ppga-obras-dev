@@ -813,8 +813,6 @@ export async function deleteRemuneration(id: number) {
   }
 }
 
-}
-
 // ============================================
 // AUTHENTICATION FUNCTIONS
 // ============================================
