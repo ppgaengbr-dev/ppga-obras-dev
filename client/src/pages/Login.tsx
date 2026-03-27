@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'wouter';
+import { useLocation, Link } from 'wouter';
 import { trpc } from '@/lib/trpc';
 
 export function LoginPage() {
-  const [, navigate] = useNavigate();
+  const [, setLocation] = useLocation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
@@ -17,7 +17,7 @@ export function LoginPage() {
         if (rememberMe) {
           localStorage.setItem('rememberMe', 'true');
         }
-        navigate('/');
+        setLocation('/');
       }
     },
     onError: (error: any) => {

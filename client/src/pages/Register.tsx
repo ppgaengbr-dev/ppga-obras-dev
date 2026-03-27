@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'wouter';
+import { useLocation, Link } from 'wouter';
 import { trpc } from '@/lib/trpc';
 
 export function RegisterPage() {
-  const [, navigate] = useNavigate();
+  const [, setLocation] = useLocation();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -18,7 +18,7 @@ export function RegisterPage() {
         setSuccess(data.message);
         setError('');
         setTimeout(() => {
-          navigate('/login');
+          setLocation('/login');
         }, 2000);
       }
     },

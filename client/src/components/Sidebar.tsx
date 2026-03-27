@@ -1,5 +1,5 @@
 import { useSidebar } from "@/contexts/SidebarContext";
-import { useLocation, useNavigate } from "wouter";
+import { useLocation } from "wouter";
 import {
   ChevronLeft,
   LayoutDashboard,
@@ -57,13 +57,12 @@ const secondaryNavItems: NavItem[] = [
 
 export default function Sidebar() {
   const { isCollapsed, toggleSidebar } = useSidebar();
-  const [location] = useLocation();
-  const [, navigate] = useNavigate();
+  const [location, setLocation] = useLocation();
 
   const handleLogout = () => {
     localStorage.removeItem('auth_token');
     sessionStorage.clear();
-    navigate('/login');
+    setLocation('/login');
   };
 
   const isActive = (href: string) => {
