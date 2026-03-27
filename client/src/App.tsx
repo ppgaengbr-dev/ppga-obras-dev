@@ -1,6 +1,7 @@
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 import { Route, Switch, useLocation } from "wouter";
+import { useEffect, useState } from "react";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { SidebarProvider } from "./contexts/SidebarContext";
@@ -71,6 +72,29 @@ function InternalRouter() {
 }
 
 function Router() {
+  const [, setLocation] = useLocation();
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    // Check if user has auth token
+    const token = localStorage.getItem('auth_token');
+    setIsAuthenticated(!!token);
+  }, []);
+
+  // Redirect to login if not authenticated and trying to access protected routes
+  useEffect(() => {
+    const currentPath = window.location.pathname;
+    const isPublicRoute = currentPath === '/login' || currentPath === '/register';
+    
+    if (isAuthenticated === false && !isPublicRoute) {
+      setLocation('/login');
+    }
+  }, [isAuthenticated, setLocation]);
+
+  if (isAuthenticated === null) {
+    return <div className="flex items-center justify-center h-screen">Carregando...</div>;
+  }
+
   return (
     <Switch>
       <Route path={"/login"} component={LoginPage} />
