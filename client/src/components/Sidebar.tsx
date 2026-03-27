@@ -1,5 +1,5 @@
 import { useSidebar } from "@/contexts/SidebarContext";
-import { useLocation } from "wouter";
+import { useLocation, useNavigate } from "wouter";
 import {
   ChevronLeft,
   LayoutDashboard,
@@ -12,6 +12,7 @@ import {
   Globe,
   Instagram,
   Menu,
+  LogOut,
 } from "lucide-react";
 import { Link } from "wouter";
 
@@ -57,6 +58,13 @@ const secondaryNavItems: NavItem[] = [
 export default function Sidebar() {
   const { isCollapsed, toggleSidebar } = useSidebar();
   const [location] = useLocation();
+  const [, navigate] = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem('auth_token');
+    sessionStorage.clear();
+    navigate('/login');
+  };
 
   const isActive = (href: string) => {
     if (href === "/") return location === "/";
@@ -141,6 +149,16 @@ export default function Sidebar() {
 
       {/* Footer com Informações do Usuário */}
       <div className="p-4 border-t border-sidebar-border">
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-normal transition-all duration-150 hover:bg-red-600/20 group mb-3"
+          title={isCollapsed ? "Sair" : ""}
+        >
+          <span className="flex-shrink-0 text-sidebar-foreground group-hover:text-red-500 transition-colors">
+            <LogOut size={20} />
+          </span>
+          {!isCollapsed && <span className="truncate text-red-500 group-hover:text-red-600">Sair</span>}
+        </button>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gradient-to-br from-sidebar-accent to-secondary rounded-full flex items-center justify-center flex-shrink-0">
             <span className="text-sidebar-accent-foreground font-display font-bold text-xs">RA</span>

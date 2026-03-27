@@ -21,6 +21,9 @@ import Works from "./pages/Works";
 import Schedule from "./pages/Schedule";
 import Settings from "./pages/Settings";
 import { getRouteHeaderConfig } from "./config/routeHeaderConfig";
+import { LoginPage } from "./pages/Login";
+import { RegisterPage } from "./pages/Register";
+import { AdminUsersPage } from "./pages/AdminUsers";
 
 function InternalRouter() {
   const [location] = useLocation();
@@ -46,7 +49,7 @@ function InternalRouter() {
       actionButton={getActionButton()}
     >
       <Switch>
-        <Route path={"/"} component={Dashboard} />
+        <Route path={"/("} component={Dashboard} />
         <Route path={"/clients"} component={Clients} />
         <Route path={"/clients-summary"} component={ClientsSummary} />
         <Route path={"/architects"} component={Architects} />
@@ -60,6 +63,7 @@ function InternalRouter() {
         <Route path={"/works"} component={Works} />
         <Route path={"/timeline"} component={Schedule} />
         <Route path={"/settings"} component={Settings} />
+        <Route path={"/admin/users"} component={AdminUsersPage} />
         <Route component={NotFound} />
       </Switch>
     </DashboardLayout>
@@ -69,7 +73,9 @@ function InternalRouter() {
 function Router() {
   return (
     <Switch>
-      <Route path={"/(.*)"} component={InternalRouter} />
+      <Route path={"/login"} component={LoginPage} />
+      <Route path={"/register"} component={RegisterPage} />
+      <Route path={"/(.*)"}  component={InternalRouter} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>
