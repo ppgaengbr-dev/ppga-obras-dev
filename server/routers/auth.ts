@@ -374,6 +374,51 @@ export const authRouter = router({
       }
     }),
 
+  // Admin: Get all architects
+  getArchitects: adminProcedure.query(async () => {
+    try {
+      const db = await import('../db');
+      const architects = await db.getAllArchitects();
+      return architects.map((a) => ({
+        id: a.id,
+        name: a.name || a.architectName || 'Sem nome',
+      }));
+    } catch (error: any) {
+      console.error('[Auth] Get architects error:', error);
+      throw error;
+    }
+  }),
+
+  // Admin: Get all clients
+  getClients: adminProcedure.query(async () => {
+    try {
+      const db = await import('../db');
+      const clients = await db.getAllClients();
+      return clients.map((c) => ({
+        id: c.id,
+        name: c.fullName || 'Sem nome',
+      }));
+    } catch (error: any) {
+      console.error('[Auth] Get clients error:', error);
+      throw error;
+    }
+  }),
+
+  // Admin: Get all providers
+  getProviders: adminProcedure.query(async () => {
+    try {
+      const db = await import('../db');
+      const providers = await db.getAllProviders();
+      return providers.map((p) => ({
+        id: p.id,
+        name: p.fullName || 'Sem nome',
+      }));
+    } catch (error: any) {
+      console.error('[Auth] Get providers error:', error);
+      throw error;
+    }
+  }),
+
   // Seed: Create initial admin user
   seed: publicProcedure.mutation(async () => {
     try {

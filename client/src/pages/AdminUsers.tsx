@@ -1,11 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
 
 export function AdminUsersPage() {
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [showApprovalModal, setShowApprovalModal] = useState(false);
   const [selectedRole, setSelectedRole] = useState('CLIENTE');
-  const [selectedLinkedType, setSelectedLinkedType] = useState<string | null>(null);
   const [selectedLinkedId, setSelectedLinkedId] = useState<number | null>(null);
 
   // Fetch pending users
@@ -14,25 +23,53 @@ export function AdminUsersPage() {
   // Fetch all users
   const { data: allUsers = [] } = trpc.auth.getAllUsers.useQuery();
 
+  // Fetch entities for linking
+  const { data: architects = [] } = trpc.auth.getArchitects.useQuery();
+  const { data: clients = [] } = trpc.auth.getClients.useQuery();
+  const { data: providers = [] } = trpc.auth.getProviders.useQuery();
+
+  // Get linked entities based on selected role
+  const linkedEntities = useMemo(() => {
+    switch (selectedRole) {
+      case 'ARQUITETO':
+        return architects;
+      case 'CLIENTE':
+        return clients;
+      case 'PRESTADOR':
+        return providers;
+      default:
+        return [];
+    }
+  }, [selectedRole, architects, clients, providers]);
+
   // Mutations
   const approveMutation = trpc.auth.approveUser.useMutation({
     onSuccess: () => {
       setShowApprovalModal(false);
       setSelectedUser(null);
+      setSelectedRole('CLIENTE');
+      setSelectedLinkedId(null);
       refetchPending();
+      toast.success('Usuário aprovado com sucesso');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Erro ao aprovar usuário');
     },
   });
 
   const blockMutation = trpc.auth.blockUser.useMutation({
     onSuccess: () => {
       refetchPending();
+      toast.success('Usuário bloqueado com sucesso');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Erro ao bloquear usuário');
     },
   });
 
   const handleApprove = (user: any) => {
     setSelectedUser(user);
     setSelectedRole('CLIENTE');
-    setSelectedLinkedType(null);
     setSelectedLinkedId(null);
     setShowApprovalModal(true);
   };
@@ -42,8 +79,8 @@ export function AdminUsersPage() {
 
     // Validate linked fields for non-ADMIN roles
     if (selectedRole !== 'ADMIN') {
-      if (!selectedLinkedType || !selectedLinkedId) {
-        alert('Selecione um vínculo obrigatório para usuários não-ADMIN');
+      if (!selectedLinkedId) {
+        toast.error('Selecione uma entidade para vincular');
         return;
       }
     }
@@ -51,8 +88,8 @@ export function AdminUsersPage() {
     approveMutation.mutate({
       userId: selectedUser.id,
       role: selectedRole,
-      linkedType: selectedLinkedType,
-      linkedId: selectedLinkedId,
+      linkedType: selectedRole === 'ADMIN' ? null : selectedRole,
+      linkedId: selectedRole === 'ADMIN' ? null : selectedLinkedId,
     });
   };
 
@@ -178,86 +215,76 @@ export function AdminUsersPage() {
       </div>
 
       {/* Approval Modal */}
-      {showApprovalModal && selectedUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">
-              Aprovar Usuário: {selectedUser.name}
-            </h3>
+      <Dialog open={showApprovalModal} onOpenChange={setShowApprovalModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Aprovar Usuário: {selectedUser?.name}</DialogTitle>
+          </DialogHeader>
 
-            <div className="space-y-4">
-              {/* Role Selection */}
+          <div className="space-y-4 py-4">
+            {/* Role Selection */}
+            <div>
+              <Label htmlFor="role" className="text-sm font-medium text-gray-700">
+                Função
+              </Label>
+              <select
+                id="role"
+                value={selectedRole}
+                onChange={(e) => {
+                  setSelectedRole(e.target.value);
+                  setSelectedLinkedId(null);
+                }}
+                className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="ADMIN">ADMIN</option>
+                <option value="CLIENTE">CLIENTE</option>
+                <option value="ARQUITETO">ARQUITETO</option>
+                <option value="PRESTADOR">PRESTADOR</option>
+              </select>
+            </div>
+
+            {/* Linked Entity Selection (if not ADMIN) */}
+            {selectedRole !== 'ADMIN' && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Função
-                </label>
+                <Label htmlFor="linked-entity" className="text-sm font-medium text-gray-700">
+                  {selectedRole === 'ARQUITETO' && 'Selecione um Arquiteto'}
+                  {selectedRole === 'CLIENTE' && 'Selecione um Cliente'}
+                  {selectedRole === 'PRESTADOR' && 'Selecione um Prestador'}
+                </Label>
                 <select
-                  value={selectedRole}
-                  onChange={(e) => setSelectedRole(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  id="linked-entity"
+                  value={selectedLinkedId || ''}
+                  onChange={(e) => setSelectedLinkedId(e.target.value ? parseInt(e.target.value) : null)}
+                  className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="ADMIN">ADMIN</option>
-                  <option value="CLIENTE">CLIENTE</option>
-                  <option value="ARQUITETO">ARQUITETO</option>
-                  <option value="PRESTADOR">PRESTADOR</option>
+                  <option value="">Selecione...</option>
+                  {linkedEntities.map((entity: any) => (
+                    <option key={entity.id} value={entity.id}>
+                      {entity.name}
+                    </option>
+                  ))}
                 </select>
               </div>
-
-              {/* Linked Type Selection (if not ADMIN) */}
-              {selectedRole !== 'ADMIN' && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Tipo de Vínculo
-                    </label>
-                    <select
-                      value={selectedLinkedType || ''}
-                      onChange={(e) => setSelectedLinkedType(e.target.value || null)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Selecione...</option>
-                      <option value="CLIENTE">CLIENTE</option>
-                      <option value="ARQUITETO">ARQUITETO</option>
-                      <option value="PRESTADOR">PRESTADOR</option>
-                    </select>
-                  </div>
-
-                  {/* Linked ID Input */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      ID do Vínculo
-                    </label>
-                    <input
-                      type="number"
-                      value={selectedLinkedId || ''}
-                      onChange={(e) => setSelectedLinkedId(e.target.value ? parseInt(e.target.value) : null)}
-                      placeholder="ID da entidade vinculada"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* Buttons */}
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={() => setShowApprovalModal(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-semibold"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleApprovalSubmit}
-                disabled={approveMutation.isPending}
-                className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded-lg font-semibold"
-              >
-                {approveMutation.isPending ? 'Aprovando...' : 'Aprovar'}
-              </button>
-            </div>
+            )}
           </div>
-        </div>
-      )}
+
+          <DialogFooter className="flex gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setShowApprovalModal(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleApprovalSubmit}
+              disabled={approveMutation.isPending}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {approveMutation.isPending ? 'Aprovando...' : 'Aprovar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
