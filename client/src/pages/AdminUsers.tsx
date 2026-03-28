@@ -1,4 +1,6 @@
-import React, { useState, useMemo } from 'react';
+'use client';
+
+import { useState, useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import {
   Dialog,
@@ -99,13 +101,54 @@ export function AdminUsersPage() {
     }
   };
 
+  // Função para traduzir role
+  const translateRole = (role: string) => {
+    const translations: Record<string, string> = {
+      'ADMIN': 'Administrador',
+      'CLIENTE': 'Cliente',
+      'ARQUITETO': 'Arquiteto',
+      'PRESTADOR': 'Prestador',
+    };
+    return translations[role] || role;
+  };
+
+  // Função para traduzir status
+  const translateStatus = (status: string) => {
+    const translations: Record<string, string> = {
+      'APPROVED': 'Aprovado',
+      'BLOCKED': 'Bloqueado',
+      'PENDING': 'Pendente',
+    };
+    return translations[status] || status;
+  };
+
+  // Função para obter o nome da entidade vinculada
+  const getLinkedEntityName = (user: any) => {
+    if (!user.linkedType || !user.linkedId) return 'Sem vínculo';
+    
+    let entities: any[] = [];
+    switch (user.linkedType) {
+      case 'ARQUITETO':
+        entities = architects;
+        break;
+      case 'CLIENTE':
+        entities = clients;
+        break;
+      case 'PRESTADOR':
+        entities = providers;
+        break;
+    }
+    
+    const entity = entities.find(e => e.id === user.linkedId);
+    return entity ? entity.name : 'Sem vínculo';
+  };
+
   return (
     <div className="p-6">
       <div className="max-w-6xl mx-auto">
-        {/* Header */}
+        {/* Header - Removido cabeçalho duplicado */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Gestão de Usuários</h1>
-          <p className="text-gray-600 mt-2">Configurações → Usuários</p>
         </div>
 
         {/* Pending Users Section */}
@@ -135,7 +178,7 @@ export function AdminUsersPage() {
                       <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
                       <td className="px-6 py-4 text-sm">
                         <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">
-                          {user.status}
+                          {translateStatus(user.status)}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
@@ -188,10 +231,8 @@ export function AdminUsersPage() {
                     <tr key={user.id} className="border-b hover:bg-gray-50">
                       <td className="px-6 py-4 text-sm text-gray-900">{user.name}</td>
                       <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
-                      <td className="px-6 py-4 text-sm">
-                        <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
-                          {user.role}
-                        </span>
+                      <td className="px-6 py-4 text-sm text-gray-700">
+                        {translateRole(user.role)}
                       </td>
                       <td className="px-6 py-4 text-sm">
                         <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
@@ -199,11 +240,11 @@ export function AdminUsersPage() {
                           user.status === 'BLOCKED' ? 'bg-red-100 text-red-800' :
                           'bg-yellow-100 text-yellow-800'
                         }`}>
-                          {user.status}
+                          {translateStatus(user.status)}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
-                        {user.linkedType ? `${user.linkedType} (ID: ${user.linkedId})` : 'Sem vínculo'}
+                        {getLinkedEntityName(user)}
                       </td>
                     </tr>
                   ))}
@@ -236,10 +277,10 @@ export function AdminUsersPage() {
                 }}
                 className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="ADMIN">ADMIN</option>
-                <option value="CLIENTE">CLIENTE</option>
-                <option value="ARQUITETO">ARQUITETO</option>
-                <option value="PRESTADOR">PRESTADOR</option>
+                <option value="ADMIN">Administrador</option>
+                <option value="CLIENTE">Cliente</option>
+                <option value="ARQUITETO">Arquiteto</option>
+                <option value="PRESTADOR">Prestador</option>
               </select>
             </div>
 
@@ -257,7 +298,7 @@ export function AdminUsersPage() {
                   onChange={(e) => setSelectedLinkedId(e.target.value ? parseInt(e.target.value) : null)}
                   className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="">Selecione...</option>
+                  <option value="">Definir</option>
                   {linkedEntities.map((entity: any) => (
                     <option key={entity.id} value={entity.id}>
                       {entity.name}
