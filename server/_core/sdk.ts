@@ -257,7 +257,22 @@ class SDKServer {
   }
 
   async authenticateRequest(req: Request): Promise<User> {
-    // Regular authentication flow
+    // Try JWT token first (for email/password login)
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      try {
+        const payload = await db.verifyJWT(token);
+        const user = await db.getUserById(payload.userId);
+        if (user) {
+          return user;
+        }
+      } catch (error) {
+        console.error('[Auth] JWT verification failed:', error);
+      }
+    }
+
+    // Fallback to OAuth cookie authentication
     const cookies = this.parseCookies(req.headers.cookie);
     const sessionCookie = cookies.get(COOKIE_NAME);
     const session = await this.verifySession(sessionCookie);

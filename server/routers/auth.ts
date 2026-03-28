@@ -77,8 +77,12 @@ export const authRouter = router({
         // Update lastSignedIn
         await db.updateUserStatus(user.id, user.status);
 
+        // Generate JWT token
+        const token = await db.generateJWT(user.id, user.email, user.role || 'CLIENTE');
+
         return {
           success: true,
+          token,
           user: {
             id: user.id,
             name: user.name,

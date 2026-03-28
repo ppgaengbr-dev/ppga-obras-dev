@@ -4,9 +4,15 @@ import { ENV } from './_core/env';
 import mysql from 'mysql2/promise';
 import { eq, and } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
+import { SignJWT, jwtVerify } from 'jose';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 let _pool: mysql.Pool | null = null;
+
+// JWT Secret key
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET || 'dev-secret-key-change-in-production'
+);
 
 // Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
@@ -19,6 +25,36 @@ export async function getDb() {
     }
   }
   return _db;
+}
+
+// Generate JWT token for user
+export async function generateJWT(userId: number, email: string, role: string): Promise<string> {
+  try {
+    const token = await new SignJWT({
+      userId,
+      email,
+      role,
+      iat: Math.floor(Date.now() / 1000),
+    })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setExpirationTime('7d')
+      .sign(JWT_SECRET);
+    return token;
+  } catch (error) {
+    console.error('[JWT] Error generating token:', error);
+    throw new Error('Failed to generate JWT token');
+  }
+}
+
+// Verify JWT token
+export async function verifyJWT(token: string): Promise<{ userId: number; email: string; role: string }> {
+  try {
+    const verified = await jwtVerify(token, JWT_SECRET);
+    return verified.payload as any;
+  } catch (error) {
+    console.error('[JWT] Error verifying token:', error);
+    throw new Error('Invalid JWT token');
+  }
 }
 
 // Get raw MySQL connection pool for transactions

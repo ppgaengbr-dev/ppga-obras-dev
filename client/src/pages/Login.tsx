@@ -12,9 +12,10 @@ export function LoginPage() {
 
   const loginMutation = trpc.auth.login.useMutation({
     onSuccess: (data) => {
-      if (data.success) {
-        // Store auth token
-        localStorage.setItem('auth_token', data.token || 'authenticated');
+      if (data.success && data.token) {
+        // Store JWT token
+        localStorage.setItem('auth_token', data.token);
+        sessionStorage.setItem('auth_token', data.token);
         if (rememberMe) {
           localStorage.setItem('rememberMe', 'true');
         }
