@@ -6,6 +6,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { SidebarProvider } from "./contexts/SidebarContext";
 import DashboardLayout from "./components/DashboardLayout";
 import { Button } from "./components/ui/button";
+import ProtectedRoute from "./components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import Clients from "./pages/Clients";
 import ClientsSummary from "./pages/ClientsSummary";
@@ -24,6 +25,7 @@ import { getRouteHeaderConfig } from "./config/routeHeaderConfig";
 import { LoginPage } from "./pages/Login";
 import { RegisterPage } from "./pages/Register";
 import { AdminUsersPage } from "./pages/AdminUsers";
+import RootRedirect from "./pages/RootRedirect";
 
 function InternalRouter() {
   const [location] = useLocation();
@@ -43,37 +45,39 @@ function InternalRouter() {
   };
 
   return (
-    <DashboardLayout 
-      title={headerConfig.title}
-      subtitle={headerConfig.subtitle}
-      actionButton={getActionButton()}
-    >
-      <Switch>
-        <Route path={"/"} component={Dashboard} />
-        <Route path={"/dashboard"} component={Dashboard} />
-        <Route path={"/clients"} component={Clients} />
-        <Route path={"/clients-summary"} component={ClientsSummary} />
-        <Route path={"/architects"} component={Architects} />
+    <ProtectedRoute>
+      <DashboardLayout 
+        title={headerConfig.title}
+        subtitle={headerConfig.subtitle}
+        actionButton={getActionButton()}
+      >
+        <Switch>
+          <Route path={"/dashboard"} component={Dashboard} />
+          <Route path={"/clients"} component={Clients} />
+          <Route path={"/clients-summary"} component={ClientsSummary} />
+          <Route path={"/architects"} component={Architects} />
 
-        <Route path={"/prestadores"} component={Prestadores} />
-        <Route path={"/allocations"} component={Allocations} />
-        <Route path={"/reports"} component={Reports} />
-        <Route path={"/budgets"} component={Budgets} />
-        <Route path={"/contracts"} component={Contracts} />
-        <Route path={"/finance"} component={Finance} />
-        <Route path={"/works"} component={Works} />
-        <Route path={"/timeline"} component={Schedule} />
-        <Route path={"/settings"} component={Settings} />
-        <Route path={"/admin/users"} component={AdminUsersPage} />
-        <Route component={NotFound} />
-      </Switch>
-    </DashboardLayout>
+          <Route path={"/prestadores"} component={Prestadores} />
+          <Route path={"/allocations"} component={Allocations} />
+          <Route path={"/reports"} component={Reports} />
+          <Route path={"/budgets"} component={Budgets} />
+          <Route path={"/contracts"} component={Contracts} />
+          <Route path={"/finance"} component={Finance} />
+          <Route path={"/works"} component={Works} />
+          <Route path={"/timeline"} component={Schedule} />
+          <Route path={"/settings"} component={Settings} />
+          <Route path={"/admin/users"} component={AdminUsersPage} />
+          <Route component={NotFound} />
+        </Switch>
+      </DashboardLayout>
+    </ProtectedRoute>
   );
 }
 
 function Router() {
   return (
     <Switch>
+      <Route path={"/"} component={RootRedirect} />
       <Route path={"/login"} component={LoginPage} />
       <Route path={"/register"} component={RegisterPage} />
       <Route path={"/:rest*"} component={InternalRouter} />
