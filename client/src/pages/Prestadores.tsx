@@ -335,12 +335,6 @@ export default function Prestadores() {
           </DialogHeader>
 
           <div className="space-y-5 py-4">
-            {/* Mensagem de erro se houver */}
-            {createPrestadorMutation.isPending && (
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
-                Salvando prestador...
-              </div>
-            )}
 
             {/* Linha 1: Nome completo | Status */}
             <div className="grid grid-cols-2 gap-4">
@@ -353,11 +347,7 @@ export default function Prestadores() {
                   placeholder="Digite o nome completo"
                   value={formData.fullName}
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                  className={`w-full bg-white border ${
-                    !formData.fullName.trim() && createPrestadorMutation.isPending
-                      ? 'border-red-500'
-                      : 'border-gray-300'
-                  }`}
+                  className="w-full bg-white border border-gray-300"
                 />
               </div>
               <div>
@@ -421,11 +411,7 @@ export default function Prestadores() {
                   Categoria <span className="text-red-500">*</span>
                 </Label>
                 <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
-                  <SelectTrigger id="category" className={`w-full bg-white border ${
-                    !formData.category && createPrestadorMutation.isPending
-                      ? 'border-red-500'
-                      : 'border-gray-300'
-                  }`}>
+                  <SelectTrigger id="category" className="w-full bg-white border border-gray-300">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -456,11 +442,7 @@ export default function Prestadores() {
                   Remuneração <span className="text-red-500">*</span>
                 </Label>
                 <Select value={formData.remuneration} onValueChange={(value) => setFormData({ ...formData, remuneration: value })}>
-                  <SelectTrigger id="remuneration" className={`w-full bg-white border ${
-                    !formData.remuneration && createPrestadorMutation.isPending
-                      ? 'border-red-500'
-                      : 'border-gray-300'
-                  }`}>
+                  <SelectTrigger id="remuneration" className="w-full bg-white border border-gray-300">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -481,11 +463,7 @@ export default function Prestadores() {
                   placeholder="R$ 0,00"
                   value={formData.baseValue}
                   onChange={(e) => setFormData({ ...formData, baseValue: formatCurrency(e.target.value) })}
-                  className={`w-full bg-white border ${
-                    !formData.baseValue.trim() && createPrestadorMutation.isPending
-                      ? 'border-red-500'
-                      : 'border-gray-300'
-                  }`}
+                  className="w-full bg-white border border-gray-300"
                 />
               </div>
             </div>

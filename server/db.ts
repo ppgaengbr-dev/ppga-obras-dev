@@ -485,15 +485,17 @@ export async function createProvider(data: any) {
     }
     
     const providerData = {
-      providerName: data.providerName,
-      officeNameProvider: data.officeNameProvider,
+      fullName: data.fullName,
       status: data.status || 'active',
-      address: data.address,
-      phone: data.phone,
+      cpf: data.cpf,
       birthDate: data.birthDate,
-      commission: data.commission,
+      address: data.address,
+      category: data.category,
       observation: data.observation,
+      remuneration: data.remuneration,
       baseValue: cleanBaseValue,
+      uniformSize: data.uniformSize,
+      shoeSize: data.shoeSize,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -521,15 +523,17 @@ export async function updateProvider(id: number, data: any) {
     }
     
     const validFields: any = {
-      providerName: data.providerName,
-      officeNameProvider: data.officeNameProvider,
+      fullName: data.fullName,
       status: data.status,
-      address: data.address,
-      phone: data.phone,
+      cpf: data.cpf,
       birthDate: data.birthDate,
-      commission: data.commission,
+      address: data.address,
+      category: data.category,
       observation: data.observation,
+      remuneration: data.remuneration,
       baseValue: cleanBaseValue,
+      uniformSize: data.uniformSize,
+      shoeSize: data.shoeSize,
     };
     
     Object.keys(validFields).forEach(key => validFields[key] === undefined && delete validFields[key]);
