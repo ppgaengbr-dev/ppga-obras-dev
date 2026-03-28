@@ -670,6 +670,72 @@ export async function getAllocationsByWorkId(workId: number) {
   }
 }
 
+export async function createAllocation(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  try {
+    // Validar campos obrigatórios
+    if (!data.workId || !data.providerId) {
+      throw new Error('workId and providerId are required');
+    }
+
+    // Filtrar apenas campos válidos
+    const validFields = ['workId', 'workName', 'providerId', 'providerName', 'service', 'startDate', 'endDate', 'startDay', 'endDay', 'week'];
+    const filteredData: any = {};
+    
+    for (const field of validFields) {
+      if (field in data) {
+        filteredData[field] = data[field];
+      }
+    }
+
+    const result = await db.insert(allocations).values(filteredData);
+    console.log('[DB] createAllocation completed successfully');
+    return result;
+  } catch (error) {
+    console.error('[Database] Failed to create allocation:', error);
+    throw error;
+  }
+}
+
+// Update allocation
+export async function updateAllocation(id: number, data: any) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  try {
+    // Filtrar apenas campos válidos
+    const validFields = ['workId', 'workName', 'providerId', 'providerName', 'service', 'startDate', 'endDate', 'startDay', 'endDay', 'week'];
+    const filteredData: any = {};
+    
+    for (const field of validFields) {
+      if (field in data) {
+        filteredData[field] = data[field];
+      }
+    }
+
+    const result = await db.update(allocations).set(filteredData).where(eq(allocations.id, id));
+    console.log('[DB] updateAllocation completed successfully');
+    return result;
+  } catch (error) {
+    console.error('[Database] Failed to update allocation:', error);
+    throw error;
+  }
+}
+
+// Delete allocation
+export async function deleteAllocation(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  try {
+    const result = await db.delete(allocations).where(eq(allocations.id, id));
+    console.log('[DB] deleteAllocation completed successfully');
+    return result;
+  } catch (error) {
+    console.error('[Database] Failed to delete allocation:', error);
+    throw error;
+  }
+}
+
 // Categories queries
 export async function getAllCategories() {
   const db = await getDb();
