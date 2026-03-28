@@ -1,4 +1,4 @@
-import { drizzle } from "drizzle-orm/mysql2";
+import { drizzle } from 'drizzle-orm/mysql2';
 import { InsertUser, users, clients, works, providers, architects, allocations, categories, remunerations, passwordRequests } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import mysql from 'mysql2/promise';
@@ -27,6 +27,28 @@ export async function getDb() {
   return _db;
 }
 
+// Get connection pool
+export async function getPool() {
+  if (!_pool && process.env.DATABASE_URL) {
+    try {
+      const url = new URL(process.env.DATABASE_URL);
+      _pool = await mysql.createPool({
+        host: url.hostname,
+        user: url.username,
+        password: url.password,
+        database: url.pathname.slice(1),
+        waitForConnections: true,
+        connectionLimit: 10,
+        queueLimit: 0,
+      });
+    } catch (error) {
+      console.warn("[Database] Failed to create pool:", error);
+      _pool = null;
+    }
+  }
+  return _pool;
+}
+
 // Generate JWT token for user
 export async function generateJWT(userId: number, email: string, role: string): Promise<string> {
   try {
@@ -50,183 +72,132 @@ export async function generateJWT(userId: number, email: string, role: string): 
 export async function verifyJWT(token: string): Promise<{ userId: number; email: string; role: string }> {
   try {
     const verified = await jwtVerify(token, JWT_SECRET);
-    return verified.payload as any;
+    return verified.payload as { userId: number; email: string; role: string };
   } catch (error) {
     console.error('[JWT] Error verifying token:', error);
     throw new Error('Invalid JWT token');
   }
 }
 
-// Get raw MySQL connection pool for transactions
-export async function getPool() {
-  if (!_pool && process.env.DATABASE_URL) {
-    try {
-      const url = new URL(process.env.DATABASE_URL);
-      _pool = mysql.createPool({
-        host: url.hostname,
-        user: url.username,
-        password: url.password,
-        database: url.pathname.slice(1),
-        port: parseInt(url.port || '3306'),
-        waitForConnections: true,
-        connectionLimit: 10,
-        queueLimit: 0,
-      });
-    } catch (error) {
-      console.warn("[Database] Failed to create pool:", error);
-      _pool = null;
-    }
-  }
-  return _pool;
-}
-
-export async function upsertUser(user: InsertUser): Promise<void> {
-  if (!user.openId) {
-    throw new Error("User openId is required for upsert");
-  }
-
+// User queries
+export async function getUserByEmail(email: string) {
   const db = await getDb();
-  if (!db) {
-    console.warn("[Database] Cannot upsert user: database not available");
-    return;
-  }
-
+  if (!db) throw new Error('Database not available');
   try {
-    const values: InsertUser = {
-      openId: user.openId,
-    };
-    const updateSet: Record<string, unknown> = {};
-
-    const textFields = ["name", "email", "loginMethod"] as const;
-    type TextField = (typeof textFields)[number];
-
-    const assignNullable = (field: TextField) => {
-      const value = user[field];
-      if (value === undefined) return;
-      const normalized = value ?? null;
-      values[field] = normalized;
-      updateSet[field] = normalized;
-    };
-
-    textFields.forEach(assignNullable);
-
-    if (user.lastSignedIn !== undefined) {
-      values.lastSignedIn = user.lastSignedIn;
-      updateSet.lastSignedIn = user.lastSignedIn;
-    }
-    if (user.role !== undefined) {
-      values.role = user.role;
-      updateSet.role = user.role;
-    } else if (user.openId === ENV.ownerOpenId) {
-      values.role = 'admin';
-      updateSet.role = 'admin';
-    }
-
-    if (!values.lastSignedIn) {
-      values.lastSignedIn = new Date();
-    }
-
-    if (Object.keys(updateSet).length === 0) {
-      updateSet.lastSignedIn = new Date();
-    }
-
-    await db.insert(users).values(values).onDuplicateKeyUpdate({
-      set: updateSet,
-    });
+    const user = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    return user.length > 0 ? user[0] : null;
   } catch (error) {
-    console.error("[Database] Failed to upsert user:", error);
+    console.error('[Database] Failed to get user by email:', error);
     throw error;
   }
 }
 
-export async function getUserByOpenId(openId: string) {
+export async function getUserById(id: number) {
   const db = await getDb();
-  if (!db) {
-    console.warn("[Database] Cannot get user: database not available");
-    return undefined;
-  }
-
-  const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
-
-  return result.length > 0 ? result[0] : undefined;
-}
-
-// Works queries - WORKS IS PRIMARY
-export async function getAllWorks() {
-  const db = await getDb();
-  if (!db) return [];
+  if (!db) throw new Error('Database not available');
   try {
-    return await db.select().from(works);
+    const user = await db.select().from(users).where(eq(users.id, id)).limit(1);
+    return user.length > 0 ? user[0] : null;
   } catch (error) {
-    console.error('[Database] Failed to get all works:', error);
-    return [];
+    console.error('[Database] Failed to get user by id:', error);
+    throw error;
   }
 }
 
-export async function getWorkById(id: number) {
+export async function getAllUsers() {
   const db = await getDb();
-  if (!db) return null;
+  if (!db) throw new Error('Database not available');
   try {
-    const result = await db.select().from(works).where(eq(works.id, id)).limit(1);
-    return result.length > 0 ? result[0] : null;
+    return await db.select().from(users);
   } catch (error) {
-    console.error('[Database] Failed to get work by id:', error);
-    return null;
+    console.error('[Database] Failed to get all users:', error);
+    throw error;
   }
 }
 
-export async function getWorkByClientId(clientId: number) {
+// User mutations
+export async function createUser(data: InsertUser) {
   const db = await getDb();
-  if (!db) return null;
+  if (!db) throw new Error('Database not available');
   try {
-    const result = await db.select().from(works).where(eq(works.clientId, clientId)).limit(1);
-    return result.length > 0 ? result[0] : null;
+    const result = await db.insert(users).values(data);
+    return result;
   } catch (error) {
-    console.error('[Database] Failed to get work by client id:', error);
-    return null;
+    console.error('[Database] Failed to create user:', error);
+    throw error;
+  }
+}
+
+export async function updateUser(id: number, data: any) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  try {
+    const validFields: any = {
+      name: data.name,
+      email: data.email,
+      password: data.password,
+      role: data.role,
+      status: data.status,
+      linkedType: data.linkedType,
+      linkedId: data.linkedId,
+      lastSignedIn: data.lastSignedIn,
+    };
+
+    Object.keys(validFields).forEach(key => validFields[key] === undefined && delete validFields[key]);
+
+    await db.update(users).set(validFields).where(eq(users.id, id));
+  } catch (error) {
+    console.error('[Database] Failed to update user:', error);
+    throw error;
+  }
+}
+
+export async function deleteUser(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  try {
+    await db.delete(users).where(eq(users.id, id));
+  } catch (error) {
+    console.error('[Database] Failed to delete user:', error);
+    throw error;
   }
 }
 
 // Clients queries
 export async function getAllClients() {
   const db = await getDb();
-  if (!db) return [];
+  if (!db) throw new Error('Database not available');
   try {
     return await db.select().from(clients);
   } catch (error) {
     console.error('[Database] Failed to get all clients:', error);
-    return [];
+    throw error;
   }
 }
 
 export async function getClientById(id: number) {
   const db = await getDb();
-  if (!db) return null;
+  if (!db) throw new Error('Database not available');
   try {
-    const result = await db.select().from(clients).where(eq(clients.id, id)).limit(1);
-    return result.length > 0 ? result[0] : null;
+    const client = await db.select().from(clients).where(eq(clients.id, id)).limit(1);
+    return client.length > 0 ? client[0] : null;
   } catch (error) {
     console.error('[Database] Failed to get client by id:', error);
-    return null;
-  }
-}
-
-export async function getClientsByStatus(status: string) {
-  const db = await getDb();
-  if (!db) return [];
-  try {
-    return await db.select().from(clients).where(eq(clients.status, status));
-  } catch (error) {
-    console.error('[Database] Failed to get clients by status:', error);
-    return [];
+    throw error;
   }
 }
 
 // Clients mutations
 export async function createClient(data: any) {
   const db = await getDb();
-  if (!db) throw new Error('Database not available');
+  const pool = await getPool();
+  
+  if (!db || !pool) throw new Error('Database not available');
+  
+  const connection = await pool.getConnection();
+  
   try {
+    await connection.beginTransaction();
     
     // Clean workValue: remove "R$", spaces, and convert comma to dot
     let cleanWorkValue = data.workValue;
@@ -257,10 +228,53 @@ export async function createClient(data: any) {
     };
     
     const result = await db.insert(clients).values(clientData);
-    return result;
+    const clientId = result.insertId;
+    
+    // If status is 'work', create work record automatically
+    if (data.status === 'work' && clientId) {
+      console.log('[DB] Creating client with status work, creating work record for client:', clientId);
+      
+      const workData = {
+        clientId: clientId,
+        clientName: data.fullName,
+        name: data.workName || data.fullName,
+        workName: data.workName,
+        architectId: data.architectId,
+        responsible: data.responsible,
+        status: data.workStatus || 'Aguardando',
+        workValue: cleanWorkValue,
+        startDate: data.startDate,
+        endDate: data.endDate,
+        commission: data.commission,
+        clientPhone: data.phone,
+        clientBirthDate: data.birthDate,
+        clientAddress: data.address,
+        clientOrigin: data.origin,
+        clientContact: data.contact,
+        reminder: data.reminder ? parseInt(data.reminder) : 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      
+      console.log('[DB] Creating work record:', workData);
+      await db.insert(works).values(workData);
+    }
+    
+    await connection.commit();
+    console.log('[DB] createClient transaction completed successfully');
+    
+    // Retornar cliente completo com status para o frontend
+    return {
+      insertId: clientId,
+      ...clientData,
+      id: clientId,
+    };
   } catch (error) {
+    await connection.rollback();
     console.error('[Database] Failed to create client:', error);
     throw error;
+  } finally {
+    connection.release();
   }
 }
 
@@ -400,6 +414,30 @@ export async function deleteClient(id: number) {
   }
 }
 
+// Works queries
+export async function getAllWorks() {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  try {
+    return await db.select().from(works);
+  } catch (error) {
+    console.error('[Database] Failed to get all works:', error);
+    throw error;
+  }
+}
+
+export async function getWorkById(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  try {
+    const work = await db.select().from(works).where(eq(works.id, id)).limit(1);
+    return work.length > 0 ? work[0] : null;
+  } catch (error) {
+    console.error('[Database] Failed to get work by id:', error);
+    throw error;
+  }
+}
+
 // Works mutations
 export async function createWork(data: any) {
   const db = await getDb();
@@ -463,24 +501,24 @@ export async function deleteWork(id: number) {
 // Providers queries
 export async function getAllProviders() {
   const db = await getDb();
-  if (!db) return [];
+  if (!db) throw new Error('Database not available');
   try {
     return await db.select().from(providers);
   } catch (error) {
     console.error('[Database] Failed to get all providers:', error);
-    return [];
+    throw error;
   }
 }
 
 export async function getProviderById(id: number) {
   const db = await getDb();
-  if (!db) return null;
+  if (!db) throw new Error('Database not available');
   try {
-    const result = await db.select().from(providers).where(eq(providers.id, id)).limit(1);
-    return result.length > 0 ? result[0] : null;
+    const provider = await db.select().from(providers).where(eq(providers.id, id)).limit(1);
+    return provider.length > 0 ? provider[0] : null;
   } catch (error) {
     console.error('[Database] Failed to get provider by id:', error);
-    return null;
+    throw error;
   }
 }
 
@@ -574,90 +612,23 @@ export async function deleteProvider(id: number) {
 // Architects queries
 export async function getAllArchitects() {
   const db = await getDb();
-  if (!db) return [];
+  if (!db) throw new Error('Database not available');
   try {
     return await db.select().from(architects);
   } catch (error) {
     console.error('[Database] Failed to get all architects:', error);
-    return [];
+    throw error;
   }
 }
 
 export async function getArchitectById(id: number) {
   const db = await getDb();
-  if (!db) return null;
+  if (!db) throw new Error('Database not available');
   try {
-    const result = await db.select().from(architects).where(eq(architects.id, id)).limit(1);
-    return result.length > 0 ? result[0] : null;
+    const architect = await db.select().from(architects).where(eq(architects.id, id)).limit(1);
+    return architect.length > 0 ? architect[0] : null;
   } catch (error) {
     console.error('[Database] Failed to get architect by id:', error);
-    return null;
-  }
-}
-
-// Architects mutations
-export async function createArchitect(data: any) {
-  const db = await getDb();
-  if (!db) throw new Error('Database not available');
-  try {
-    
-    const architectData = {
-      name: data.name,
-      officeNameName: data.officeNameName,
-      status: data.status || 'active',
-      address: data.address,
-      architectName: data.architectName,
-      phone: data.phone,
-      birthDate: data.birthDate,
-      commission: data.commission,
-      observation: data.observation,
-      reminder: data.reminder ? parseInt(data.reminder) : 0,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    
-    const result = await db.insert(architects).values(architectData);
-    return result;
-  } catch (error) {
-    console.error('[Database] Failed to create architect:', error);
-    throw error;
-  }
-}
-
-export async function updateArchitect(id: number, data: any) {
-  const db = await getDb();
-  if (!db) throw new Error('Database not available');
-  try {
-    
-    const validFields: any = {
-      name: data.name,
-      officeNameName: data.officeNameName,
-      status: data.status,
-      address: data.address,
-      architectName: data.architectName,
-      phone: data.phone,
-      birthDate: data.birthDate,
-      commission: data.commission,
-      observation: data.observation,
-      reminder: data.reminder ? parseInt(data.reminder) : 0,
-    };
-    
-    Object.keys(validFields).forEach(key => validFields[key] === undefined && delete validFields[key]);
-    
-    await db.update(architects).set(validFields).where(eq(architects.id, id));
-  } catch (error) {
-    console.error('[Database] Failed to update architect:', error);
-    throw error;
-  }
-}
-
-export async function deleteArchitect(id: number) {
-  const db = await getDb();
-  if (!db) throw new Error('Database not available');
-  try {
-    await db.delete(architects).where(eq(architects.id, id));
-  } catch (error) {
-    console.error('[Database] Failed to delete architect:', error);
     throw error;
   }
 }
@@ -665,135 +636,22 @@ export async function deleteArchitect(id: number) {
 // Allocations queries
 export async function getAllAllocations() {
   const db = await getDb();
-  if (!db) return [];
+  if (!db) throw new Error('Database not available');
   try {
     return await db.select().from(allocations);
   } catch (error) {
     console.error('[Database] Failed to get all allocations:', error);
-    return [];
+    throw error;
   }
 }
 
 export async function getAllocationsByWorkId(workId: number) {
   const db = await getDb();
-  if (!db) return [];
+  if (!db) throw new Error('Database not available');
   try {
     return await db.select().from(allocations).where(eq(allocations.workId, workId));
   } catch (error) {
     console.error('[Database] Failed to get allocations by work id:', error);
-    return [];
-  }
-}
-
-export async function getAllocationById(id: number) {
-  const db = await getDb();
-  if (!db) return null;
-  try {
-    const result = await db.select().from(allocations).where(eq(allocations.id, id)).limit(1);
-    return result.length > 0 ? result[0] : null;
-  } catch (error) {
-    console.error('[Database] Failed to get allocation by id:', error);
-    return null;
-  }
-}
-
-// Allocations mutations
-export async function createAllocation(data: any) {
-  const db = await getDb();
-  if (!db) throw new Error('Database not available');
-  try {
-    
-    // Clean baseValue: remove "R$", spaces, and convert comma to dot
-    let cleanBaseValue = data.baseValue;
-    if (typeof cleanBaseValue === 'string') {
-      cleanBaseValue = cleanBaseValue
-        .replace(/R\$\s*/g, '')
-        .trim()
-        .replace(',', '.');
-    }
-    
-    console.log('[Database] createAllocation input:', data);
-    
-    // Verify that work exists before creating allocation
-    let workId = data.workId;
-    
-    // If workId is provided, verify it exists
-    if (workId) {
-      const workExists = await db.select().from(works).where(eq(works.id, workId)).limit(1);
-      if (workExists.length === 0) {
-        throw new Error(`Work with ID ${workId} does not exist`);
-      }
-    } else {
-      throw new Error('workId is required');
-    }
-    
-    const allocationData = {
-      workId: workId,
-      providerId: data.providerId,
-      providerName: data.providerName,
-      service: data.service,
-      startDate: data.startDate,
-      endDate: data.endDate,
-      category: data.category,
-      observation: data.observation,
-      remuneration: data.remuneration,
-      baseValue: cleanBaseValue,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    
-    console.log('[Database] Inserting allocation with workId:', workId);
-    const result = await db.insert(allocations).values(allocationData);
-    return result;
-  } catch (error) {
-    console.error('[Database] Failed to create allocation:', error);
-    throw error;
-  }
-}
-
-export async function updateAllocation(id: number, data: any) {
-  const db = await getDb();
-  if (!db) throw new Error('Database not available');
-  try {
-    
-    // Clean baseValue: remove "R$", spaces, and convert comma to dot
-    let cleanBaseValue = data.baseValue;
-    if (typeof cleanBaseValue === 'string') {
-      cleanBaseValue = cleanBaseValue
-        .replace(/R\$\s*/g, '')
-        .trim()
-        .replace(',', '.');
-    }
-    
-    const validFields: any = {
-      workId: data.workId,
-      providerId: data.providerId,
-      providerName: data.providerName,
-      service: data.service,
-      startDate: data.startDate,
-      endDate: data.endDate,
-      category: data.category,
-      observation: data.observation,
-      remuneration: data.remuneration,
-      baseValue: cleanBaseValue,
-    };
-    
-    Object.keys(validFields).forEach(key => validFields[key] === undefined && delete validFields[key]);
-    
-    await db.update(allocations).set(validFields).where(eq(allocations.id, id));
-  } catch (error) {
-    console.error('[Database] Failed to update allocation:', error);
-    throw error;
-  }
-}
-
-export async function deleteAllocation(id: number) {
-  const db = await getDb();
-  if (!db) throw new Error('Database not available');
-  try {
-    await db.delete(allocations).where(eq(allocations.id, id));
-  } catch (error) {
-    console.error('[Database] Failed to delete allocation:', error);
     throw error;
   }
 }
@@ -801,34 +659,11 @@ export async function deleteAllocation(id: number) {
 // Categories queries
 export async function getAllCategories() {
   const db = await getDb();
-  if (!db) return [];
+  if (!db) throw new Error('Database not available');
   try {
     return await db.select().from(categories);
   } catch (error) {
     console.error('[Database] Failed to get all categories:', error);
-    return [];
-  }
-}
-
-export async function createCategory(data: any) {
-  const db = await getDb();
-  if (!db) throw new Error('Database not available');
-  try {
-    const result = await db.insert(categories).values(data);
-    return result;
-  } catch (error) {
-    console.error('[Database] Failed to create category:', error);
-    throw error;
-  }
-}
-
-export async function deleteCategory(id: number) {
-  const db = await getDb();
-  if (!db) throw new Error('Database not available');
-  try {
-    await db.delete(categories).where(eq(categories.id, id));
-  } catch (error) {
-    console.error('[Database] Failed to delete category:', error);
     throw error;
   }
 }
@@ -836,233 +671,11 @@ export async function deleteCategory(id: number) {
 // Remunerations queries
 export async function getAllRemunerations() {
   const db = await getDb();
-  if (!db) return [];
+  if (!db) throw new Error('Database not available');
   try {
     return await db.select().from(remunerations);
   } catch (error) {
     console.error('[Database] Failed to get all remunerations:', error);
-    return [];
-  }
-}
-
-export async function createRemuneration(data: any) {
-  const db = await getDb();
-  if (!db) throw new Error('Database not available');
-  try {
-    const result = await db.insert(remunerations).values(data);
-    return result;
-  } catch (error) {
-    console.error('[Database] Failed to create remuneration:', error);
-    throw error;
-  }
-}
-
-export async function deleteRemuneration(id: number) {
-  const db = await getDb();
-  if (!db) throw new Error('Database not available');
-  try {
-    await db.delete(remunerations).where(eq(remunerations.id, id));
-  } catch (error) {
-    console.error('[Database] Failed to delete remuneration:', error);
-    throw error;
-  }
-}
-
-// ============================================
-// AUTHENTICATION FUNCTIONS
-// ============================================
-
-export async function getUserByEmail(email: string) {
-  const db = await getDb();
-  if (!db) return null;
-  try {
-    const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
-    return result.length > 0 ? result[0] : null;
-  } catch (error) {
-    console.error('[Database] Failed to get user by email:', error);
-    return null;
-  }
-}
-
-export async function getUserById(id: number) {
-  const db = await getDb();
-  if (!db) return null;
-  try {
-    const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
-    return result.length > 0 ? result[0] : null;
-  } catch (error) {
-    console.error('[Database] Failed to get user by id:', error);
-    return null;
-  }
-}
-
-export async function createUser(data: {
-  name: string;
-  email: string;
-  password: string;
-  role?: string;
-  status?: string;
-}) {
-  const db = await getDb();
-  if (!db) throw new Error('Database not available');
-  
-  try {
-    const hashedPassword = await bcrypt.hash(data.password, 10);
-    
-    const result = await db.insert(users).values({
-      name: data.name,
-      email: data.email,
-      password: hashedPassword,
-      role: (data.role || 'CLIENTE') as any,
-      status: (data.status || 'PENDING') as any,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-    
-    return result;
-  } catch (error) {
-    console.error('[Database] Failed to create user:', error);
-    throw error;
-  }
-}
-
-export async function verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
-  try {
-    return await bcrypt.compare(password, hashedPassword);
-  } catch (error) {
-    console.error('[Database] Failed to verify password:', error);
-    return false;
-  }
-}
-
-export async function updateUserStatus(userId: number, status: string, role?: string, linkedType?: string | null, linkedId?: number | null) {
-  const db = await getDb();
-  if (!db) throw new Error('Database not available');
-  
-  try {
-    const updateData: any = {
-      status: status as any,
-      updatedAt: new Date(),
-    };
-    
-    if (role) updateData.role = role as any;
-    if (linkedType) updateData.linkedType = linkedType as any;
-    if (linkedId) updateData.linkedId = linkedId;
-    
-    await db.update(users).set(updateData).where(eq(users.id, userId));
-  } catch (error) {
-    console.error('[Database] Failed to update user status:', error);
-    throw error;
-  }
-}
-
-export async function getAllUsers() {
-  const db = await getDb();
-  if (!db) return [];
-  try {
-    return await db.select().from(users);
-  } catch (error) {
-    console.error('[Database] Failed to get all users:', error);
-    return [];
-  }
-}
-
-export async function getPendingUsers() {
-  const db = await getDb();
-  if (!db) return [];
-  try {
-    return await db.select().from(users).where(eq(users.status, 'PENDING'));
-  } catch (error) {
-    console.error('[Database] Failed to get pending users:', error);
-    return [];
-  }
-}
-
-export async function createPasswordRequest(userId: number, newPassword: string) {
-  const db = await getDb();
-  if (!db) throw new Error('Database not available');
-  
-  try {
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    
-    const result = await db.insert(passwordRequests).values({
-      userId,
-      newPassword: hashedPassword,
-      status: 'PENDING' as any,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-    
-    return result;
-  } catch (error) {
-    console.error('[Database] Failed to create password request:', error);
-    throw error;
-  }
-}
-
-export async function getPasswordRequestsByUserId(userId: number) {
-  const db = await getDb();
-  if (!db) return [];
-  try {
-    return await db.select().from(passwordRequests).where(eq(passwordRequests.userId, userId));
-  } catch (error) {
-    console.error('[Database] Failed to get password requests:', error);
-    return [];
-  }
-}
-
-export async function getPendingPasswordRequests() {
-  const db = await getDb();
-  if (!db) return [];
-  try {
-    return await db.select().from(passwordRequests).where(eq(passwordRequests.status, 'PENDING'));
-  } catch (error) {
-    console.error('[Database] Failed to get pending password requests:', error);
-    return [];
-  }
-}
-
-export async function approvePasswordRequest(requestId: number) {
-  const db = await getDb();
-  if (!db) throw new Error('Database not available');
-  
-  try {
-    const request = await db.select().from(passwordRequests).where(eq(passwordRequests.id, requestId)).limit(1);
-    
-    if (request.length === 0) {
-      throw new Error('Password request not found');
-    }
-    
-    const req = request[0];
-    
-    // Update password request status
-    await db.update(passwordRequests).set({
-      status: 'APPROVED' as any,
-      updatedAt: new Date(),
-    }).where(eq(passwordRequests.id, requestId));
-    
-    // Update user password
-    await db.update(users).set({
-      password: req.newPassword,
-      updatedAt: new Date(),
-    }).where(eq(users.id, req.userId));
-  } catch (error) {
-    console.error('[Database] Failed to approve password request:', error);
-    throw error;
-  }
-}
-
-export async function rejectPasswordRequest(requestId: number) {
-  const db = await getDb();
-  if (!db) throw new Error('Database not available');
-  
-  try {
-    await db.update(passwordRequests).set({
-      status: 'REJECTED' as any,
-      updatedAt: new Date(),
-    }).where(eq(passwordRequests.id, requestId));
-  } catch (error) {
-    console.error('[Database] Failed to reject password request:', error);
     throw error;
   }
 }
