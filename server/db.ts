@@ -163,6 +163,22 @@ export async function updateUser(id: number, data: any) {
   }
 }
 
+export async function updateUserStatus(userId: number, status: string, role: string, linkedType: string | null, linkedId: number | null) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  try {
+    await db.update(users).set({
+      status,
+      role,
+      linkedType,
+      linkedId,
+    }).where(eq(users.id, userId));
+  } catch (error) {
+    console.error('[Database] Failed to update user status:', error);
+    throw error;
+  }
+}
+
 export async function deleteUser(id: number) {
   const db = await getDb();
   if (!db) throw new Error('Database not available');

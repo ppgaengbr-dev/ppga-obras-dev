@@ -161,7 +161,6 @@ export function AdminUsersPage() {
                   <tr>
                     <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Nome</th>
                     <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Email</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
                     <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Data de Cadastro</th>
                     <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Ações</th>
                   </tr>
@@ -171,11 +170,6 @@ export function AdminUsersPage() {
                     <tr key={user.id} className="border-b hover:bg-gray-50">
                       <td className="px-6 py-4 text-sm text-gray-900">{user.name}</td>
                       <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
-                      <td className="px-6 py-4 text-sm">
-                        <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">
-                          {translateStatus(user.status)}
-                        </span>
-                      </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
                         {new Date(user.createdAt).toLocaleDateString('pt-BR')}
                       </td>
