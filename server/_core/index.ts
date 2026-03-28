@@ -218,7 +218,14 @@ async function startServer() {
       ];
   */
   
-  // tRPC API
+  // development mode uses Vite, production mode uses static files
+  if (process.env.NODE_ENV === "development") {
+    await setupVite(app, server);
+  } else {
+    serveStatic(app);
+  }
+
+  // tRPC API (after static files so it doesn't get intercepted)
   app.use(
     "/api/trpc",
     createExpressMiddleware({
@@ -226,11 +233,13 @@ async function startServer() {
       createContext,
     })
   );
-  // development mode uses Vite, production mode uses static files
-  if (process.env.NODE_ENV === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
+
+  // Fallback to index.html for SPA routing in production
+  if (process.env.NODE_ENV !== "development") {
+    app.get("*", (_req, res) => {
+      const distPath = path.resolve(import.meta.dirname, "public");
+      res.sendFile(path.resolve(distPath, "index.html"));
+    });
   }
 
   const preferredPort = parseInt(process.env.PORT || "3000");
