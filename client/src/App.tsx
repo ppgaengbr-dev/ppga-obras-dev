@@ -50,6 +50,7 @@ function InternalRouter() {
     >
       <Switch>
         <Route path={"/"} component={Dashboard} />
+        <Route path={"/dashboard"} component={Dashboard} />
         <Route path={"/clients"} component={Clients} />
         <Route path={"/clients-summary"} component={ClientsSummary} />
         <Route path={"/architects"} component={Architects} />

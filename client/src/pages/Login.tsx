@@ -20,7 +20,7 @@ export function LoginPage() {
           localStorage.setItem('rememberMe', 'true');
         }
         // Redirect to dashboard
-        window.location.href = '/';
+        setLocation('/dashboard');
       }
     },
     onError: (error: any) => {
