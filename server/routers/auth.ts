@@ -333,4 +333,33 @@ export const authRouter = router({
         throw error;
       }
     }),
+
+  // Seed: Create initial admin user
+  seed: publicProcedure.mutation(async () => {
+    try {
+      const existingAdmin = await db.getUserByEmail('ppga.eng.br@gmail.com');
+      if (existingAdmin) {
+        return {
+          success: false,
+          message: 'Usuário admin já existe',
+        };
+      }
+
+      await db.createUser({
+        name: 'Renato Araujo',
+        email: 'ppga.eng.br@gmail.com',
+        password: 'Ppga@2026',
+        role: 'ADMIN',
+        status: 'APPROVED',
+      });
+
+      return {
+        success: true,
+        message: 'Usuário admin criado com sucesso',
+      };
+    } catch (error: any) {
+      console.error('[Auth] Seed error:', error);
+      throw error;
+    }
+  }),
 });
