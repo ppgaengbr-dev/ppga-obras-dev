@@ -101,6 +101,16 @@ export async function verifyPassword(plainPassword: string, hashedPassword: stri
   }
 }
 
+export async function hashPassword(password: string): Promise<string> {
+  try {
+    const salt = await bcrypt.genSalt(10);
+    return await bcrypt.hash(password, salt);
+  } catch (error) {
+    console.error('[Database] Failed to hash password:', error);
+    throw error;
+  }
+}
+
 export async function getUserById(id: number) {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
