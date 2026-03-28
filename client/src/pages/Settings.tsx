@@ -159,7 +159,11 @@ export default function Settings() {
     <div className="p-6 max-w-6xl mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Configurações</h1>
-        <p className="text-gray-600">Gerencie as categorias e remunerações do sistema</p>
+        <p className="text-gray-600">
+          {activeTab === 'categories' && 'Gerencie as categorias do sistema'}
+          {activeTab === 'remunerations' && 'Gerencie as remunerações do sistema'}
+          {activeTab === 'users' && 'Gerencie os usuários do sistema'}
+        </p>
       </div>
 
       {/* Tabs */}

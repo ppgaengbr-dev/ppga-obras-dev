@@ -48,10 +48,10 @@ export function AdminUsersPage() {
   const approveMutation = trpc.auth.approveUser.useMutation({
     onSuccess: () => {
       setShowApprovalModal(false);
+      refetchPending();
       setSelectedUser(null);
       setSelectedRole('CLIENTE');
       setSelectedLinkedId(null);
-      refetchPending();
       toast.success('Usuário aprovado com sucesso');
     },
     onError: (error) => {
