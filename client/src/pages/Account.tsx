@@ -12,9 +12,11 @@ export default function Account() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(user?.photo || null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+
+  const hasUserPhoto = user?.photo && typeof user.photo === "string" && user.photo.trim().length > 0;
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -129,9 +131,9 @@ export default function Account() {
         <div className="bg-card border border-border rounded-lg p-6 mb-6">
           <div className="flex items-center gap-4">
             <div className="relative">
-              {photoPreview ? (
+              {hasUserPhoto ? (
                 <img
-                  src={photoPreview}
+                  src={user.photo}
                   alt="Foto de perfil"
                   className="w-16 h-16 rounded-full object-cover flex-shrink-0"
                 />
