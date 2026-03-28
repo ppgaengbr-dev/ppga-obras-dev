@@ -92,6 +92,15 @@ export async function getUserByEmail(email: string) {
   }
 }
 
+export async function verifyPassword(plainPassword: string, hashedPassword: string): Promise<boolean> {
+  try {
+    return await bcrypt.compare(plainPassword, hashedPassword);
+  } catch (error) {
+    console.error('[Database] Failed to verify password:', error);
+    return false;
+  }
+}
+
 export async function getUserById(id: number) {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
