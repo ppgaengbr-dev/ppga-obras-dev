@@ -66,6 +66,58 @@ async function startServer() {
     }
   });
   
+  // Promote user to admin endpoint
+  app.get('/api/promote-admin', async (req, res) => {
+    try {
+      const { email, secret } = req.query;
+      const adminSecret = process.env.ADMIN_SECRET;
+      
+      if (!adminSecret) {
+        return res.status(500).json({
+          success: false,
+          message: 'ADMIN_SECRET não configurado no servidor'
+        });
+      }
+      
+      if (secret !== adminSecret) {
+        return res.status(403).json({
+          success: false,
+          message: 'Secret inválido'
+        });
+      }
+      
+      if (!email) {
+        return res.status(400).json({
+          success: false,
+          message: 'Email é obrigatório'
+        });
+      }
+      
+      const db = await import('../db');
+      const user = await db.getUserByEmail(email as string);
+      
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: 'Usuário não encontrado'
+        });
+      }
+      
+      await db.updateUserStatus(user.id, 'APPROVED', 'ADMIN', null, null);
+      
+      res.json({
+        success: true,
+        message: `Usuário ${email} promovido a ADMIN com sucesso`
+      });
+    } catch (error: any) {
+      console.error('[Promote-Admin] Error:', error.message);
+      res.status(500).json({
+        success: false,
+        message: error.message
+      });
+    }
+  });
+  
   // Seed endpoint - create initial admin user
   app.get('/api/seed-admin', async (req, res) => {
     try {
