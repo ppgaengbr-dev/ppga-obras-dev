@@ -21,14 +21,11 @@ export const authRouter = router({
           });
         }
 
-        // Hash password before saving
-        const hashedPassword = await db.hashPassword(input.password);
-
         // Create new user with PENDING status
         await db.createUser({
           name: input.name,
           email: input.email,
-          password: hashedPassword,
+          password: input.password,
           role: "CLIENTE",
           status: "PENDING",
         });
@@ -178,7 +175,7 @@ export const authRouter = router({
       const users = await db.getPendingUsers();
       return users.map((u) => ({
         id: u.id,
-        name: u.name,
+        name: u.fullName,
         email: u.email,
         role: u.role,
         status: u.status,
