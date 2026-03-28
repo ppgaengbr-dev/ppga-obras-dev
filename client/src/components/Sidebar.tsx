@@ -1,6 +1,6 @@
 import { useSidebar } from "@/contexts/SidebarContext";
 import { useLocation } from "wouter";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/_core/hooks/useAuth";
 import {
   ChevronLeft,
   LayoutDashboard,
