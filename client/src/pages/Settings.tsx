@@ -157,14 +157,21 @@ export default function Settings() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Configurações</h1>
-        <p className="text-gray-600">
-          {activeTab === 'categories' && 'Gerencie as categorias do sistema'}
-          {activeTab === 'remunerations' && 'Gerencie as remunerações do sistema'}
-          {activeTab === 'users' && 'Gerencie os usuários do sistema'}
-        </p>
-      </div>
+      {activeTab !== 'users' && (
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Configurações</h1>
+          <p className="text-gray-600">
+            {activeTab === 'categories' && 'Gerencie as categorias do sistema'}
+            {activeTab === 'remunerations' && 'Gerencie as remunerações do sistema'}
+          </p>
+        </div>
+      )}
+      {activeTab === 'users' && (
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Configurações</h1>
+          <p className="text-gray-600">Gerencie os usuários do sistema</p>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-4 mb-6 border-b border-gray-200">

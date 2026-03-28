@@ -85,7 +85,7 @@ export const authRouter = router({
           token,
           user: {
             id: user.id,
-            name: user.name,
+            name: user.fullName,
             email: user.email,
             role: user.role,
             linkedType: user.linkedType,
@@ -175,7 +175,7 @@ export const authRouter = router({
       const users = await db.getPendingUsers();
       return users.map((u) => ({
         id: u.id,
-        name: u.name,
+        name: u.fullName,
         email: u.email,
         role: u.role,
         status: u.status,
