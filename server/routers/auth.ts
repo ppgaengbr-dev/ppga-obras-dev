@@ -246,6 +246,42 @@ export const authRouter = router({
       }
     }),
 
+  // Admin: Promote user to ADMIN (via email - for setup)
+  promoteToAdmin: publicProcedure
+    .input((data: any) => ({
+      email: data.email as string,
+      adminSecret: data.adminSecret as string,
+    }))
+    .mutation(async ({ input }) => {
+      try {
+        // Simple security check
+        if (input.adminSecret !== process.env.ADMIN_SECRET || !process.env.ADMIN_SECRET) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Secret inválido",
+          });
+        }
+
+        const user = await db.getUserByEmail(input.email);
+        if (!user) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Usuário não encontrado",
+          });
+        }
+
+        await db.updateUserStatus(user.id, "APPROVED", "ADMIN", null, null);
+
+        return {
+          success: true,
+          message: `Usuário ${input.email} promovido a ADMIN`,
+        };
+      } catch (error: any) {
+        console.error("[Auth] Promote to admin error:", error);
+        throw error;
+      }
+    }),
+
   // Admin: Change user role
   changeUserRole: adminProcedure
     .input((data: any) => ({
