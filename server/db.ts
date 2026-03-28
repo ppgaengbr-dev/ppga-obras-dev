@@ -405,7 +405,22 @@ export async function createWork(data: any) {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
   try {
-    const result = await db.insert(works).values(data);
+    // Validar campos obrigatórios
+    if (!data.workName) {
+      throw new Error('workName is required');
+    }
+    
+    // Filtrar apenas campos válidos da tabela works
+    const validFields = ['name', 'workName', 'clientName', 'clientId', 'architectId', 'responsible', 'status', 'workValue', 'startDate', 'endDate', 'commission', 'clientPhone', 'clientBirthDate', 'clientAddress', 'clientOrigin', 'clientContact', 'reminder'];
+    const filteredData = Object.keys(data)
+      .filter(key => validFields.includes(key))
+      .reduce((obj, key) => {
+        obj[key] = data[key];
+        return obj;
+      }, {} as any);
+    
+    console.log('[Database] Creating work with filtered data:', filteredData);
+    const result = await db.insert(works).values(filteredData);
     return result;
   } catch (error) {
     console.error('[Database] Failed to create work:', error);
