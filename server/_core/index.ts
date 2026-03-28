@@ -112,6 +112,22 @@ async function startServer() {
     });
   });
   
+  // tRPC API - MUST be before static files
+  app.use(
+    "/api/trpc",
+    createExpressMiddleware({
+      router: appRouter,
+      createContext,
+    })
+  );
+
+  // Static files and SPA routing - AFTER API routes
+  if (process.env.NODE_ENV === "development") {
+    await setupVite(app, server);
+  } else {
+    serveStatic(app);
+  }
+  
   // Old migrations code (commented out - no longer needed)
   /*
   const migrations = [
@@ -225,22 +241,7 @@ async function startServer() {
     serveStatic(app);
   }
 
-  // tRPC API (after static files so it doesn't get intercepted)
-  app.use(
-    "/api/trpc",
-    createExpressMiddleware({
-      router: appRouter,
-      createContext,
-    })
-  );
 
-  // Fallback to index.html for SPA routing in production
-  if (process.env.NODE_ENV !== "development") {
-    app.get("*", (_req, res) => {
-      const distPath = path.resolve(import.meta.dirname, "public");
-      res.sendFile(path.resolve(distPath, "index.html"));
-    });
-  }
 
   const preferredPort = parseInt(process.env.PORT || "3000");
   const port = await findAvailablePort(preferredPort);
