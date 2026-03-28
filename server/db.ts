@@ -234,10 +234,18 @@ export async function createClient(data: any) {
     if (data.status === 'work' && clientId) {
       console.log('[DB] Creating client with status work, creating work record for client:', clientId);
       
+      // Validar que workName foi fornecido
+      if (!data.workName) {
+        throw new Error('workName is required when creating a work');
+      }
+      
+      // Usar o mesmo filtro de campos validos que createWork usa
+      const validFields = ['name', 'workName', 'clientName', 'clientId', 'architectId', 'responsible', 'status', 'workValue', 'startDate', 'endDate', 'commission', 'clientPhone', 'clientBirthDate', 'clientAddress', 'clientOrigin', 'clientContact', 'reminder'];
+      
       const workData = {
         clientId: clientId,
         clientName: data.fullName,
-        name: data.workName || data.fullName,
+        name: data.workName,
         workName: data.workName,
         architectId: data.architectId,
         responsible: data.responsible,
@@ -252,12 +260,18 @@ export async function createClient(data: any) {
         clientOrigin: data.origin,
         clientContact: data.contact,
         reminder: data.reminder ? parseInt(data.reminder) : 0,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       };
       
-      console.log('[DB] Creating work record:', workData);
-      await db.insert(works).values(workData);
+      // Filtrar apenas campos validos
+      const filteredWorkData = Object.keys(workData)
+        .filter(key => validFields.includes(key))
+        .reduce((obj, key) => {
+          obj[key] = workData[key];
+          return obj;
+        }, {} as any);
+      
+      console.log('[DB] Creating work record with filtered data:', filteredWorkData);
+      await db.insert(works).values(filteredWorkData);
     }
     
     await connection.commit();
