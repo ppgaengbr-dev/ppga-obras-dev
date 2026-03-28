@@ -33,24 +33,23 @@ interface NavItem {
   icon: React.ReactNode;
   href: string;
   external?: boolean;
-  roles?: string[];
 }
 
-const allNavItems: NavItem[] = [
-  { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard size={20} />, href: "/", roles: ["ADMIN", "CLIENTE", "ARQUITETO", "PRESTADOR"] },
-  { id: "clients", label: "Clientes", icon: <Users size={20} />, href: "/clients", roles: ["ADMIN"] },
-  { id: "budgets", label: "Orçamentos", icon: <DollarSign size={20} />, href: "/budgets", roles: ["ADMIN", "CLIENTE"] },
-  { id: "works", label: "Obras", icon: <Briefcase size={20} />, href: "/works", roles: ["ADMIN", "CLIENTE", "ARQUITETO"] },
-  { id: "timeline", label: "Cronogramas", icon: <BarChart3 size={20} />, href: "/timeline", roles: ["ADMIN", "CLIENTE", "ARQUITETO"] },
-  { id: "contracts", label: "Contratos", icon: <FileText size={20} />, href: "/contracts", roles: ["ADMIN", "CLIENTE"] },
-  { id: "allocations", label: "Alocações", icon: <BarChart3 size={20} />, href: "/allocations", roles: ["ADMIN", "PRESTADOR"] },
-  { id: "prestadores", label: "Prestadores", icon: <Briefcase size={20} />, href: "/prestadores", roles: ["ADMIN"] },
-  { id: "architects", label: "Arquitetos", icon: <Users size={20} />, href: "/architects", roles: ["ADMIN"] },
-  { id: "reports", label: "Relatórios", icon: <FileText size={20} />, href: "/reports", roles: ["ADMIN"] },
-  { id: "financial", label: "Financeiro", icon: <DollarSign size={20} />, href: "/finance", roles: ["ADMIN"] },
-  { id: "settings", label: "Configurações", icon: <Settings size={20} />, href: "/settings", roles: ["ADMIN"] },
-  { id: "rules", label: "Regras", icon: <FileText size={20} />, href: "/rules", roles: ["ADMIN"] },
-] as (NavItem & { roles?: string[] })[];
+const mainNavItems: NavItem[] = [
+  { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard size={20} />, href: "/" },
+  { id: "clients", label: "Clientes", icon: <Users size={20} />, href: "/clients" },
+  { id: "budgets", label: "Orçamentos", icon: <DollarSign size={20} />, href: "/budgets" },
+  { id: "works", label: "Obras", icon: <Briefcase size={20} />, href: "/works" },
+  { id: "timeline", label: "Cronogramas", icon: <BarChart3 size={20} />, href: "/timeline" },
+  { id: "contracts", label: "Contratos", icon: <FileText size={20} />, href: "/contracts" },
+  { id: "allocations", label: "Alocações", icon: <BarChart3 size={20} />, href: "/allocations" },
+  { id: "prestadores", label: "Prestadores", icon: <Briefcase size={20} />, href: "/prestadores" },
+  { id: "architects", label: "Arquitetos", icon: <Users size={20} />, href: "/architects" },
+  { id: "reports", label: "Relatórios", icon: <FileText size={20} />, href: "/reports" },
+  { id: "financial", label: "Financeiro", icon: <DollarSign size={20} />, href: "/finance" },
+  { id: "settings", label: "Configurações", icon: <Settings size={20} />, href: "/settings" },
+  { id: "rules", label: "Regras", icon: <FileText size={20} />, href: "/rules" },
+];
 
 const secondaryNavItems: NavItem[] = [
   { id: "website", label: "Website", icon: <Globe size={20} />, href: "https://www.ppga.eng.br", external: true },
@@ -108,9 +107,7 @@ export default function Sidebar() {
 
       {/* Menu Principal */}
       <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-1">
-        {allNavItems
-          .filter((item) => !item.roles || item.roles.includes(user?.role || ''))
-          .map((item) => (
+        {mainNavItems.map((item) => (
           <Link key={item.id} href={item.href}>
             <a
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-150 group ${
