@@ -6,9 +6,10 @@ import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { trpc } from '@/lib/trpc';
+import { AdminUsersPage } from './AdminUsers';
 
 export default function Settings() {
-  const [activeTab, setActiveTab] = useState<'categories' | 'remunerations'>('categories');
+  const [activeTab, setActiveTab] = useState<'categories' | 'remunerations' | 'users'>('categories');
   const [newItemName, setNewItemName] = useState('');
   const [newItemDescription, setNewItemDescription] = useState('');
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -183,7 +184,22 @@ export default function Settings() {
         >
           Remunerações
         </button>
+        <button
+          onClick={() => setActiveTab('users')}
+          className={`px-4 py-2 font-medium border-b-2 transition-colors ${
+            activeTab === 'users'
+              ? 'border-black text-black'
+              : 'border-transparent text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          Usuários
+        </button>
       </div>
+
+      {/* Users Tab */}
+      {activeTab === 'users' && (
+        <AdminUsersPage />
+      )}
 
       {/* Categories Tab */}
       {activeTab === 'categories' && (
