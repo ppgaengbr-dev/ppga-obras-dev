@@ -66,6 +66,44 @@ async function startServer() {
     }
   });
   
+  // Seed endpoint - create initial admin user
+  app.get('/api/seed-admin', async (req, res) => {
+    try {
+      const db = await import('../db');
+      
+      // Check if admin already exists
+      const existingAdmin = await db.getUserByEmail('ppga.eng.br@gmail.com');
+      if (existingAdmin) {
+        return res.json({
+          success: false,
+          message: 'Usuario admin ja existe'
+        });
+      }
+
+      // Create admin user
+      await db.createUser({
+        name: 'Renato Araujo',
+        email: 'ppga.eng.br@gmail.com',
+        password: 'Ppga@2026',
+        role: 'ADMIN',
+        status: 'APPROVED',
+      });
+
+      res.json({
+        success: true,
+        message: 'Usuario admin criado com sucesso',
+        email: 'ppga.eng.br@gmail.com',
+        password: 'Ppga@2026'
+      });
+    } catch (error: any) {
+      console.error('[Seed-Admin] Error:', error);
+      res.status(500).json({
+        success: false,
+        message: error.message
+      });
+    }
+  });
+  
   // Legacy setup-db endpoint (deprecated)
   app.get('/api/setup-db', (req, res) => {
     res.json({ 
