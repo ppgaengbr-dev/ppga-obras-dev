@@ -1,5 +1,6 @@
 import { useSidebar } from "@/contexts/SidebarContext";
 import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/useAuth";
 import {
   ChevronLeft,
   LayoutDashboard,
@@ -32,23 +33,24 @@ interface NavItem {
   icon: React.ReactNode;
   href: string;
   external?: boolean;
+  roles?: string[];
 }
 
-const mainNavItems: NavItem[] = [
-  { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard size={20} />, href: "/" },
-  { id: "clients", label: "Clientes", icon: <Users size={20} />, href: "/clients" },
-  { id: "budgets", label: "Orçamentos", icon: <DollarSign size={20} />, href: "/budgets" },
-  { id: "works", label: "Obras", icon: <Briefcase size={20} />, href: "/works" },
-  { id: "timeline", label: "Cronogramas", icon: <BarChart3 size={20} />, href: "/timeline" },
-  { id: "contracts", label: "Contratos", icon: <FileText size={20} />, href: "/contracts" },
-  { id: "allocations", label: "Alocações", icon: <BarChart3 size={20} />, href: "/allocations" },
-  { id: "prestadores", label: "Prestadores", icon: <Briefcase size={20} />, href: "/prestadores" },
-  { id: "architects", label: "Arquitetos", icon: <Users size={20} />, href: "/architects" },
-  { id: "reports", label: "Relatórios", icon: <FileText size={20} />, href: "/reports" },
-  { id: "financial", label: "Financeiro", icon: <DollarSign size={20} />, href: "/finance" },
-  { id: "settings", label: "Configurações", icon: <Settings size={20} />, href: "/settings" },
-  { id: "rules", label: "Regras", icon: <FileText size={20} />, href: "/rules" },
-];
+const allNavItems: NavItem[] = [
+  { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard size={20} />, href: "/", roles: ["ADMIN", "CLIENTE", "ARQUITETO", "PRESTADOR"] },
+  { id: "clients", label: "Clientes", icon: <Users size={20} />, href: "/clients", roles: ["ADMIN"] },
+  { id: "budgets", label: "Orçamentos", icon: <DollarSign size={20} />, href: "/budgets", roles: ["ADMIN", "CLIENTE"] },
+  { id: "works", label: "Obras", icon: <Briefcase size={20} />, href: "/works", roles: ["ADMIN", "CLIENTE", "ARQUITETO"] },
+  { id: "timeline", label: "Cronogramas", icon: <BarChart3 size={20} />, href: "/timeline", roles: ["ADMIN", "CLIENTE", "ARQUITETO"] },
+  { id: "contracts", label: "Contratos", icon: <FileText size={20} />, href: "/contracts", roles: ["ADMIN", "CLIENTE"] },
+  { id: "allocations", label: "Alocações", icon: <BarChart3 size={20} />, href: "/allocations", roles: ["ADMIN", "PRESTADOR"] },
+  { id: "prestadores", label: "Prestadores", icon: <Briefcase size={20} />, href: "/prestadores", roles: ["ADMIN"] },
+  { id: "architects", label: "Arquitetos", icon: <Users size={20} />, href: "/architects", roles: ["ADMIN"] },
+  { id: "reports", label: "Relatórios", icon: <FileText size={20} />, href: "/reports", roles: ["ADMIN"] },
+  { id: "financial", label: "Financeiro", icon: <DollarSign size={20} />, href: "/finance", roles: ["ADMIN"] },
+  { id: "settings", label: "Configurações", icon: <Settings size={20} />, href: "/settings", roles: ["ADMIN"] },
+  { id: "rules", label: "Regras", icon: <FileText size={20} />, href: "/rules", roles: ["ADMIN"] },
+] as (NavItem & { roles?: string[] })[];
 
 const secondaryNavItems: NavItem[] = [
   { id: "website", label: "Website", icon: <Globe size={20} />, href: "https://www.ppga.eng.br", external: true },
@@ -58,6 +60,7 @@ const secondaryNavItems: NavItem[] = [
 export default function Sidebar() {
   const { isCollapsed, toggleSidebar } = useSidebar();
   const [location, setLocation] = useLocation();
+  const { user } = useAuth();
 
   const handleLogout = () => {
     localStorage.removeItem('auth_token');
@@ -105,7 +108,9 @@ export default function Sidebar() {
 
       {/* Menu Principal */}
       <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-1">
-        {mainNavItems.map((item) => (
+        {allNavItems
+          .filter((item) => !item.roles || item.roles.includes(user?.role || ''))
+          .map((item) => (
           <Link key={item.id} href={item.href}>
             <a
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-150 group ${
@@ -160,12 +165,19 @@ export default function Sidebar() {
         </button>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gradient-to-br from-sidebar-accent to-secondary rounded-full flex items-center justify-center flex-shrink-0">
-            <span className="text-sidebar-accent-foreground font-display font-bold text-xs">RA</span>
+            <span className="text-sidebar-accent-foreground font-display font-bold text-xs">
+              {user?.name?.substring(0, 2).toUpperCase() || 'XX'}
+            </span>
           </div>
           {!isCollapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold truncate">Renato Araújo</p>
-              <p className="text-xs text-sidebar-foreground/70 truncate">Admin</p>
+              <p className="text-xs font-semibold truncate">{user?.name || 'Usuário'}</p>
+              <p className="text-xs text-sidebar-foreground/70 truncate">
+                {user?.role === 'ADMIN' && 'Administrador'}
+                {user?.role === 'CLIENTE' && 'Cliente'}
+                {user?.role === 'ARQUITETO' && 'Arquiteto'}
+                {user?.role === 'PRESTADOR' && 'Prestador'}
+              </p>
             </div>
           )}
         </div>

@@ -4,15 +4,17 @@ import { trpc } from '@/lib/trpc';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  requiredRoles?: string[];
 }
 
 /**
  * ProtectedRoute Component
  * 
- * Protege rotas que exigem autenticação.
+ * Protege rotas que exigem autenticação e role específico.
  * Se o usuário não estiver autenticado, redireciona para /login
+ * Se não tiver o role necessário, redireciona para /dashboard
  */
-export function ProtectedRoute({ children }: ProtectedRouteProps) {
+export function ProtectedRoute({ children, requiredRoles }: ProtectedRouteProps) {
   const [, navigate] = useLocation();
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -28,12 +30,16 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
         // Usuário não autenticado, redirecionar para login
         navigate('/login');
         setIsAuthenticated(false);
+      } else if (requiredRoles && !requiredRoles.includes(user.role)) {
+        // Usuário não tem o role necessário
+        navigate('/dashboard');
+        setIsAuthenticated(false);
       } else {
-        // Usuário autenticado
+        // Usuário autenticado e com role correto
         setIsAuthenticated(true);
       }
     }
-  }, [user, userLoading, navigate]);
+  }, [user, userLoading, navigate, requiredRoles]);
 
   if (isLoading) {
     return (
