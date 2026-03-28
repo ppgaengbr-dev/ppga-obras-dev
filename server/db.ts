@@ -115,6 +115,17 @@ export async function getAllUsers() {
   }
 }
 
+export async function getPendingUsers() {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  try {
+    return await db.select().from(users).where(eq(users.status, 'PENDING'));
+  } catch (error) {
+    console.error('[Database] Failed to get pending users:', error);
+    throw error;
+  }
+}
+
 // User mutations
 export async function createUser(data: InsertUser) {
   const db = await getDb();
