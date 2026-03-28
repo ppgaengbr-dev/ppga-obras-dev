@@ -29,6 +29,9 @@ const STATUSES = [
   { value: 'work', label: 'Obra' },
 ];
 
+// Statuses disponíveis apenas para criação (sem 'Obra')
+const CREATION_STATUSES = STATUSES.filter(s => s.value !== 'work');
+
 const ARCHITECTS = [
   { value: 'Arquiteto 01', label: 'Arquiteto 01' },
   { value: 'Arquiteto 02', label: 'Arquiteto 02' },
@@ -447,7 +450,7 @@ export default function Clients() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {STATUSES.map((s) => (
+                    {(editingClient ? STATUSES : CREATION_STATUSES).map((s) => (
                       <SelectItem key={s.value} value={s.value}>
                         {s.label}
                       </SelectItem>
