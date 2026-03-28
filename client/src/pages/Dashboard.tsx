@@ -40,6 +40,9 @@ const recentAllocations = [
 ];
 
 export default function Dashboard() {
+  // Get user info from localStorage
+  const userInfo = localStorage.getItem('auth_token') ? 'Usuário Autenticado' : 'Visitante';
+
   return (
     <div className="space-y-6">
       {/* Cards de Resumo */}
