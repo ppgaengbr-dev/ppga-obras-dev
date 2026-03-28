@@ -18,7 +18,7 @@ export function RegisterPage() {
         setSuccess(data.message);
         setError('');
         setTimeout(() => {
-          setLocation('/login');
+          window.location.href = '/login';
         }, 2000);
       }
     },

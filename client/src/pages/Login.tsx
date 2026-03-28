@@ -13,11 +13,13 @@ export function LoginPage() {
   const loginMutation = trpc.auth.login.useMutation({
     onSuccess: (data) => {
       if (data.success) {
-        // Store auth token or session
+        // Store auth token
+        localStorage.setItem('auth_token', data.token || 'authenticated');
         if (rememberMe) {
           localStorage.setItem('rememberMe', 'true');
         }
-        setLocation('/');
+        // Redirect to dashboard
+        window.location.href = '/';
       }
     },
     onError: (error: any) => {
