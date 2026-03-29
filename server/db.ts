@@ -101,6 +101,27 @@ export async function verifyPassword(plainPassword: string, hashedPassword: stri
   }
 }
 
+export async function hashPassword(password: string): Promise<string> {
+  try {
+    const salt = await bcrypt.genSalt(10);
+    return await bcrypt.hash(password, salt);
+  } catch (error) {
+    console.error('[Database] Failed to hash password:', error);
+    throw error;
+  }
+}
+
+export async function updateUserPassword(userId: number, hashedPassword: string) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  try {
+    await db.update(users).set({ password: hashedPassword }).where(eq(users.id, userId));
+  } catch (error) {
+    console.error('[Database] Failed to update user password:', error);
+    throw error;
+  }
+}
+
 export async function getUserById(id: number) {
   const db = await getDb();
   if (!db) throw new Error('Database not available');

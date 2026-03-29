@@ -123,6 +123,50 @@ export const authRouter = router({
     }
   }),
 
+  // Change password (user can change their own password)
+  changePassword: protectedProcedure
+    .input((data: any) => ({
+      currentPassword: data.currentPassword as string,
+      newPassword: data.newPassword as string,
+    }))
+    .mutation(async ({ input, ctx }) => {
+      try {
+        if (!ctx.user) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Usuario nao autenticado",
+          });
+        }
+
+        const user = await db.getUserById(ctx.user.id);
+        if (!user || !user.password) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Usuario nao encontrado",
+          });
+        }
+
+        const passwordValid = await db.verifyPassword(input.currentPassword, user.password);
+        if (!passwordValid) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Senha atual incorreta",
+          });
+        }
+
+        const hashedPassword = await db.hashPassword(input.newPassword);
+        await db.updateUserPassword(ctx.user.id, hashedPassword);
+
+        return {
+          success: true,
+          message: "Senha alterada com sucesso",
+        };
+      } catch (error: any) {
+        console.error("[Auth] Change password error:", error);
+        throw error;
+      }
+    }),
+
   // Request password change
   requestPasswordChange: protectedProcedure
     .input((data: any) => ({
