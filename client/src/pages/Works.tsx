@@ -16,6 +16,8 @@ import {
 import { toast } from 'sonner';
 import { SquarePen, Trash2, Bell, Calendar, ChevronDown } from 'lucide-react';
 import { formatPhone } from '@/lib/formatters';
+import { usePermission } from '@/_core/hooks/usePermission';
+import AccessDenied from '@/components/AccessDenied';
 
 const WORK_STATUSES = [
   { value: 'Aguardando', label: 'Aguardando' },
@@ -107,6 +109,13 @@ const formatCurrency = (value: string) => {
 
 
 export default function Works() {
+  const { canAccessPage, filterWorks, canEdit, canDelete } = usePermission();
+  
+  // Check permission
+  if (!canAccessPage({ page: 'OBRAS' })) {
+    return <AccessDenied />;
+  }
+  
   const [works, setWorks] = useState<Work[]>([]);
   const { data: worksData } = trpc.works.list.useQuery();
   const { data: architectsData } = trpc.architects.list.useQuery();
@@ -142,13 +151,14 @@ export default function Works() {
   // Sync data from tRPC
   useEffect(() => {
     if (worksData) {
-      const adaptedWorks = worksData.map((w: any) => ({
+      const filteredWorks = filterWorks(worksData);
+      const adaptedWorks = filteredWorks.map((w: any) => ({
         ...w,
         reminder: w.reminder ? true : undefined,
       }));
       setWorks(adaptedWorks as Work[]);
     }
-  }, [worksData]);
+  }, [worksData, filterWorks]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingWork, setEditingWork] = useState<Work | null>(null);
   const [showDetails, setShowDetails] = useState(false);
@@ -427,22 +437,24 @@ export default function Works() {
                 <div key={work.id}>
                   <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow relative group flex flex-col">
                     {/* Ações do Card - Lado a lado (Editar e Excluir) */}
-                    <div className="absolute top-3 right-3 flex items-center gap-2">
-                      <button
-                        onClick={() => openEditModal(work)}
-                        title="Editar obra"
-                        className="text-gray-400 hover:text-gray-600 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <SquarePen size={16} />
-                      </button>
-                      <button
-                        onClick={() => setDeleteConfirm({ type: 'work', id: work.id, name: work.workName })}
-                        title="Excluir obra"
-                        className="text-gray-400 hover:text-red-600 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
+                    {canEdit() && canDelete() && (
+                      <div className="absolute top-3 right-3 flex items-center gap-2">
+                        <button
+                          onClick={() => openEditModal(work)}
+                          title="Editar obra"
+                          className="text-gray-400 hover:text-gray-600 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <SquarePen size={16} />
+                        </button>
+                        <button
+                          onClick={() => setDeleteConfirm({ type: 'work', id: work.id, name: work.workName })}
+                          title="Excluir obra"
+                          className="text-gray-400 hover:text-red-600 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    )}
 
                     {/* Conteúdo do Card */}
                     <div className="flex flex-col flex-1 pr-8">
