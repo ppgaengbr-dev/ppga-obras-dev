@@ -26,6 +26,7 @@ import { LoginPage } from "./pages/Login";
 import { RegisterPage } from "./pages/Register";
 import { AdminUsersPage } from "./pages/AdminUsers";
 import RootRedirect from "./pages/RootRedirect";
+import Account from "./pages/Account";
 
 function InternalRouter() {
   const [location] = useLocation();
@@ -67,6 +68,7 @@ function InternalRouter() {
           <Route path={"/timeline"} component={Schedule} />
           <Route path={"/settings"} component={Settings} />
           <Route path={"/admin/users"} component={AdminUsersPage} />
+          <Route path={"/account"} component={Account} />
           <Route component={NotFound} />
         </Switch>
       </DashboardLayout>

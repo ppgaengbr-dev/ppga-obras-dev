@@ -99,6 +99,10 @@ export const routeHeaderConfig: Record<string, RouteHeaderConfig> = {
     title: 'Configurações',
     subtitle: 'Ajuste as configurações do sistema',
   },
+  '/account': {
+    title: 'Conta do usuário',
+    subtitle: 'Gerencie o seu perfil de usuário',
+  },
 };
 
 export function getRouteHeaderConfig(pathname: string): RouteHeaderConfig {
