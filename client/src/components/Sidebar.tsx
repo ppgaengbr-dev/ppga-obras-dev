@@ -15,7 +15,6 @@ import {
   LogOut,
 } from "lucide-react";
 import { Link } from "wouter";
-import { useAuth } from "@/_core/hooks/useAuth";
 
 /**
  * Sidebar Component
@@ -59,7 +58,6 @@ const secondaryNavItems: NavItem[] = [
 export default function Sidebar() {
   const { isCollapsed, toggleSidebar } = useSidebar();
   const [location, setLocation] = useLocation();
-  const { user } = useAuth();
 
   const handleLogout = () => {
     localStorage.removeItem('auth_token');
@@ -162,19 +160,12 @@ export default function Sidebar() {
         </button>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gradient-to-br from-sidebar-accent to-secondary rounded-full flex items-center justify-center flex-shrink-0">
-            <span className="text-sidebar-accent-foreground font-display font-bold text-xs">
-              {user?.name?.substring(0, 2).toUpperCase() || "XX"}
-            </span>
+            <span className="text-sidebar-accent-foreground font-display font-bold text-xs">RA</span>
           </div>
           {!isCollapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold truncate">{user?.name || "Usuário"}</p>
-              <p className="text-xs text-sidebar-foreground/70 truncate">
-                {user?.role === "ADMIN" && "Administrador"}
-                {user?.role === "CLIENTE" && "Cliente"}
-                {user?.role === "ARQUITETO" && "Arquiteto"}
-                {user?.role === "PRESTADOR" && "Prestador"}
-              </p>
+              <p className="text-xs font-semibold truncate">Renato Araújo</p>
+              <p className="text-xs text-sidebar-foreground/70 truncate">Admin</p>
             </div>
           )}
         </div>
