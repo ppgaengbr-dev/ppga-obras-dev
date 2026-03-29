@@ -1,6 +1,5 @@
 import { useSidebar } from "@/contexts/SidebarContext";
 import { useLocation } from "wouter";
-import { useAuth } from "@/_core/hooks/useAuth";
 import {
   ChevronLeft,
   LayoutDashboard,
@@ -10,9 +9,13 @@ import {
   BarChart3,
   DollarSign,
   Settings,
+  Globe,
+  Instagram,
   Menu,
+  LogOut,
 } from "lucide-react";
 import { Link } from "wouter";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 /**
  * Sidebar Component
@@ -48,15 +51,20 @@ const mainNavItems: NavItem[] = [
   { id: "rules", label: "Regras", icon: <FileText size={20} />, href: "/rules" },
 ];
 
-const secondaryNavItems: NavItem[] = [];
+const secondaryNavItems: NavItem[] = [
+  { id: "website", label: "Website", icon: <Globe size={20} />, href: "https://www.ppga.eng.br", external: true },
+  { id: "instagram", label: "Instagram", icon: <Instagram size={20} />, href: "https://www.instagram.com/ppga.eng.br", external: true },
+];
 
 export default function Sidebar() {
   const { isCollapsed, toggleSidebar } = useSidebar();
   const [location, setLocation] = useLocation();
   const { user } = useAuth();
 
-  const handleAccountClick = () => {
-    setLocation('/account');
+  const handleLogout = () => {
+    localStorage.removeItem('auth_token');
+    sessionStorage.clear();
+    setLocation('/login');
   };
 
   const isActive = (href: string) => {
@@ -143,23 +151,21 @@ export default function Sidebar() {
       {/* Footer com Informações do Usuário */}
       <div className="p-4 border-t border-sidebar-border">
         <button
-          onClick={handleAccountClick}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-normal transition-all duration-150 hover:bg-sidebar-accent/10 group"
-          title={isCollapsed ? "Conta" : ""}
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-normal transition-all duration-150 hover:bg-red-600/20 group mb-3"
+          title={isCollapsed ? "Sair" : ""}
         >
-          {user?.photo ? (
-            <img
-              src={user.photo}
-              alt="Foto de perfil"
-              className="w-10 h-10 rounded-full object-cover flex-shrink-0"
-            />
-          ) : (
-            <div className="w-10 h-10 bg-gradient-to-br from-sidebar-accent to-secondary rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-sidebar-accent-foreground font-display font-bold text-xs">
-                {user?.name?.substring(0, 2).toUpperCase() || "XX"}
-              </span>
-            </div>
-          )}
+          <span className="flex-shrink-0 text-sidebar-foreground group-hover:text-red-500 transition-colors">
+            <LogOut size={20} />
+          </span>
+          {!isCollapsed && <span className="truncate text-red-500 group-hover:text-red-600">Sair</span>}
+        </button>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-sidebar-accent to-secondary rounded-full flex items-center justify-center flex-shrink-0">
+            <span className="text-sidebar-accent-foreground font-display font-bold text-xs">
+              {user?.name?.substring(0, 2).toUpperCase() || "XX"}
+            </span>
+          </div>
           {!isCollapsed && (
             <div className="flex-1 min-w-0">
               <p className="text-xs font-semibold truncate">{user?.name || "Usuário"}</p>
@@ -171,7 +177,7 @@ export default function Sidebar() {
               </p>
             </div>
           )}
-        </button>
+        </div>
       </div>
     </aside>
   );
