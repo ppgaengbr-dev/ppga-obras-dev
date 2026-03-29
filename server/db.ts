@@ -487,10 +487,33 @@ export async function deleteClient(id: number) {
 
 // Works queries
 export async function getAllWorks() {
-  const db = await getDb();
-  if (!db) throw new Error('Database not available');
+  const pool = await getPool();
+  if (!pool) throw new Error('Database pool not available');
+  
   try {
-    return await db.select().from(works);
+    const connection = await pool.getConnection();
+    try {
+      // Query that joins works with architects to resolve architectId from clientContact
+      const query = `
+        SELECT 
+          w.*,
+          COALESCE(w.architectId, a.id) as resolvedArchitectId
+        FROM works w
+        LEFT JOIN architects a ON a.officeNameName = w.clientContact
+      `;
+      
+      const [rows] = await connection.execute(query);
+      
+      // Map the results to include resolvedArchitectId as architectId
+      const worksWithArchitectId = (rows as any[]).map(row => ({
+        ...row,
+        architectId: row.resolvedArchitectId,
+      }));
+      
+      return worksWithArchitectId;
+    } finally {
+      connection.release();
+    }
   } catch (error) {
     console.error('[Database] Failed to get all works:', error);
     throw error;
