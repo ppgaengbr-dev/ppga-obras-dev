@@ -3,7 +3,7 @@ import { useAuth } from './useAuth';
 export type UserRole = 'ADMIN' | 'CLIENTE' | 'ARQUITETO' | 'PRESTADOR';
 
 export interface PermissionConfig {
-  page: 'OBRAS' | 'CLIENTES' | 'PRESTADORES' | 'ARQUITETOS' | 'ORCAMENTOS' | 'CONTRATOS' | 'FINANCEIRO' | 'RELATORIOS' | 'CONFIGURACOES' | 'CRONOGRAMAS' | 'ALOCACOES';
+  page: 'OBRAS' | 'CLIENTES' | 'PRESTADORES' | 'ARQUITETOS' | 'ORCAMENTOS' | 'CONTRATOS' | 'FINANCEIRO' | 'RELATORIOS' | 'CONFIGURACOES' | 'CRONOGRAMAS' | 'ALOCACOES' | 'DASHBOARD' | 'BUDGETS' | 'SCHEDULE' | 'FINANCE' | 'REPORTS' | 'SETTINGS' | 'CONTRACTS';
   action?: 'view' | 'edit' | 'delete' | 'create';
 }
 
@@ -14,20 +14,23 @@ export function usePermission() {
   /**
    * Verifica se o usuário tem permissão para acessar uma página
    */
-  const canAccessPage = (config: PermissionConfig): boolean => {
+  const canAccessPage = (pageOrConfig: string | PermissionConfig): boolean => {
     if (!role) return false;
 
     // Admin tem acesso a tudo
     if (role === 'ADMIN') return true;
 
-    const { page } = config;
+    // Converter string para uppercase para compatibilidade
+    const page = (typeof pageOrConfig === 'string' 
+      ? pageOrConfig.toUpperCase() 
+      : pageOrConfig.page) as string;
 
     // Páginas bloqueadas para não-admin
-    const blockedPages: Record<UserRole, PermissionConfig['page'][]> = {
+    const blockedPages: Record<UserRole, string[]> = {
       ADMIN: [],
-      CLIENTE: ['CLIENTES', 'PRESTADORES', 'ARQUITETOS', 'FINANCEIRO', 'RELATORIOS', 'CONFIGURACOES'],
-      ARQUITETO: ['CLIENTES', 'PRESTADORES', 'ARQUITETOS', 'FINANCEIRO', 'RELATORIOS', 'CONFIGURACOES'],
-      PRESTADOR: ['CLIENTES', 'PRESTADORES', 'ARQUITETOS', 'ORCAMENTOS', 'CONTRATOS', 'FINANCEIRO', 'RELATORIOS', 'CONFIGURACOES', 'CRONOGRAMAS', 'OBRAS'],
+      CLIENTE: ['CLIENTES', 'PRESTADORES', 'ARQUITETOS', 'DASHBOARD', 'FINANCEIRO', 'RELATORIOS', 'CONFIGURACOES', 'SETTINGS', 'ORCAMENTOS', 'BUDGETS', 'CONTRATOS', 'CONTRACTS', 'CRONOGRAMAS', 'SCHEDULE', 'FINANCE', 'REPORTS'],
+      ARQUITETO: ['CLIENTES', 'PRESTADORES', 'ARQUITETOS', 'DASHBOARD', 'FINANCEIRO', 'RELATORIOS', 'CONFIGURACOES', 'SETTINGS', 'ORCAMENTOS', 'BUDGETS', 'CONTRATOS', 'CONTRACTS', 'FINANCE', 'REPORTS'],
+      PRESTADOR: ['CLIENTES', 'PRESTADORES', 'ARQUITETOS', 'DASHBOARD', 'ORCAMENTOS', 'BUDGETS', 'CONTRATOS', 'CONTRACTS', 'FINANCEIRO', 'FINANCE', 'RELATORIOS', 'REPORTS', 'CONFIGURACOES', 'SETTINGS', 'CRONOGRAMAS', 'SCHEDULE', 'OBRAS'],
     };
 
     return !blockedPages[role]?.includes(page);

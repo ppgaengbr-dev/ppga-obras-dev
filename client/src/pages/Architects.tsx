@@ -37,7 +37,16 @@ const COMMISSION_OPTIONS = [
   { value: 'no', label: 'Não' },
 ];
 
+import { usePermission } from '../_core/hooks/usePermission';
+import AccessDenied from '../components/AccessDenied';
+
 export default function Architects() {
+  const { canAccessPage } = usePermission();
+  
+  if (!canAccessPage('architects')) {
+    return <AccessDenied />;
+  }
+  
   const [architects, setArchitects] = useState<Architect[]>([]);
   const { data: architectsData } = trpc.architects.list.useQuery();
   const utils = trpc.useUtils();

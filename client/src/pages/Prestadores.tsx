@@ -97,7 +97,16 @@ const openDatePicker = (inputId: string) => {
 
 
 
+import { usePermission } from '../_core/hooks/usePermission';
+import AccessDenied from '../components/AccessDenied';
+
 export default function Prestadores() {
+  const { canAccessPage } = usePermission();
+  
+  if (!canAccessPage('prestadores')) {
+    return <AccessDenied />;
+  }
+  
   const [prestadores, setPrestadores] = useState<Prestador[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [remunerations, setRemunerations] = useState<any[]>([]);

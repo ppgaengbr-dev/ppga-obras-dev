@@ -1,9 +1,16 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
+import { usePermission } from '../_core/hooks/usePermission';
+import AccessDenied from '../components/AccessDenied';
 
 export default function Reports() {
+  const { canAccessPage } = usePermission();
   const [, setLocation] = useLocation();
+  
+  if (!canAccessPage('reports')) {
+    return <AccessDenied />;
+  }
 
   return (
     <>

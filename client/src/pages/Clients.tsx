@@ -105,7 +105,16 @@ const formatCurrency = (value: string) => {
 
 
 
+import { usePermission } from '../_core/hooks/usePermission';
+import AccessDenied from '../components/AccessDenied';
+
 export default function Clients() {
+  const { canAccessPage } = usePermission();
+  
+  if (!canAccessPage('clients')) {
+    return <AccessDenied />;
+  }
+  
   const [clients, setClients] = useState<any[]>([]);
   const [works, setWorks] = useState<any[]>([]);
   const { data: clientsData } = trpc.clients.list.useQuery();

@@ -39,7 +39,16 @@ const recentAllocations = [
   },
 ];
 
+import { usePermission } from '../_core/hooks/usePermission';
+import AccessDenied from '../components/AccessDenied';
+
 export default function Dashboard() {
+  const { canAccessPage } = usePermission();
+  
+  if (!canAccessPage('dashboard')) {
+    return <AccessDenied />;
+  }
+  
   // Get user info from localStorage
   const userInfo = localStorage.getItem('auth_token') ? 'Usuário Autenticado' : 'Visitante';
 

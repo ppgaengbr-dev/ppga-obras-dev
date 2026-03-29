@@ -75,7 +75,16 @@ const getWeekStart = (date: Date): Date => {
   return new Date(year, parseInt(month) - 1, diff);
 };
 
+import { usePermission } from '../_core/hooks/usePermission';
+import AccessDenied from '../components/AccessDenied';
+
 export default function Allocations() {
+  const { canAccessPage, filterAllocations: filterAllocationsByRole } = usePermission();
+  
+  if (!canAccessPage('alocacoes')) {
+    return <AccessDenied />;
+  }
+  
   // Estados de datas
   const [currentDate, setCurrentDate] = useState<Date>(() => new Date());
   const [weekStartDate, setWeekStartDate] = useState<Date>(() => getWeekStart(new Date()));
@@ -122,12 +131,15 @@ export default function Allocations() {
 
   // Allocations desta semana
   const allocationsThisWeek = useMemo(() => {
-    return allocations.filter(a => {
+    // Aplicar filtro de role primeiro
+    const filteredAllocations = filterAllocationsByRole(allocations);
+    
+    return filteredAllocations.filter(a => {
       const allocStart = parseLocalDate(a.startDate);
       const allocEnd = parseLocalDate(a.endDate);
       return allocStart <= weekDays[4] && allocEnd >= weekDays[0];
     });
-  }, [allocations, weekDays]);
+  }, [allocations, weekDays, filterAllocationsByRole]);
 
   // Obras com alocações nesta semana
   const worksWithAllocations = useMemo(() => {

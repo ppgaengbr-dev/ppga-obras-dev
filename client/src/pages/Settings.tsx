@@ -8,7 +8,16 @@ import { toast } from 'sonner';
 import { trpc } from '@/lib/trpc';
 import { AdminUsersPage } from './AdminUsers';
 
+import { usePermission } from '../_core/hooks/usePermission';
+import AccessDenied from '../components/AccessDenied';
+
 export default function Settings() {
+  const { canAccessPage } = usePermission();
+  
+  if (!canAccessPage('settings')) {
+    return <AccessDenied />;
+  }
+  
   const [activeTab, setActiveTab] = useState<'categories' | 'remunerations' | 'users'>('categories');
   const [newItemName, setNewItemName] = useState('');
   const [newItemDescription, setNewItemDescription] = useState('');

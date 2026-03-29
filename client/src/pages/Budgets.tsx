@@ -1,9 +1,16 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
+import { usePermission } from '../_core/hooks/usePermission';
+import AccessDenied from '../components/AccessDenied';
 
 export default function Budgets() {
+  const { canAccessPage } = usePermission();
   const [, setLocation] = useLocation();
+  
+  if (!canAccessPage('budgets')) {
+    return <AccessDenied />;
+  }
 
   return (
     <>
