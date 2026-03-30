@@ -55,21 +55,33 @@ function InternalRouter() {
       >
         <Switch>
           <Route path={"/dashboard"} component={Dashboard} />
+          <Route path={"/painel"} component={Dashboard} />
           <Route path={"/clients"} component={Clients} />
+          <Route path={"/clientes"} component={Clients} />
           <Route path={"/clients-summary"} component={ClientsSummary} />
           <Route path={"/architects"} component={Architects} />
+          <Route path={"/arquitetos"} component={Architects} />
 
           <Route path={"/prestadores"} component={Prestadores} />
           <Route path={"/allocations"} component={Allocations} />
+          <Route path={"/alocacoes"} component={Allocations} />
           <Route path={"/reports"} component={Reports} />
+          <Route path={"/relatorios"} component={Reports} />
           <Route path={"/budgets"} component={Budgets} />
+          <Route path={"/orcamentos"} component={Budgets} />
           <Route path={"/contracts"} component={Contracts} />
+          <Route path={"/contratos"} component={Contracts} />
           <Route path={"/finance"} component={Finance} />
+          <Route path={"/financeiro"} component={Finance} />
           <Route path={"/works"} component={Works} />
+          <Route path={"/obras"} component={Works} />
           <Route path={"/timeline"} component={Schedule} />
+          <Route path={"/cronogramas"} component={Schedule} />
           <Route path={"/settings"} component={Settings} />
+          <Route path={"/configuracoes"} component={Settings} />
           <Route path={"/admin/users"} component={AdminUsersPage} />
           <Route path={"/account"} component={Account} />
+          <Route path={"/simulador"} component={Simulator} />
           <Route path={"/simulator"} component={Simulator} />
           <Route component={NotFound} />
         </Switch>

@@ -112,7 +112,7 @@ export default function Works() {
   const { canAccessPage, filterWorks, canEdit, canDelete } = usePermission();
   
   // Check permission
-  if (!canAccessPage({ page: 'OBRAS' })) {
+  if (!canAccessPage('obras')) {
     return <AccessDenied />;
   }
   
