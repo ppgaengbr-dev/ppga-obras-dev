@@ -48,7 +48,7 @@ const mainNavItems: NavItem[] = [
   { id: "reports", label: "Relatórios", icon: <FileText size={20} />, href: "/reports" },
   { id: "financial", label: "Financeiro", icon: <DollarSign size={20} />, href: "/finance" },
   { id: "settings", label: "Configurações", icon: <Settings size={20} />, href: "/settings" },
-  { id: "rules", label: "Regras", icon: <FileText size={20} />, href: "/rules" },
+  { id: "simulator", label: "Simulador", icon: <FileText size={20} />, href: "/simulator" },
 ];
 
 const secondaryNavItems: NavItem[] = [];

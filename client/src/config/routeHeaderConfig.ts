@@ -11,9 +11,9 @@ export interface RouteHeaderConfig {
 }
 
 export const routeHeaderConfig: Record<string, RouteHeaderConfig> = {
-  '/': {
+  '/dashboard': {
     title: 'Dashboard',
-    subtitle: 'Visão geral do sistema',
+    subtitle: 'Painel de controle',
     actionButton: {
       label: 'Atalho rápido',
     },
@@ -103,11 +103,15 @@ export const routeHeaderConfig: Record<string, RouteHeaderConfig> = {
     title: 'Conta do usuário',
     subtitle: 'Gerencie o seu perfil de usuário',
   },
+  '/simulator': {
+    title: 'Simulador',
+    subtitle: 'Simule o cálculo de valor de obra',
+  },
 };
 
 export function getRouteHeaderConfig(pathname: string): RouteHeaderConfig {
   return routeHeaderConfig[pathname] || {
-    title: 'Página',
-    subtitle: 'Conteúdo',
+    title: '',
+    subtitle: '',
   };
 }

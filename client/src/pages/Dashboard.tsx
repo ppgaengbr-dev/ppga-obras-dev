@@ -39,14 +39,17 @@ const recentAllocations = [
   },
 ];
 
-import { usePermission } from '../_core/hooks/usePermission';
-import AccessDenied from '../components/AccessDenied';
+import { useAuth } from '../_core/hooks/useAuth';
 
 export default function Dashboard() {
-  const { canAccessPage } = usePermission();
+  const { user } = useAuth();
   
-  if (!canAccessPage('dashboard')) {
-    return <AccessDenied />;
+  // Dashboard é acessível para todos, mas com conteúdo diferente
+  const isAdmin = user?.role === 'ADMIN';
+  
+  if (!isAdmin) {
+    // Para não-admin, mostrar página de boas-vindas
+    return <WelcomePage user={user} />;
   }
   
   // Get user info from localStorage
@@ -149,6 +152,48 @@ export default function Dashboard() {
           ))}
         </div>
       </Card>
+    </div>
+  );
+}
+
+// Página de Boas-vindas para não-admin
+function WelcomePage({ user }: any) {
+  return (
+    <div className="space-y-8">
+      {/* Welcome Section */}
+      <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl p-8 border border-border">
+        <h2 className="text-3xl font-bold text-foreground mb-2">Bem-vindo(a), {user?.name}!</h2>
+        <p className="text-lg text-muted-foreground">Você está logado como <span className="font-semibold">{user?.role}</span></p>
+      </div>
+
+      {/* Sobre a Empresa */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="p-6 border border-border rounded-2xl">
+          <h3 className="text-xl font-bold text-foreground mb-4">Sobre a PPGA Obras</h3>
+          <p className="text-muted-foreground leading-relaxed">
+            A PPGA Obras é uma empresa especializada em reformas e construção civil na cidade de Porto Alegre, Rio Grande do Sul. 
+            Com experiência em projetos residenciais e comerciais, oferecemos soluções completas de engenharia e arquitetura.
+          </p>
+        </Card>
+
+        <Card className="p-6 border border-border rounded-2xl">
+          <h3 className="text-xl font-bold text-foreground mb-4">Entre em Contato</h3>
+          <div className="space-y-3">
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">Instagram</p>
+              <a href="https://instagram.com/ppgaobras" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">
+                @ppgaobras
+              </a>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">Website</p>
+              <a href="https://www.ppgaobras.com.br" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">
+                www.ppgaobras.com.br
+              </a>
+            </div>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }

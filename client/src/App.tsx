@@ -27,6 +27,7 @@ import { RegisterPage } from "./pages/Register";
 import { AdminUsersPage } from "./pages/AdminUsers";
 import RootRedirect from "./pages/RootRedirect";
 import Account from "./pages/Account";
+import Simulator from "./pages/Simulator";
 
 function InternalRouter() {
   const [location] = useLocation();
@@ -69,6 +70,7 @@ function InternalRouter() {
           <Route path={"/settings"} component={Settings} />
           <Route path={"/admin/users"} component={AdminUsersPage} />
           <Route path={"/account"} component={Account} />
+          <Route path={"/simulator"} component={Simulator} />
           <Route component={NotFound} />
         </Switch>
       </DashboardLayout>
