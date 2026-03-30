@@ -47,8 +47,8 @@ export function usePermission() {
       ADMIN: [],
       // CLIENTE: Bloqueia Prestadores, Arquitetos, Alocações, Financeiro, Relatórios, Configurações, Simulador
       CLIENTE: ['CLIENTES', 'PRESTADORES', 'ARQUITETOS', 'ALOCACOES', 'FINANCEIRO', 'RELATORIOS', 'CONFIGURACOES', 'SIMULADOR'],
-      // ARQUITETO: Bloqueia Clientes, Prestadores, Alocações, Contratos, Financeiro, Relatórios, Configurações
-      ARQUITETO: ['CLIENTES', 'PRESTADORES', 'ARQUITETOS', 'ALOCACOES', 'CONTRATOS', 'FINANCEIRO', 'RELATORIOS', 'CONFIGURACOES'],
+      // ARQUITETO: Bloqueia Clientes, Contratos, Prestadores, Arquitetos, Relatórios, Financeiro, Configurações
+      ARQUITETO: ['CLIENTES', 'CONTRATOS', 'PRESTADORES', 'ARQUITETOS', 'RELATORIOS', 'FINANCEIRO', 'CONFIGURACOES'],
       // PRESTADOR: Bloqueia Clientes, Prestadores, Arquitetos, Obras, Orçamentos, Contratos, Cronogramas, Financeiro, Relatórios, Configurações, Simulador
       PRESTADOR: ['CLIENTES', 'PRESTADORES', 'ARQUITETOS', 'OBRAS', 'ORCAMENTOS', 'CONTRATOS', 'CRONOGRAMAS', 'FINANCEIRO', 'RELATORIOS', 'CONFIGURACOES', 'SIMULADOR'],
     };

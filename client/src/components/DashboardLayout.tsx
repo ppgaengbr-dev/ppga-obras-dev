@@ -41,7 +41,7 @@ export default function DashboardLayout({
         {/* Page Content */}
         <main className="flex-1 overflow-auto">
           <div className="max-w-6xl mx-auto px-8 py-8">
-            {(title || actionButton) && (
+            {(title || actionButton) && title !== '' && (
               <div className="flex items-start justify-between mb-8">
                 <div>
                   {title && <h1 className="text-3xl font-bold text-foreground mb-2">{title}</h1>}
