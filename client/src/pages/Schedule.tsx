@@ -8,7 +8,7 @@ export default function Schedule() {
   const { canAccessPage } = usePermission();
   const [, setLocation] = useLocation();
   
-  if (!canAccessPage('schedule')) {
+  if (!canAccessPage('cronogramas')) {
     return <AccessDenied />;
   }
 

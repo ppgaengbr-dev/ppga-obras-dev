@@ -3,7 +3,7 @@ import { useAuth } from './useAuth';
 export type UserRole = 'ADMIN' | 'CLIENTE' | 'ARQUITETO' | 'PRESTADOR';
 
 export interface PermissionConfig {
-  page: 'OBRAS' | 'CLIENTES' | 'PRESTADORES' | 'ARQUITETOS' | 'ORCAMENTOS' | 'CONTRATOS' | 'FINANCEIRO' | 'RELATORIOS' | 'CONFIGURACOES' | 'CRONOGRAMAS' | 'ALOCACOES' | 'DASHBOARD' | 'BUDGETS' | 'SCHEDULE' | 'FINANCE' | 'REPORTS' | 'SETTINGS' | 'CONTRACTS';
+  page: 'OBRAS' | 'CLIENTES' | 'PRESTADORES' | 'ARQUITETOS' | 'ORCAMENTOS' | 'CONTRATOS' | 'FINANCEIRO' | 'RELATORIOS' | 'CONFIGURACOES' | 'CRONOGRAMAS' | 'ALOCACOES' | 'DASHBOARD' | 'BUDGETS' | 'SCHEDULE' | 'FINANCE' | 'REPORTS' | 'SETTINGS' | 'CONTRACTS' | 'SIMULADOR';
   action?: 'view' | 'edit' | 'delete' | 'create';
 }
 
@@ -13,6 +13,23 @@ export function usePermission() {
 
   /**
    * Verifica se o usuário tem permissão para acessar uma página
+   * 
+   * Tabela de permissões:
+   * | Página        | ADMIN | CLIENTE | ARQUITETO | PRESTADOR |
+   * |---------------|-------|---------|-----------|-----------|
+   * | Dashboard     | ✅    | ✅      | ✅        | ✅        |
+   * | Clientes      | ✅    | ❌      | ❌        | ❌        |
+   * | Prestadores   | ✅    | ❌      | ❌        | ❌        |
+   * | Arquitetos    | ✅    | ❌      | ❌        | ❌        |
+   * | Obras         | ✅    | Suas    | Suas      | ❌        |
+   * | Alocações     | ✅    | ❌      | ❌        | Suas      |
+   * | Orçamentos    | ✅    | Suas    | Suas      | ❌        |
+   * | Contratos     | ✅    | Suas    | ❌        | ❌        |
+   * | Cronogramas   | ✅    | Suas    | Suas      | ❌        |
+   * | Financeiro    | ✅    | ❌      | ❌        | ❌        |
+   * | Relatórios    | ✅    | ❌      | ❌        | ❌        |
+   * | Configurações | ✅    | ❌      | ❌        | ❌        |
+   * | Simulador     | ✅    | ❌      | ✅        | ❌        |
    */
   const canAccessPage = (pageOrConfig: string | PermissionConfig): boolean => {
     if (!role) return false;
@@ -25,12 +42,15 @@ export function usePermission() {
       ? pageOrConfig.toUpperCase() 
       : pageOrConfig.page) as string;
 
-    // Páginas bloqueadas para não-admin (usando nomes em português)
+    // Páginas bloqueadas para cada role (usando nomes em português)
     const blockedPages: Record<UserRole, string[]> = {
       ADMIN: [],
-      CLIENTE: ['CLIENTES', 'PRESTADORES', 'ARQUITETOS', 'FINANCEIRO', 'RELATORIOS', 'CONFIGURACOES', 'ORCAMENTOS', 'CONTRATOS', 'CRONOGRAMAS'],
-      ARQUITETO: ['CLIENTES', 'PRESTADORES', 'ARQUITETOS', 'FINANCEIRO', 'RELATORIOS', 'CONFIGURACOES', 'ORCAMENTOS', 'CONTRATOS'],
-      PRESTADOR: ['CLIENTES', 'PRESTADORES', 'ARQUITETOS', 'ORCAMENTOS', 'CONTRATOS', 'FINANCEIRO', 'RELATORIOS', 'CONFIGURACOES', 'CRONOGRAMAS', 'OBRAS'],
+      // CLIENTE: Bloqueia Prestadores, Arquitetos, Alocações, Financeiro, Relatórios, Configurações, Simulador
+      CLIENTE: ['CLIENTES', 'PRESTADORES', 'ARQUITETOS', 'ALOCACOES', 'FINANCEIRO', 'RELATORIOS', 'CONFIGURACOES', 'SIMULADOR'],
+      // ARQUITETO: Bloqueia Clientes, Prestadores, Alocações, Contratos, Financeiro, Relatórios, Configurações
+      ARQUITETO: ['CLIENTES', 'PRESTADORES', 'ARQUITETOS', 'ALOCACOES', 'CONTRATOS', 'FINANCEIRO', 'RELATORIOS', 'CONFIGURACOES'],
+      // PRESTADOR: Bloqueia Clientes, Prestadores, Arquitetos, Obras, Orçamentos, Contratos, Cronogramas, Financeiro, Relatórios, Configurações, Simulador
+      PRESTADOR: ['CLIENTES', 'PRESTADORES', 'ARQUITETOS', 'OBRAS', 'ORCAMENTOS', 'CONTRATOS', 'CRONOGRAMAS', 'FINANCEIRO', 'RELATORIOS', 'CONFIGURACOES', 'SIMULADOR'],
     };
 
     return !blockedPages[role]?.includes(page);

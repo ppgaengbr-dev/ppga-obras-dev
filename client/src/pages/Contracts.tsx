@@ -8,7 +8,7 @@ export default function Contracts() {
   const { canAccessPage } = usePermission();
   const [, setLocation] = useLocation();
   
-  if (!canAccessPage('contracts')) {
+  if (!canAccessPage('contratos')) {
     return <AccessDenied />;
   }
 

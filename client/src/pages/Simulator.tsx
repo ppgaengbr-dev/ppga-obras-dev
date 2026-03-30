@@ -1,7 +1,14 @@
 import { Card } from '@/components/ui/card';
 import { AlertCircle } from 'lucide-react';
+import { usePermission } from '../_core/hooks/usePermission';
+import AccessDenied from '../components/AccessDenied';
 
 export default function Simulator() {
+  const { canAccessPage } = usePermission();
+  
+  if (!canAccessPage('simulador')) {
+    return <AccessDenied />;
+  }
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
       <Card className="p-8 max-w-md w-full border border-border rounded-2xl">

@@ -8,7 +8,7 @@ export default function Budgets() {
   const { canAccessPage } = usePermission();
   const [, setLocation] = useLocation();
   
-  if (!canAccessPage('budgets')) {
+  if (!canAccessPage('orcamentos')) {
     return <AccessDenied />;
   }
 
