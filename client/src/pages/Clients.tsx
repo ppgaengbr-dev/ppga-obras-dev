@@ -111,7 +111,7 @@ import AccessDenied from '../components/AccessDenied';
 export default function Clients() {
   const { canAccessPage } = usePermission();
   
-  if (!canAccessPage('clients')) {
+  if (!canAccessPage('clientes')) {
     return <AccessDenied />;
   }
   

@@ -8,7 +8,7 @@ export default function Reports() {
   const { canAccessPage } = usePermission();
   const [, setLocation] = useLocation();
   
-  if (!canAccessPage('reports')) {
+  if (!canAccessPage('relatorios')) {
     return <AccessDenied />;
   }
 

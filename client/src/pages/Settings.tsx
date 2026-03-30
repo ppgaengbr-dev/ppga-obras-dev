@@ -14,7 +14,7 @@ import AccessDenied from '../components/AccessDenied';
 export default function Settings() {
   const { canAccessPage } = usePermission();
   
-  if (!canAccessPage('settings')) {
+  if (!canAccessPage('configuracoes')) {
     return <AccessDenied />;
   }
   

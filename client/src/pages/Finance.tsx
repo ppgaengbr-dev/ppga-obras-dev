@@ -8,7 +8,7 @@ export default function Finance() {
   const { canAccessPage } = usePermission();
   const [, setLocation] = useLocation();
   
-  if (!canAccessPage('finance')) {
+  if (!canAccessPage('financeiro')) {
     return <AccessDenied />;
   }
 

@@ -43,7 +43,7 @@ import AccessDenied from '../components/AccessDenied';
 export default function Architects() {
   const { canAccessPage } = usePermission();
   
-  if (!canAccessPage('architects')) {
+  if (!canAccessPage('arquitetos')) {
     return <AccessDenied />;
   }
   
