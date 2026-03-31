@@ -11,6 +11,99 @@ export interface RouteHeaderConfig {
 }
 
 export const routeHeaderConfig: Record<string, RouteHeaderConfig> = {
+  // Portuguese routes (primary)
+  '/painel': {
+    title: 'Dashboard',
+    subtitle: 'Painel de controle',
+    actionButton: {
+      label: 'Atalho rápido',
+    },
+  },
+  '/clientes': {
+    title: 'Clientes',
+    subtitle: 'Gerencie seus clientes',
+    actionButton: {
+      label: '+ Adicionar cliente',
+      onClick: () => {
+        const event = new CustomEvent('openAddClientModal');
+        window.dispatchEvent(event);
+      },
+    },
+  },
+  '/arquitetos': {
+    title: 'Arquitetos',
+    subtitle: 'Gerencie seus arquitetos',
+    actionButton: {
+      label: '+ Adicionar arquiteto',
+      onClick: () => {
+        const event = new CustomEvent('openAddArchitectModal');
+        window.dispatchEvent(event);
+      },
+    },
+  },
+  '/prestadores': {
+    title: 'Prestadores',
+    subtitle: 'Gerencie seus prestadores',
+    actionButton: {
+      label: '+ Adicionar prestador',
+      onClick: () => {
+        const event = new CustomEvent('openAddPrestadorModal');
+        window.dispatchEvent(event);
+      },
+    },
+  },
+  '/alocacoes': {
+    title: 'Alocações',
+    subtitle: 'Gerencie alocações de prestadores',
+    actionButton: {
+      label: '+ Adicionar alocação',
+      onClick: () => {
+        const event = new CustomEvent('openAddAllocationModal');
+        window.dispatchEvent(event);
+      },
+    },
+  },
+  '/relatorios': {
+    title: 'Relatórios',
+    subtitle: 'Visualize relatórios e análises',
+  },
+  '/orcamentos': {
+    title: 'Orçamentos',
+    subtitle: 'Gerencie orçamentos de projetos',
+  },
+  '/contratos': {
+    title: 'Contratos',
+    subtitle: 'Gerencie contratos e documentos',
+  },
+  '/financeiro': {
+    title: 'Financeiro',
+    subtitle: 'Controle financeiro do sistema',
+  },
+  '/obras': {
+    title: 'Obras',
+    subtitle: 'Gerencie suas obras',
+    actionButton: {
+      label: '+ Adicionar obra',
+      onClick: () => {
+        const event = new CustomEvent('openAddWorkModal');
+        window.dispatchEvent(event);
+      },
+    },
+  },
+  '/cronogramas': {
+    title: 'Cronograma',
+    subtitle: 'Visualize cronograma de projetos',
+  },
+  '/configuracoes': {
+    title: 'Configurações',
+    subtitle: 'Ajuste as configurações do sistema',
+  },
+  '/simulador': {
+    title: 'Simulador',
+    subtitle: 'Simule o cálculo de valor de obra',
+  },
+  
+  // English routes (backward compatibility)
   '/dashboard': {
     title: 'Dashboard',
     subtitle: 'Painel de controle',
@@ -24,7 +117,6 @@ export const routeHeaderConfig: Record<string, RouteHeaderConfig> = {
     actionButton: {
       label: '+ Adicionar cliente',
       onClick: () => {
-        // Trigger modal open via custom event
         const event = new CustomEvent('openAddClientModal');
         window.dispatchEvent(event);
       },
@@ -36,7 +128,6 @@ export const routeHeaderConfig: Record<string, RouteHeaderConfig> = {
     actionButton: {
       label: '+ Adicionar arquiteto',
       onClick: () => {
-        // Trigger modal open via custom event
         const event = new CustomEvent('openAddArchitectModal');
         window.dispatchEvent(event);
       },
@@ -47,17 +138,6 @@ export const routeHeaderConfig: Record<string, RouteHeaderConfig> = {
     subtitle: 'Gerencie seus prestadores',
     actionButton: {
       label: '+ Adicionar prestador',
-    },
-  },
-  '/prestadores': {
-    title: 'Prestadores',
-    subtitle: 'Gerencie seus prestadores',
-    actionButton: {
-      label: '+ Adicionar prestador',
-      onClick: () => {
-        const event = new CustomEvent('openAddPrestadorModal');
-        window.dispatchEvent(event);
-      },
     },
   },
   '/allocations': {
@@ -90,6 +170,17 @@ export const routeHeaderConfig: Record<string, RouteHeaderConfig> = {
   '/works': {
     title: 'Obras',
     subtitle: 'Gerencie suas obras',
+    actionButton: {
+      label: '+ Adicionar obra',
+      onClick: () => {
+        const event = new CustomEvent('openAddWorkModal');
+        window.dispatchEvent(event);
+      },
+    },
+  },
+  '/timeline': {
+    title: 'Cronograma',
+    subtitle: 'Visualize cronograma de projetos',
   },
   '/schedule': {
     title: 'Cronograma',
