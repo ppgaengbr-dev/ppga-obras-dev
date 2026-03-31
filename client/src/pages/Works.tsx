@@ -223,8 +223,7 @@ export default function Works() {
     setShowDetails(false);
     setEditClientDetails(false);
     
-    const commission = work.commission || '';
-    const clientCommission = work.clientCommission || '';
+    let commission = work.commission || '';
     
     setFormData({
       clientName: work.clientName,
@@ -238,9 +237,9 @@ export default function Works() {
       clientAddress: work.clientAddress || '',
       clientOrigin: work.clientOrigin || '',
       clientContact: work.clientContact || '',
-      responsible: work.responsible || '',
+      responsible: work.responsible,
       commission: commission,
-      clientCommission: clientCommission,
+      clientCommission: commission,
     });
     setIsModalOpen(true);
   };
