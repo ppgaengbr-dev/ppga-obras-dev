@@ -53,6 +53,7 @@ type Work = {
   endDate: string;
   responsible: string;
   commission: string;
+  clientCommission?: string;
   clientPhone?: string;
   clientBirthDate?: string;
   clientAddress?: string;
@@ -150,11 +151,13 @@ export default function Works() {
 
   // Sync data from tRPC
   useEffect(() => {
-    if (worksData) {
+    if (worksData && Array.isArray(worksData)) {
       const filteredWorks = filterWorks(worksData);
       const adaptedWorks = filteredWorks.map((w: any) => ({
         ...w,
-        reminder: w.reminder ? true : undefined,
+        id: w.id || Math.random(),
+        clientCommission: w.clientCommission || '',
+        reminder: w.reminder || false,
       }));
       setWorks(adaptedWorks as Work[]);
     }

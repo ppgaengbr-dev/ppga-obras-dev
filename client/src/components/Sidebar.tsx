@@ -36,19 +36,19 @@ interface NavItem {
 }
 
 const mainNavItems: NavItem[] = [
-  { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard size={20} />, href: "/" },
-  { id: "clients", label: "Clientes", icon: <Users size={20} />, href: "/clients" },
-  { id: "budgets", label: "Orçamentos", icon: <DollarSign size={20} />, href: "/budgets" },
-  { id: "works", label: "Obras", icon: <Briefcase size={20} />, href: "/works" },
-  { id: "timeline", label: "Cronogramas", icon: <BarChart3 size={20} />, href: "/timeline" },
-  { id: "contracts", label: "Contratos", icon: <FileText size={20} />, href: "/contracts" },
-  { id: "allocations", label: "Alocações", icon: <BarChart3 size={20} />, href: "/allocations" },
+  { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard size={20} />, href: "/painel" },
+  { id: "clients", label: "Clientes", icon: <Users size={20} />, href: "/clientes" },
+  { id: "budgets", label: "Orçamentos", icon: <DollarSign size={20} />, href: "/orcamentos" },
+  { id: "works", label: "Obras", icon: <Briefcase size={20} />, href: "/obras" },
+  { id: "timeline", label: "Cronogramas", icon: <BarChart3 size={20} />, href: "/cronogramas" },
+  { id: "contracts", label: "Contratos", icon: <FileText size={20} />, href: "/contratos" },
+  { id: "allocations", label: "Alocações", icon: <BarChart3 size={20} />, href: "/alocacoes" },
   { id: "prestadores", label: "Prestadores", icon: <Briefcase size={20} />, href: "/prestadores" },
-  { id: "architects", label: "Arquitetos", icon: <Users size={20} />, href: "/architects" },
-  { id: "reports", label: "Relatórios", icon: <FileText size={20} />, href: "/reports" },
-  { id: "financial", label: "Financeiro", icon: <DollarSign size={20} />, href: "/finance" },
-  { id: "settings", label: "Configurações", icon: <Settings size={20} />, href: "/settings" },
-  { id: "simulator", label: "Simulador", icon: <FileText size={20} />, href: "/simulator" },
+  { id: "architects", label: "Arquitetos", icon: <Users size={20} />, href: "/arquitetos" },
+  { id: "reports", label: "Relatórios", icon: <FileText size={20} />, href: "/relatorios" },
+  { id: "financial", label: "Financeiro", icon: <DollarSign size={20} />, href: "/financeiro" },
+  { id: "settings", label: "Configurações", icon: <Settings size={20} />, href: "/configuracoes" },
+  { id: "simulator", label: "Simulador", icon: <FileText size={20} />, href: "/simulador" },
 ];
 
 const secondaryNavItems: NavItem[] = [];
