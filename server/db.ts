@@ -727,6 +727,69 @@ export async function getArchitectById(id: number) {
   }
 }
 
+// Architects mutations
+export async function createArchitect(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  try {
+    const architectData = {
+      name: data.officeNameName || data.name, // Fallback for compatibility
+      officeNameName: data.officeNameName,
+      status: data.status || 'active',
+      address: data.address,
+      architectName: data.architectName,
+      phone: data.phone,
+      birthDate: data.birthDate,
+      commission: data.commission,
+      observation: data.observation,
+      reminder: data.reminder ? parseInt(data.reminder) : 0,
+    };
+    
+    const result = await db.insert(architects).values(architectData);
+    return result;
+  } catch (error) {
+    console.error('[Database] Failed to create architect:', error);
+    throw error;
+  }
+}
+
+export async function updateArchitect(id: number, data: any) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  try {
+    const validFields: any = {
+      name: data.officeNameName || data.name, // Fallback for compatibility
+      officeNameName: data.officeNameName,
+      status: data.status,
+      address: data.address,
+      architectName: data.architectName,
+      phone: data.phone,
+      birthDate: data.birthDate,
+      commission: data.commission,
+      observation: data.observation,
+      reminder: data.reminder ? parseInt(data.reminder) : undefined,
+    };
+
+    Object.keys(validFields).forEach(key => validFields[key] === undefined && delete validFields[key]);
+
+    await db.update(architects).set(validFields).where(eq(architects.id, id));
+  } catch (error) {
+    console.error('[Database] Failed to update architect:', error);
+    throw error;
+  }
+}
+
+export async function deleteArchitect(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  try {
+    await db.delete(architects).where(eq(architects.id, id));
+  } catch (error) {
+    console.error('[Database] Failed to delete architect:', error);
+    throw error;
+  }
+}
+
 // Allocations queries
 export async function getAllAllocations() {
   const db = await getDb();

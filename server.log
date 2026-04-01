@@ -28,3 +28,7 @@ Error: server.handleUpgrade() was called more than once with the same socket, po
     at onParserExecute (node:_http_server:852:3)
 
 Node.js v22.13.0
+10:50:44 AM [tsx] change in ./server/db.ts Rerunning...
+c[OAuth] Initialized with baseURL: https://dev.ppgaobras.com.br
+Port 3000 is busy, using port 3001 instead
+Server running on http://localhost:3001/

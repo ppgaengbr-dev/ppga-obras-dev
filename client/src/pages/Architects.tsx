@@ -161,70 +161,80 @@ export default function Architects() {
   return (
     <>
       <div className="grid grid-cols-4 gap-6">
-        {STATUSES.map((status) => (
-          <div key={status.value}>
-            <h2 className="font-semibold text-gray-900 mb-4">
-              {status.label} ({groupedArchitects[status.value as keyof typeof groupedArchitects].length})
-            </h2>
+        {STATUSES.map((status) => {
+          const columnArchitects = groupedArchitects[status.value as keyof typeof groupedArchitects];
+          
+          return (
+            <div key={status.value} className="flex flex-col">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-gray-900">
+                  {status.label} ({columnArchitects.length})
+                </h3>
+              </div>
 
-            <div className="space-y-3">
-              {(groupedArchitects[status.value as keyof typeof groupedArchitects] || []).map((architect: Architect) => (
-                <div key={architect.id}>
-                  <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow relative group flex flex-col">
-                    <div className="absolute top-3 right-3 flex items-center gap-2">
-                      <button
-                        onClick={() => openEditModal(architect)}
-                        title="Editar arquiteto"
-                        className="text-gray-400 hover:text-gray-600 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <SquarePen size={16} />
-                      </button>
-                      <button
-                        onClick={() => setDeleteConfirm({ id: architect.id, name: architect.officeNameName })}
-                        title="Excluir arquiteto"
-                        className="text-gray-400 hover:text-red-600 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-
-                    <div className="flex flex-col flex-1 pr-8">
-                      <p className="font-semibold text-gray-900 text-sm break-words">
-                        {architect.officeNameName}
-                      </p>
-                      <p className="text-gray-600 text-xs mt-1 break-words">
-                        {architect.architectName}
-                      </p>
-                      <p className="text-gray-500 text-xs mt-1 break-words">
-                        {architect.phone}
-                      </p>
-                    </div>
+              <div className="space-y-3">
+                {columnArchitects.length === 0 ? (
+                  <Card className="p-4 flex items-center justify-center text-gray-400 text-sm h-24 border-dashed">
+                    Nenhum arquiteto
                   </Card>
-                </div>
-              ))}
+                ) : (
+                  columnArchitects.map((architect: Architect) => (
+                    <Card 
+                      key={architect.id} 
+                      className="p-4 hover:shadow-md transition-shadow cursor-pointer group"
+                      onClick={() => openEditModal(architect)}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex flex-col flex-1 pr-8">
+                          <p className="font-semibold text-gray-900 text-sm break-words">
+                            {architect.officeNameName}
+                          </p>
+                          <p className="text-gray-600 text-xs mt-1 break-words">
+                            {architect.architectName}
+                          </p>
+                          <p className="text-gray-500 text-xs mt-1 break-words">
+                            {architect.phone}
+                          </p>
+                        </div>
+
+                        <div className="flex gap-2 flex-shrink-0">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openEditModal(architect);
+                            }}
+                            title="Editar arquiteto"
+                            className="text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <SquarePen size={16} />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteConfirm({ id: architect.id, name: architect.officeNameName });
+                            }}
+                            title="Excluir arquiteto"
+                            className="text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+                    </Card>
+                  ))
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
-      <Button
-        onClick={openCreateModal}
-        className="fixed bottom-6 right-6 bg-gray-900 hover:bg-gray-800 text-white rounded-full p-4 shadow-lg"
-        title="Adicionar novo arquiteto"
-      >
-        <Plus size={24} />
-      </Button>
-
       {isModalOpen && (
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              {editingId ? 'Editar Arquiteto' : 'Novo Arquiteto'}
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4 py-4">
+        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <DialogContent className="sm:max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>{editingId ? 'Editar Arquiteto' : 'Adicionar Arquiteto'}</DialogTitle>
+            </DialogHeader>       <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="officeNameName" className="text-sm font-medium mb-2 block">Nome do escritório *</Label>
