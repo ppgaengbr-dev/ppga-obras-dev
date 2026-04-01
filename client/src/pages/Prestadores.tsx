@@ -103,10 +103,6 @@ import AccessDenied from '../components/AccessDenied';
 export default function Prestadores() {
   const { canAccessPage } = usePermission();
   
-  if (!canAccessPage('prestadores')) {
-    return <AccessDenied />;
-  }
-  
   const [prestadores, setPrestadores] = useState<Prestador[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [remunerations, setRemunerations] = useState<any[]>([]);
@@ -275,6 +271,11 @@ export default function Prestadores() {
     unvalidated: prestadores.filter((p: Prestador) => p.status === 'unvalidated'),
     inactive: prestadores.filter((p: Prestador) => p.status === 'inactive'),
   };
+
+  // Check permission - MUST be after all hooks
+  if (!canAccessPage('prestadores')) {
+    return <AccessDenied />;
+  }
 
   return (
     <>

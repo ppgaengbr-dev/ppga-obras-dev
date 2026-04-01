@@ -111,10 +111,6 @@ import AccessDenied from '../components/AccessDenied';
 export default function Clients() {
   const { canAccessPage } = usePermission();
   
-  if (!canAccessPage('clientes')) {
-    return <AccessDenied />;
-  }
-  
   const [clients, setClients] = useState<any[]>([]);
   const [works, setWorks] = useState<any[]>([]);
   const { data: clientsData } = trpc.clients.list.useQuery();
@@ -357,6 +353,11 @@ export default function Clients() {
     remarketing: clients.filter((c: any) => c.status === 'remarketing' && c.status !== 'work'),
     lost: clients.filter((c: any) => c.status === 'lost' && c.status !== 'work'),
   };
+
+  // Check permission - MUST be after all hooks
+  if (!canAccessPage('clientes')) {
+    return <AccessDenied />;
+  }
 
   return (
     <>

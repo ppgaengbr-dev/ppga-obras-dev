@@ -7,9 +7,8 @@ export const getLoginUrl = () => {
   const redirectUri = `${window.location.origin}/api/oauth/callback`;
   const state = btoa(redirectUri);
 
-  // Validate that required environment variables are set
+  // Fallback seguro sem quebrar app e sem console.error
   if (!oauthPortalUrl || !appId) {
-    console.error("Missing required environment variables: VITE_OAUTH_PORTAL_URL or VITE_APP_ID");
     return "/login";
   }
 
@@ -21,7 +20,6 @@ export const getLoginUrl = () => {
     url.searchParams.set("type", "signIn");
     return url.toString();
   } catch (error) {
-    console.error("Error creating login URL:", error);
     return "/login";
   }
 };

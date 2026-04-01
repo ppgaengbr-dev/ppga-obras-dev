@@ -7,7 +7,8 @@ import AccessDenied from '../components/AccessDenied';
 export default function Schedule() {
   const { canAccessPage } = usePermission();
   const [, setLocation] = useLocation();
-  
+
+  // Check permission - MUST be after all hooks
   if (!canAccessPage('cronogramas')) {
     return <AccessDenied />;
   }

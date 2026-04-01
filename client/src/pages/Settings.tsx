@@ -14,10 +14,6 @@ import AccessDenied from '../components/AccessDenied';
 export default function Settings() {
   const { canAccessPage } = usePermission();
   
-  if (!canAccessPage('configuracoes')) {
-    return <AccessDenied />;
-  }
-  
   const [activeTab, setActiveTab] = useState<'categories' | 'remunerations' | 'users'>('categories');
   const [newItemName, setNewItemName] = useState('');
   const [newItemDescription, setNewItemDescription] = useState('');
@@ -163,6 +159,11 @@ export default function Settings() {
     setEditingName('');
     setEditingDescription('');
   };
+
+  // Check permission - MUST be after all hooks
+  if (!canAccessPage('configuracoes')) {
+    return <AccessDenied />;
+  }
 
   return (
     <div className="p-6 max-w-6xl mx-auto">

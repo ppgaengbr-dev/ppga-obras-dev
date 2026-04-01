@@ -103,7 +103,7 @@ function loadMapScript() {
       script.remove(); // Clean up immediately
     };
     script.onerror = () => {
-      console.error("Failed to load Google Maps script");
+      // Silently fail to avoid console spam
     };
     document.head.appendChild(script);
   });

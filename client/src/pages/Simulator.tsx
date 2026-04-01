@@ -5,10 +5,12 @@ import AccessDenied from '../components/AccessDenied';
 
 export default function Simulator() {
   const { canAccessPage } = usePermission();
-  
+
+  // Check permission - MUST be after all hooks
   if (!canAccessPage('simulador')) {
     return <AccessDenied />;
   }
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
       <Card className="p-8 max-w-md w-full border border-border rounded-2xl">

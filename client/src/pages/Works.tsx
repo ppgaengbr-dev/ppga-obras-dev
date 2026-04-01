@@ -112,11 +112,6 @@ const formatCurrency = (value: string) => {
 export default function Works() {
   const { canAccessPage, filterWorks, canEdit, canDelete } = usePermission();
   
-  // Check permission
-  if (!canAccessPage('obras')) {
-    return <AccessDenied />;
-  }
-  
   const [works, setWorks] = useState<Work[]>([]);
   const { data: worksData } = trpc.works.list.useQuery();
   const { data: architectsData } = trpc.architects.list.useQuery();
@@ -131,7 +126,6 @@ export default function Works() {
       utils.works.list.invalidate();
     },
     onError: (error) => {
-      console.error('updateWorkMutation error:', error);
       toast.error('Erro ao atualizar obra');
     },
   });
@@ -230,12 +224,12 @@ export default function Works() {
     const clientCommission = work.clientCommission || '';
     
     setFormData({
-      clientName: work.clientName,
-      status: work.status,
-      workName: work.workName,
-      workValue: work.workValue,
-      startDate: work.startDate,
-      endDate: work.endDate,
+      clientName: work.clientName || '',
+      status: work.status || 'waiting',
+      workName: work.workName || '',
+      workValue: work.workValue || '',
+      startDate: work.startDate || '',
+      endDate: work.endDate || '',
       clientPhone: work.clientPhone || '',
       clientBirthDate: work.clientBirthDate || '',
       clientAddress: work.clientAddress || '',
@@ -411,7 +405,6 @@ export default function Works() {
       await utils.works.list.refetch();
       toast.success('Obra removida com sucesso!');
     } catch (error) {
-      console.error('Erro ao deletar obra:', error);
       toast.error('Erro ao remover obra');
     }
   };
@@ -423,6 +416,11 @@ export default function Works() {
     interrupted: works.filter((w: Work) => w.status === 'Interrompido'),
     completed: works.filter((w: Work) => w.status === 'Finalizado'),
   };
+
+  // Check permission - MUST be after all hooks
+  if (!canAccessPage('obras')) {
+    return <AccessDenied />;
+  }
 
   return (
     <>
@@ -437,7 +435,7 @@ export default function Works() {
             </h2>
 
             <div className="space-y-3">
-              {statusWorks.map((work: Work) => (
+              {(statusWorks || []).map((work: Work) => (
                 <div key={work.id}>
                   <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow relative group flex flex-col">
                     {/* Ações do Card - Lado a lado (Editar e Excluir) */}
@@ -795,7 +793,6 @@ export default function Works() {
                     }
                     toast.success('Item excluido com sucesso!');
                   } catch (error) {
-                    console.error('Erro ao deletar:', error);
                     toast.error('Erro ao excluir item');
                   }
                   setDeleteConfirm(null);

@@ -7,7 +7,8 @@ import AccessDenied from '../components/AccessDenied';
 export default function Finance() {
   const { canAccessPage } = usePermission();
   const [, setLocation] = useLocation();
-  
+
+  // Check permission - MUST be after all hooks
   if (!canAccessPage('financeiro')) {
     return <AccessDenied />;
   }
