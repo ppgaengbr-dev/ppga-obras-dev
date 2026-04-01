@@ -131,23 +131,20 @@ export default function Architects() {
   const activeArchitects = (architects || []).filter((a: Architect) => a.commission === 'yes');
   const inactiveArchitects = (architects || []).filter((a: Architect) => a.commission === 'no');
 
-  return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Arquitetos</h1>
-          <p className="text-gray-500 mt-1">Gerencie seus arquitetos</p>
-        </div>
-        <Button
-          onClick={openCreateModal}
-          className="bg-gray-900 hover:bg-gray-800 text-white rounded-md px-4 py-2"
-        >
-          <Plus size={16} className="mr-2" />
-          Adicionar arquiteto
-        </Button>
-      </div>
+  // Listen for custom event from header button
+  useEffect(() => {
+    const handleOpenAddModal = () => {
+      openCreateModal();
+    };
+    window.addEventListener('openAddArchitectModal', handleOpenAddModal);
+    return () => {
+      window.removeEventListener('openAddArchitectModal', handleOpenAddModal);
+    };
+  }, []);
 
-      <div className="grid grid-cols-2 gap-8">
+  return (
+    <>
+      <div className="grid grid-cols-4 gap-6">
         {/* Coluna Ativos */}
         <div>
           <h2 className="font-semibold text-gray-900 mb-4">
@@ -156,7 +153,7 @@ export default function Architects() {
           <div className="space-y-3">
             {activeArchitects.map((architect: Architect) => (
               <div key={architect.id}>
-                <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow relative group flex flex-col bg-white border border-gray-200 rounded-xl">
+                <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow relative group flex flex-col">
                   <div className="absolute top-3 right-3 flex items-center gap-2">
                     <button
                       onClick={() => openEditModal(architect)}
@@ -196,7 +193,7 @@ export default function Architects() {
           <div className="space-y-3">
             {inactiveArchitects.map((architect: Architect) => (
               <div key={architect.id}>
-                <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow relative group flex flex-col bg-white border border-gray-200 rounded-xl">
+                <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow relative group flex flex-col">
                   <div className="absolute top-3 right-3 flex items-center gap-2">
                     <button
                       onClick={() => openEditModal(architect)}
@@ -229,6 +226,7 @@ export default function Architects() {
         </div>
       </div>
 
+      {isModalOpen && (
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -237,7 +235,7 @@ export default function Architects() {
             </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4">
+          <div className="space-y-4 py-4">
             <div>
               <Label htmlFor="officeNameName" className="text-sm font-medium mb-2 block">Nome do escritório *</Label>
               <Input
@@ -278,7 +276,7 @@ export default function Architects() {
                 id="commission"
                 value={formData.commission}
                 onChange={(e) => setFormData({ ...formData, commission: e.target.value })}
-                className="w-full bg-white border border-gray-300 rounded px-3 py-2"
+                className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-sm"
               >
                 <option value="no">Não</option>
                 <option value="yes">Sim</option>
@@ -296,6 +294,7 @@ export default function Architects() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      )}
 
       <Dialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
         <DialogContent>
@@ -315,6 +314,6 @@ export default function Architects() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }
