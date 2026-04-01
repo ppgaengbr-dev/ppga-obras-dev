@@ -170,9 +170,9 @@ export default function Works() {
   useEffect(() => {
     if (worksData && Array.isArray(worksData)) {
       const filteredWorks = filterWorks(worksData);
-      const adaptedWorks = filteredWorks.map((w: any) => ({
+      const adaptedWorks = filteredWorks.map((w: any, index: number) => ({
         ...w,
-        id: w.id || Math.random(),
+        id: w.id || `temp-${index}-${Date.now()}`,
         clientCommission: w.clientCommission || '',
         reminder: w.reminder || false,
       }));
@@ -226,7 +226,7 @@ export default function Works() {
     
     setFormData({
       clientName: work.clientName || '',
-      status: work.status || 'waiting',
+      status: work.status || 'Aguardando',
       workName: work.workName || '',
       workValue: work.workValue || '',
       startDate: work.startDate || '',
@@ -683,7 +683,7 @@ export default function Works() {
               </div>
               <div>
                 <Label htmlFor="clientContact" className="text-sm font-medium mb-2 block">Contato *</Label>
-                {formData.clientOrigin === 'architect' ? (
+                {formData.clientOrigin === 'Arquiteto' ? (
                   <Select value={formData.clientContact} onValueChange={(value) => {
                     // Buscar dados do arquiteto selecionado
                     const selectedArchitect = (architectsData || []).find((a: any) => a.officeNameName === value);

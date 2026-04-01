@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useAuth } from './useAuth';
 
 export type UserRole = 'ADMIN' | 'CLIENTE' | 'ARQUITETO' | 'PRESTADOR';
@@ -31,7 +32,7 @@ export function usePermission() {
    * | Configurações | ✅    | ❌      | ❌        | ❌        |
    * | Simulador     | ✅    | ❌      | ✅        | ❌        |
    */
-  const canAccessPage = (pageOrConfig: string | PermissionConfig): boolean => {
+  const canAccessPage = useCallback((pageOrConfig: string | PermissionConfig): boolean => {
     if (!role) return false;
 
     // Admin tem acesso a tudo
@@ -54,36 +55,36 @@ export function usePermission() {
     };
 
     return !blockedPages[role]?.includes(page);
-  };
+  }, [role]);
 
   /**
    * Verifica se o usuário pode editar/deletar
    */
-  const canEdit = (): boolean => {
+  const canEdit = useCallback((): boolean => {
     if (!role) return false;
     return role === 'ADMIN';
-  };
+  }, [role]);
 
   /**
    * Verifica se o usuário pode deletar
    */
-  const canDelete = (): boolean => {
+  const canDelete = useCallback((): boolean => {
     if (!role) return false;
     return role === 'ADMIN';
-  };
+  }, [role]);
 
   /**
    * Verifica se o usuário pode criar
    */
-  const canCreate = (): boolean => {
+  const canCreate = useCallback((): boolean => {
     if (!role) return false;
     return role === 'ADMIN';
-  };
+  }, [role]);
 
   /**
    * Filtra obras baseado na role do usuário
    */
-  const filterWorks = (works: any[]): any[] => {
+  const filterWorks = useCallback((works: any[]): any[] => {
     if (!role || role === 'ADMIN') return works;
 
     // Cliente: vê apenas obras que ele é cliente
@@ -98,12 +99,12 @@ export function usePermission() {
 
     // Prestador não tem acesso a obras
     return [];
-  };
+  }, [role, user?.linkedId]);
 
   /**
    * Filtra alocações baseado na role do usuário
    */
-  const filterAllocations = (allocations: any[]): any[] => {
+  const filterAllocations = useCallback((allocations: any[]): any[] => {
     if (!role || role === 'ADMIN') return allocations;
 
     // Prestador: vê apenas alocações que ele está referenciado
@@ -113,12 +114,12 @@ export function usePermission() {
 
     // Outras roles não têm acesso a alocações
     return [];
-  };
+  }, [role, user?.linkedId]);
 
   /**
    * Filtra orçamentos baseado na role do usuário
    */
-  const filterBudgets = (budgets: any[]): any[] => {
+  const filterBudgets = useCallback((budgets: any[]): any[] => {
     if (!role || role === 'ADMIN') return budgets;
 
     // Cliente: vê apenas orçamentos de suas obras
@@ -133,12 +134,12 @@ export function usePermission() {
 
     // Prestador não tem acesso a orçamentos
     return [];
-  };
+  }, [role, user?.linkedId]);
 
   /**
    * Filtra contratos baseado na role do usuário
    */
-  const filterContracts = (contracts: any[]): any[] => {
+  const filterContracts = useCallback((contracts: any[]): any[] => {
     if (!role || role === 'ADMIN') return contracts;
 
     // Cliente: vê apenas contratos de suas obras
@@ -148,12 +149,12 @@ export function usePermission() {
 
     // Outras roles não têm acesso a contratos
     return [];
-  };
+  }, [role, user?.linkedId]);
 
   /**
    * Filtra cronogramas baseado na role do usuário
    */
-  const filterSchedules = (schedules: any[]): any[] => {
+  const filterSchedules = useCallback((schedules: any[]): any[] => {
     if (!role || role === 'ADMIN') return schedules;
 
     // Cliente: vê apenas cronogramas de suas obras
@@ -168,7 +169,7 @@ export function usePermission() {
 
     // Prestador não tem acesso a cronogramas
     return [];
-  };
+  }, [role, user?.linkedId]);
 
   return {
     role,
