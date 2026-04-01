@@ -24,11 +24,6 @@ interface Architect {
   commission: string;
 }
 
-const STATUSES = [
-  { value: 'active', label: 'Ativo' },
-  { value: 'inactive', label: 'Inativo' },
-];
-
 export default function Architects() {
   const { canAccessPage } = usePermission();
   
@@ -133,67 +128,106 @@ export default function Architects() {
     }
   };
 
-  const groupedArchitects = {
-    active: (architects || []).filter((a: Architect) => a.commission === 'yes'),
-    inactive: (architects || []).filter((a: Architect) => a.commission === 'no'),
-  };
+  const activeArchitects = (architects || []).filter((a: Architect) => a.commission === 'yes');
+  const inactiveArchitects = (architects || []).filter((a: Architect) => a.commission === 'no');
 
   return (
-    <>
-      <div className="grid grid-cols-4 gap-6">
-        {STATUSES.map((status) => (
-          <div key={status.value}>
-            <h2 className="font-semibold text-gray-900 mb-4">
-              {status.label} ({groupedArchitects[status.value as keyof typeof groupedArchitects].length})
-            </h2>
-
-            <div className="space-y-3">
-              {(groupedArchitects[status.value as keyof typeof groupedArchitects] || []).map((architect: Architect) => (
-                <div key={architect.id}>
-                  <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow relative group flex flex-col">
-                    <div className="absolute top-3 right-3 flex items-center gap-2">
-                      <button
-                        onClick={() => openEditModal(architect)}
-                        title="Editar arquiteto"
-                        className="text-gray-400 hover:text-gray-600 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <SquarePen size={16} />
-                      </button>
-                      <button
-                        onClick={() => setDeleteConfirm({ id: architect.id, name: architect.officeNameName })}
-                        title="Excluir arquiteto"
-                        className="text-gray-400 hover:text-red-600 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-
-                    <div className="flex flex-col flex-1 pr-8">
-                      <p className="font-semibold text-gray-900 text-sm break-words">
-                        {architect.officeNameName}
-                      </p>
-                      <p className="text-gray-600 text-xs mt-1 break-words">
-                        {architect.email}
-                      </p>
-                      <p className="text-gray-500 text-xs mt-1 break-words">
-                        {architect.phone}
-                      </p>
-                    </div>
-                  </Card>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Arquitetos</h1>
+          <p className="text-gray-500 mt-1">Gerencie seus arquitetos</p>
+        </div>
+        <Button
+          onClick={openCreateModal}
+          className="bg-gray-900 hover:bg-gray-800 text-white rounded-md px-4 py-2"
+        >
+          <Plus size={16} className="mr-2" />
+          Adicionar arquiteto
+        </Button>
       </div>
 
-      <Button
-        onClick={openCreateModal}
-        className="fixed bottom-6 right-6 bg-gray-900 hover:bg-gray-800 text-white rounded-full p-4 shadow-lg"
-        title="Adicionar novo arquiteto"
-      >
-        <Plus size={24} />
-      </Button>
+      <div className="grid grid-cols-2 gap-8">
+        {/* Coluna Ativos */}
+        <div>
+          <h2 className="font-semibold text-gray-900 mb-4">
+            Ativo ({activeArchitects.length})
+          </h2>
+          <div className="space-y-3">
+            {activeArchitects.map((architect: Architect) => (
+              <div key={architect.id}>
+                <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow relative group flex flex-col bg-white border border-gray-200 rounded-xl">
+                  <div className="absolute top-3 right-3 flex items-center gap-2">
+                    <button
+                      onClick={() => openEditModal(architect)}
+                      title="Editar arquiteto"
+                      className="text-gray-400 hover:text-gray-600 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <SquarePen size={16} />
+                    </button>
+                    <button
+                      onClick={() => setDeleteConfirm({ id: architect.id, name: architect.officeNameName })}
+                      title="Excluir arquiteto"
+                      className="text-gray-400 hover:text-red-600 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+
+                  <div className="flex flex-col flex-1 pr-8">
+                    <p className="font-semibold text-gray-900 text-sm break-words">
+                      {architect.officeNameName}
+                    </p>
+                    <p className="text-gray-500 text-xs mt-1 break-words">
+                      {architect.phone}
+                    </p>
+                  </div>
+                </Card>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Coluna Inativos */}
+        <div>
+          <h2 className="font-semibold text-gray-900 mb-4">
+            Inativo ({inactiveArchitects.length})
+          </h2>
+          <div className="space-y-3">
+            {inactiveArchitects.map((architect: Architect) => (
+              <div key={architect.id}>
+                <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow relative group flex flex-col bg-white border border-gray-200 rounded-xl">
+                  <div className="absolute top-3 right-3 flex items-center gap-2">
+                    <button
+                      onClick={() => openEditModal(architect)}
+                      title="Editar arquiteto"
+                      className="text-gray-400 hover:text-gray-600 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <SquarePen size={16} />
+                    </button>
+                    <button
+                      onClick={() => setDeleteConfirm({ id: architect.id, name: architect.officeNameName })}
+                      title="Excluir arquiteto"
+                      className="text-gray-400 hover:text-red-600 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+
+                  <div className="flex flex-col flex-1 pr-8">
+                    <p className="font-semibold text-gray-900 text-sm break-words">
+                      {architect.officeNameName}
+                    </p>
+                    <p className="text-gray-500 text-xs mt-1 break-words">
+                      {architect.phone}
+                    </p>
+                  </div>
+                </Card>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-w-md">
@@ -281,6 +315,6 @@ export default function Architects() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }

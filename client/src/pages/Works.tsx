@@ -143,19 +143,6 @@ export default function Works() {
     onSuccess: () => utils.clients.list.invalidate(),
   });
 
-  // Sync data from tRPC
-  useEffect(() => {
-    if (worksData && Array.isArray(worksData)) {
-      const filteredWorks = filterWorks(worksData);
-      const adaptedWorks = filteredWorks.map((w: any) => ({
-        ...w,
-        id: w.id || Math.random(),
-        clientCommission: w.clientCommission || '',
-        reminder: w.reminder || false,
-      }));
-      setWorks(adaptedWorks as Work[]);
-    }
-  }, [worksData, filterWorks]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingWork, setEditingWork] = useState<Work | null>(null);
   const [showDetails, setShowDetails] = useState(false);
@@ -178,6 +165,20 @@ export default function Works() {
     commission: '',
     clientCommission: '',
   });
+
+  // Sync data from tRPC
+  useEffect(() => {
+    if (worksData && Array.isArray(worksData)) {
+      const filteredWorks = filterWorks(worksData);
+      const adaptedWorks = filteredWorks.map((w: any) => ({
+        ...w,
+        id: w.id || Math.random(),
+        clientCommission: w.clientCommission || '',
+        reminder: w.reminder || false,
+      }));
+      setWorks(adaptedWorks as Work[]);
+    }
+  }, [worksData, filterWorks]);
 
 
 
