@@ -19,14 +19,20 @@ import AccessDenied from '../components/AccessDenied';
 interface Architect {
   id: number;
   officeNameName: string;
+  status: string;
+  address: string;
+  architectName: string;
   phone: string;
-  email: string;
+  birthDate: string;
   commission: string;
+  observation: string;
 }
 
 const STATUSES = [
   { value: 'active', label: 'Ativo' },
   { value: 'inactive', label: 'Inativo' },
+  { value: 'follow-up', label: 'Follow-up' },
+  { value: 'recovery', label: 'Recuperação' },
 ];
 
 export default function Architects() {
@@ -63,9 +69,13 @@ export default function Architects() {
 
   const [formData, setFormData] = useState({
     officeNameName: '',
+    status: 'active',
+    address: '',
+    architectName: '',
     phone: '',
-    email: '',
+    birthDate: '',
     commission: 'no',
+    observation: '',
   });
 
   useEffect(() => {
@@ -83,9 +93,13 @@ export default function Architects() {
     setEditingId(null);
     setFormData({
       officeNameName: '',
+      status: 'active',
+      address: '',
+      architectName: '',
       phone: '',
-      email: '',
+      birthDate: '',
       commission: 'no',
+      observation: '',
     });
     setIsModalOpen(true);
   };
@@ -94,9 +108,13 @@ export default function Architects() {
     setEditingId(architect.id);
     setFormData({
       officeNameName: architect.officeNameName || '',
+      status: architect.status || 'active',
+      address: architect.address || '',
+      architectName: architect.architectName || '',
       phone: architect.phone || '',
-      email: architect.email || '',
+      birthDate: architect.birthDate || '',
       commission: architect.commission || 'no',
+      observation: architect.observation || '',
     });
     setIsModalOpen(true);
   };
@@ -134,8 +152,10 @@ export default function Architects() {
   };
 
   const groupedArchitects = {
-    active: (architects || []).filter((a: Architect) => a.commission === 'yes'),
-    inactive: (architects || []).filter((a: Architect) => a.commission === 'no'),
+    active: (architects || []).filter((a: Architect) => a.status === 'active' || (!a.status && a.commission === 'yes')),
+    inactive: (architects || []).filter((a: Architect) => a.status === 'inactive' || (!a.status && a.commission === 'no')),
+    'follow-up': (architects || []).filter((a: Architect) => a.status === 'follow-up'),
+    recovery: (architects || []).filter((a: Architect) => a.status === 'recovery'),
   };
 
   return (
@@ -173,7 +193,7 @@ export default function Architects() {
                         {architect.officeNameName}
                       </p>
                       <p className="text-gray-600 text-xs mt-1 break-words">
-                        {architect.email}
+                        {architect.architectName}
                       </p>
                       <p className="text-gray-500 text-xs mt-1 break-words">
                         {architect.phone}
@@ -205,51 +225,101 @@ export default function Architects() {
           </DialogHeader>
 
           <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="officeNameName" className="text-sm font-medium mb-2 block">Nome do escritório *</Label>
+                <Input
+                  id="officeNameName"
+                  placeholder="Digite o nome do escritório"
+                  value={formData.officeNameName}
+                  onChange={(e) => setFormData({ ...formData, officeNameName: e.target.value })}
+                  className="w-full bg-white border border-gray-300"
+                />
+              </div>
+              <div>
+                <Label htmlFor="status" className="text-sm font-medium mb-2 block">Status *</Label>
+                <select
+                  id="status"
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-sm h-10"
+                >
+                  <option value="active">Ativo</option>
+                  <option value="inactive">Inativo</option>
+                  <option value="follow-up">Follow-up</option>
+                  <option value="recovery">Recuperação</option>
+                </select>
+              </div>
+            </div>
+
             <div>
-              <Label htmlFor="officeNameName" className="text-sm font-medium mb-2 block">Nome do escritório *</Label>
+              <Label htmlFor="address" className="text-sm font-medium mb-2 block">Endereço completo</Label>
               <Input
-                id="officeNameName"
-                placeholder="Digite o nome do escritório"
-                value={formData.officeNameName}
-                onChange={(e) => setFormData({ ...formData, officeNameName: e.target.value })}
+                id="address"
+                placeholder="Digite o endereço completo"
+                value={formData.address}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                 className="w-full bg-white border border-gray-300"
               />
             </div>
 
-            <div>
-              <Label htmlFor="phone" className="text-sm font-medium mb-2 block">Telefone</Label>
-              <Input
-                id="phone"
-                placeholder="(XX) XXXXX-XXXX"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full bg-white border border-gray-300"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="architectName" className="text-sm font-medium mb-2 block">Nome do arquiteto</Label>
+                <Input
+                  id="architectName"
+                  placeholder="Digite o nome do arquiteto"
+                  value={formData.architectName}
+                  onChange={(e) => setFormData({ ...formData, architectName: e.target.value })}
+                  className="w-full bg-white border border-gray-300"
+                />
+              </div>
+              <div>
+                <Label htmlFor="phone" className="text-sm font-medium mb-2 block">Telefone</Label>
+                <Input
+                  id="phone"
+                  placeholder="(XX) XXXXX-XXXX"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="w-full bg-white border border-gray-300"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="birthDate" className="text-sm font-medium mb-2 block">Data de nascimento</Label>
+                <Input
+                  id="birthDate"
+                  type="date"
+                  value={formData.birthDate}
+                  onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
+                  className="w-full bg-white border border-gray-300"
+                />
+              </div>
+              <div>
+                <Label htmlFor="commission" className="text-sm font-medium mb-2 block">Comissão</Label>
+                <select
+                  id="commission"
+                  value={formData.commission}
+                  onChange={(e) => setFormData({ ...formData, commission: e.target.value })}
+                  className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-sm h-10"
+                >
+                  <option value="no">Não</option>
+                  <option value="yes">Sim</option>
+                </select>
+              </div>
             </div>
 
             <div>
-              <Label htmlFor="email" className="text-sm font-medium mb-2 block">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="email@example.com"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full bg-white border border-gray-300"
+              <Label htmlFor="observation" className="text-sm font-medium mb-2 block">Observação</Label>
+              <textarea
+                id="observation"
+                placeholder="Adicione observações..."
+                value={formData.observation}
+                onChange={(e) => setFormData({ ...formData, observation: e.target.value })}
+                className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-sm min-h-[100px] resize-y"
               />
-            </div>
-
-            <div>
-              <Label htmlFor="commission" className="text-sm font-medium mb-2 block">Comissão</Label>
-              <select
-                id="commission"
-                value={formData.commission}
-                onChange={(e) => setFormData({ ...formData, commission: e.target.value })}
-                className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-sm"
-              >
-                <option value="no">Não</option>
-                <option value="yes">Sim</option>
-              </select>
             </div>
           </div>
 
@@ -258,7 +328,7 @@ export default function Architects() {
               Cancelar
             </Button>
             <Button onClick={handleSave} className="bg-gray-900 hover:bg-gray-800 text-white">
-              {editingId ? 'Salvar' : 'Adicionar'}
+              {editingId ? 'Atualizar' : 'Adicionar'}
             </Button>
           </DialogFooter>
         </DialogContent>
