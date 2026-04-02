@@ -84,6 +84,17 @@ export default function Architects() {
     }
   }, [architectsData]);
 
+  useEffect(() => {
+    const handleOpenModal = () => {
+      openCreateModal();
+    };
+
+    window.addEventListener('openAddArchitectModal', handleOpenModal);
+    return () => {
+      window.removeEventListener('openAddArchitectModal', handleOpenModal);
+    };
+  }, []);
+
   // Check permission - MUST be after all hooks
   if (!canAccessPage('arquitetos')) {
     return <AccessDenied />;
