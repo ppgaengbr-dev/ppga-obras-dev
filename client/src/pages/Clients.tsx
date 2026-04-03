@@ -107,6 +107,7 @@ const formatCurrency = (value: string) => {
 
 import { usePermission } from '../_core/hooks/usePermission';
 import AccessDenied from '../components/AccessDenied';
+import { EmptyColumnCard } from '../components/EmptyColumnCard';
 
 export default function Clients() {
   const { canAccessPage } = usePermission();
@@ -372,9 +373,12 @@ export default function Clients() {
             </h2>
 
             <div className="space-y-3">
-              {statusClients.map((client: any) => (
-                <div key={client.id}>
-                  <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow relative group flex flex-col">
+              {statusClients.length === 0 ? (
+                <EmptyColumnCard message="Nenhum cliente" />
+              ) : (
+                statusClients.map((client: any) => (
+                  <div key={client.id}>
+                    <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow relative group flex flex-col">
                     {/* Ações do Card - Lado a lado (Editar e Excluir) */}
                     <div className="absolute top-3 right-3 flex items-center gap-2">
                       <button
@@ -417,14 +421,9 @@ export default function Clients() {
                         <Bell size={14} className="text-red-500 flex-shrink-0" />
                       </div>
                     )}
-                  </Card>
-                </div>
-              ))}
-
-              {statusClients.length === 0 && (
-                <Card className="p-4 text-center text-gray-400 text-sm">
-                  Nenhum cliente
-                </Card>
+                    </Card>
+                  </div>
+                ))
               )}
             </div>
           </div>

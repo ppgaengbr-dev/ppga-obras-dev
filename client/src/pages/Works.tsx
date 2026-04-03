@@ -18,6 +18,7 @@ import { SquarePen, Trash2, Bell, Calendar, ChevronDown } from 'lucide-react';
 import { formatPhone } from '@/lib/formatters';
 import { usePermission } from '@/_core/hooks/usePermission';
 import AccessDenied from '@/components/AccessDenied';
+import { EmptyColumnCard } from '@/components/EmptyColumnCard';
 
 const WORK_STATUSES = [
   { value: 'Aguardando', label: 'Aguardando' },
@@ -436,9 +437,12 @@ export default function Works() {
             </h2>
 
             <div className="space-y-3">
-              {(statusWorks || []).map((work: Work) => (
-                <div key={work.id}>
-                  <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow relative group flex flex-col">
+              {statusWorks.length === 0 ? (
+                <EmptyColumnCard message="Nenhuma obra" />
+              ) : (
+                statusWorks.map((work: Work) => (
+                  <div key={work.id}>
+                    <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow relative group flex flex-col">
                     {/* Ações do Card - Lado a lado (Editar e Excluir) */}
                     {canEdit() && canDelete() && (
                       <div className="absolute top-3 right-3 flex items-center gap-2">
@@ -488,14 +492,9 @@ export default function Works() {
                         <Bell size={14} className="text-red-500 flex-shrink-0" />
                       </div>
                     )}
-                  </Card>
-                </div>
-              ))}
-
-              {statusWorks.length === 0 && (
-                <Card className="p-4 text-center text-gray-400 text-sm">
-                  Nenhuma obra
-                </Card>
+                    </Card>
+                  </div>
+                ))
               )}
             </div>
           </div>

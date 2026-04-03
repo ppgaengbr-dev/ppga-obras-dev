@@ -99,6 +99,7 @@ const openDatePicker = (inputId: string) => {
 
 import { usePermission } from '../_core/hooks/usePermission';
 import AccessDenied from '../components/AccessDenied';
+import { EmptyColumnCard } from '../components/EmptyColumnCard';
 
 export default function Prestadores() {
   const { canAccessPage } = usePermission();
@@ -290,9 +291,12 @@ export default function Prestadores() {
             </h2>
 
             <div className="space-y-3">
-              {statusPrestadores.map((prestador: Prestador) => (
-                <div key={prestador.id}>
-                  <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow relative group flex flex-col">
+              {statusPrestadores.length === 0 ? (
+                <EmptyColumnCard message="Nenhum prestador" />
+              ) : (
+                statusPrestadores.map((prestador: Prestador) => (
+                  <div key={prestador.id}>
+                    <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow relative group flex flex-col">
                     <div className="absolute top-3 right-3 flex items-center gap-2">
                       <button
                         onClick={() => openEditModal(prestador)}
@@ -321,14 +325,9 @@ export default function Prestadores() {
                         {prestador.cpf}
                       </p>
                     </div>
-                  </Card>
-                </div>
-              ))}
-
-              {statusPrestadores.length === 0 && (
-                <Card className="p-4 text-center text-gray-400 text-sm">
-                  Nenhum prestador
-                </Card>
+                    </Card>
+                  </div>
+                ))
               )}
             </div>
           </div>
