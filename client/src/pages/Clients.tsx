@@ -156,6 +156,10 @@ export default function Clients() {
         setIsModalOpen(false);
       }
     },
+    onError: (error: any) => {
+      console.error('updateClientMutation onError:', error);
+      toast.error('Erro ao atualizar cliente: ' + error.message);
+    },
   });
   const deleteClientMutation = trpc.clients.delete.useMutation({
     onSuccess: () => utils.clients.list.invalidate(),
@@ -303,25 +307,14 @@ export default function Clients() {
       // Call tRPC mutation to update
       updateClientMutation.mutate({ id: editingClient.id, ...formData });
       
-      // Se estava marcado como convertido e agora desmarcou, remover da lista de obras
-      if (editingClient.convertedToWork && formData.status !== 'work') {
-        setWorks(works.filter((w: any) => w.clientName !== editingClient.fullName));
-      }
-      // Não criar obra aqui - getAllWorks() vai retornar o cliente com status 'work' como obra
+
+
       
-      const updatedClient = { ...editingClient, ...formData, convertedToWork: formData.status === 'work' };
-      setClients(clients.map((c: any) => c.id === editingClient.id ? updatedClient : c));
+
       
-      // Sincronizar com Obra se existir
-      if (editingClient.convertedToWork || formData.status === 'work') {
-        const linkedWork = works.find((w: any) => w.clientId === editingClient.id);
-        if (linkedWork) {
-          const syncedWork = syncWorkFromClient(updatedClient, linkedWork);
-          setWorks(works.map((w: any) => w.id === linkedWork.id ? syncedWork : w));
-        }
-      }
+
       
-      // A lógica de celebração está no onSuccess da mutation
+
     } else {
       const newId = clients.length > 0 ? Math.max(...clients.map((c: any) => c.id)) + 1 : 1;
       const newClient = {

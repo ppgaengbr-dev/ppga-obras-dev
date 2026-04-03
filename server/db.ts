@@ -281,7 +281,7 @@ export async function createClient(data: any) {
       endDate: data.endDate,
       workStatus: data.workStatus,
       architectId: data.architectId,
-      reminder: data.reminder ? parseInt(data.reminder) : 0,
+      reminder: data.reminder ? 1 : 0,
     };
     
     const result = await db.insert(clients).values(clientData);
@@ -316,7 +316,7 @@ export async function createClient(data: any) {
         clientAddress: data.address,
         clientOrigin: data.origin,
         clientContact: data.contact,
-        reminder: data.reminder ? parseInt(data.reminder) : 0,
+        reminder: data.reminder ? 1 : 0,
       };
       
       // Filtrar apenas campos validos
@@ -386,7 +386,7 @@ export async function updateClient(id: number, data: any) {
       startDate: data.startDate,
       endDate: data.endDate,
       workStatus: data.workStatus,
-      reminder: data.reminder ? parseInt(data.reminder) : 0,
+      reminder: data.reminder ? 1 : 0,
     };
     
     // Remove undefined fields
@@ -742,7 +742,7 @@ export async function createArchitect(data: any) {
       birthDate: data.birthDate,
       commission: data.commission,
       observation: data.observation,
-      reminder: data.reminder ? parseInt(data.reminder) : 0,
+      reminder: data.reminder ? 1 : 0,
     };
     
     const result = await db.insert(architects).values(architectData);
