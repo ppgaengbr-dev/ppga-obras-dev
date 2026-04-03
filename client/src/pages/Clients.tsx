@@ -252,7 +252,7 @@ export default function Clients() {
       workValue: client.workValue,
       startDate: client.startDate,
       endDate: client.endDate,
-      reminder: client.reminder ? true : false,
+      reminder: !!client.reminder,
     });
     setIsModalOpen(true);
   };
@@ -416,7 +416,7 @@ export default function Clients() {
                     </div>
 
                     {/* Lembrete - Canto inferior direito */}
-                    {client.reminder && (
+                    {!!client.reminder && (
                       <div className="absolute bottom-3 right-3">
                         <Bell size={14} className="text-red-500 flex-shrink-0" />
                       </div>
