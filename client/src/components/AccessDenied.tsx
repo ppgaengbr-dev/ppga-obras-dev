@@ -19,21 +19,21 @@ export default function AccessDenied({
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
-      <Card className="p-8 max-w-md w-full border border-border rounded-2xl">
+    <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)] px-4">
+      <Card className="p-8 max-w-md w-full border border-border rounded-2xl shadow-sm">
         <div className="text-center space-y-4">
           {/* Ícone de Cadeado */}
           <div className="flex justify-center">
-            <div className="bg-red-100 dark:bg-red-900/20 rounded-full p-4">
-              <Lock size={40} className="text-red-600 dark:text-red-400" />
+            <div className="bg-red-50 rounded-2xl p-5 mb-4">
+              <Lock size={32} className="text-red-600" />
             </div>
           </div>
 
           {/* Título */}
-          <h1 className="text-2xl font-bold text-foreground">Acesso Negado</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Acesso Negado</h1>
 
           {/* Mensagem */}
-          <p className="text-muted-foreground">
+          <p className="text-gray-500 text-sm leading-relaxed">
             Você não tem permissão para visualizar essa página. Entre em contato com o suporte caso tenha algo errado.
           </p>
 
@@ -42,14 +42,14 @@ export default function AccessDenied({
             {showBackButton && (
               <Button
                 onClick={() => setLocation('/painel')}
-                className="flex-1 bg-gray-900 hover:bg-gray-800 text-white rounded-lg"
+                className="flex-1 bg-gray-900 hover:bg-gray-800 text-white rounded-lg h-11"
               >
                 Voltar ao Dashboard
               </Button>
             )}
             <Button
               onClick={handleContactSupport}
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-lg"
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-lg h-11"
             >
               Falar com Suporte
             </Button>

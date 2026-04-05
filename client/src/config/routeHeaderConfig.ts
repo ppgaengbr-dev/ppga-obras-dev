@@ -87,6 +87,13 @@ export const routeHeaderConfig: Record<string, RouteHeaderConfig> = {
   '/orcamentos': {
     title: 'Orçamentos',
     subtitle: 'Gerencie orçamentos de projetos',
+    actionButton: {
+      label: '+ Novo orçamento',
+      onClick: () => {
+        const event = new CustomEvent('openAddBudgetModal');
+        window.dispatchEvent(event);
+      },
+    },
   },
   '/contratos': {
     title: 'Contratos',
@@ -180,6 +187,13 @@ export const routeHeaderConfig: Record<string, RouteHeaderConfig> = {
   '/budgets': {
     title: 'Orçamentos',
     subtitle: 'Gerencie orçamentos de projetos',
+    actionButton: {
+      label: '+ Novo orçamento',
+      onClick: () => {
+        const event = new CustomEvent('openAddBudgetModal');
+        window.dispatchEvent(event);
+      },
+    },
   },
   '/contracts': {
     title: 'Contratos',

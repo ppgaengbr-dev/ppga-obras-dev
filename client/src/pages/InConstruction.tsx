@@ -7,21 +7,21 @@ const InConstruction = () => {
   const [, setLocation] = useLocation();
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
-      <Card className="p-8 max-w-md w-full border border-border rounded-2xl">
+    <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)] px-4">
+      <Card className="p-8 max-w-md w-full border border-border rounded-2xl shadow-sm">
         <div className="text-center space-y-4">
           {/* Ícone de Construção */}
           <div className="flex justify-center">
-            <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
-              <span className="text-2xl">🔨</span>
+            <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mb-4">
+              <span className="text-3xl">🔨</span>
             </div>
           </div>
 
           {/* Título */}
-          <h1 className="text-2xl font-bold text-foreground">Em Construção</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Em Construção</h1>
 
           {/* Mensagem */}
-          <p className="text-muted-foreground">
+          <p className="text-gray-500 text-sm leading-relaxed">
             Estamos trabalhando duro para trazer esta funcionalidade para você. Volte em breve!
           </p>
 
@@ -29,7 +29,7 @@ const InConstruction = () => {
           <div className="pt-4">
             <Button
               onClick={() => setLocation('/painel')}
-              className="w-full bg-gray-900 hover:bg-gray-800 text-white rounded-lg"
+              className="w-full bg-gray-900 hover:bg-gray-800 text-white rounded-lg h-11"
             >
               Voltar ao Dashboard
             </Button>
