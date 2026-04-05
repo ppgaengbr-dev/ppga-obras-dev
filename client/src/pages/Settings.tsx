@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -336,7 +335,7 @@ export default function Settings() {
                   type="text"
                   value={newItemName}
                   onChange={(e) => setNewItemName(e.target.value)}
-                  placeholder="Ex: Diária"
+                  placeholder="Ex: Empreitada"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-sm mt-1"
                 />
               </div>

@@ -28,6 +28,9 @@ export default function DashboardLayout({
 }: DashboardLayoutProps) {
   const { isCollapsed } = useSidebar();
 
+  // Se showHeader for explicitamente false, não renderizamos o bloco de título/ações
+  const shouldRenderHeader = showHeader !== false && (title || actionButton) && title !== '';
+
   return (
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
@@ -43,8 +46,8 @@ export default function DashboardLayout({
         {/* Page Content */}
         <main className="flex-1 overflow-auto">
           <div className="max-w-6xl mx-auto px-8 py-8">
-            {showHeader !== false && (title || actionButton) && title !== '' && (
-              <div className="flex items-start justify-between mb-8">
+            {shouldRenderHeader && (
+              <div className="dashboard-header-block flex items-start justify-between mb-8">
                 <div>
                   {title && <h1 className="text-3xl font-bold text-foreground mb-2">{title}</h1>}
                   {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}

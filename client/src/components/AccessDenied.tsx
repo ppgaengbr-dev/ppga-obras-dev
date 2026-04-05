@@ -41,7 +41,7 @@ export default function AccessDenied({
           <div className="flex gap-3 justify-center pt-4">
             {showBackButton && (
               <Button
-                onClick={() => setLocation('/dashboard')}
+                onClick={() => setLocation('/painel')}
                 className="flex-1 bg-gray-900 hover:bg-gray-800 text-white rounded-lg"
               >
                 Voltar ao Dashboard

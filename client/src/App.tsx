@@ -28,13 +28,48 @@ import { AdminUsersPage } from "./pages/AdminUsers";
 import RootRedirect from "./pages/RootRedirect";
 import Account from "./pages/Account";
 import Simulator from "./pages/Simulator";
+import { usePermission } from "./_core/hooks/usePermission";
+import AccessDenied from "./components/AccessDenied";
 
 function InternalRouter() {
   const [location] = useLocation();
+  const { canAccessPage } = usePermission();
   const headerConfig = getRouteHeaderConfig(location);
 
+  // Mapeamento de rotas para permissões
+  const routeToPermission: Record<string, string> = {
+    '/clientes': 'clientes',
+    '/clients': 'clientes',
+    '/arquitetos': 'arquitetos',
+    '/architects': 'arquitetos',
+    '/prestadores': 'prestadores',
+    '/providers': 'prestadores',
+    '/alocacoes': 'alocacoes',
+    '/allocations': 'alocacoes',
+    '/relatorios': 'relatorios',
+    '/reports': 'relatorios',
+    '/orcamentos': 'orcamentos',
+    '/budgets': 'orcamentos',
+    '/contratos': 'contratos',
+    '/contracts': 'contratos',
+    '/financeiro': 'financeiro',
+    '/finance': 'financeiro',
+    '/obras': 'obras',
+    '/works': 'obras',
+    '/cronogramas': 'cronogramas',
+    '/timeline': 'cronogramas',
+    '/schedule': 'cronogramas',
+    '/configuracoes': 'configuracoes',
+    '/settings': 'configuracoes',
+    '/simulador': 'simulador',
+    '/simulator': 'simulador',
+  };
+
+  const permissionKey = routeToPermission[location];
+  const hasAccess = !permissionKey || canAccessPage(permissionKey);
+
   const getActionButton = () => {
-    if (!headerConfig.actionButton) return null;
+    if (!headerConfig.actionButton || !hasAccess) return null;
 
     return (
       <Button 
@@ -46,13 +81,16 @@ function InternalRouter() {
     );
   };
 
+  // Se não tiver acesso, forçamos showHeader = false para não aparecer o título da rota
+  const showHeader = hasAccess ? headerConfig.showHeader : false;
+
   return (
     <ProtectedRoute>
       <DashboardLayout 
-        title={headerConfig.title}
-        subtitle={headerConfig.subtitle}
+        title={hasAccess ? headerConfig.title : ""}
+        subtitle={hasAccess ? headerConfig.subtitle : ""}
         actionButton={getActionButton()}
-        showHeader={headerConfig.showHeader}
+        showHeader={showHeader}
       >
         <Switch>
           {/* Portuguese routes (primary) */}
@@ -82,6 +120,7 @@ function InternalRouter() {
           <Route path={"/finance"} component={Finance} />
           <Route path={"/works"} component={Works} />
           <Route path={"/timeline"} component={Schedule} />
+          <Route path={"/schedule"} component={Schedule} />
           <Route path={"/settings"} component={Settings} />
           <Route path={"/simulator"} component={Simulator} />
           

@@ -82,6 +82,7 @@ export const routeHeaderConfig: Record<string, RouteHeaderConfig> = {
   '/relatorios': {
     title: 'Relatórios',
     subtitle: 'Visualize relatórios e análises',
+    showHeader: false, // Em construção
   },
   '/orcamentos': {
     title: 'Orçamentos',
@@ -90,10 +91,12 @@ export const routeHeaderConfig: Record<string, RouteHeaderConfig> = {
   '/contratos': {
     title: 'Contratos',
     subtitle: 'Gerencie contratos e documentos',
+    showHeader: false, // Em construção
   },
   '/financeiro': {
     title: 'Financeiro',
     subtitle: 'Controle financeiro do sistema',
+    showHeader: false, // Em construção
   },
   '/obras': {
     title: 'Obras',
@@ -109,6 +112,7 @@ export const routeHeaderConfig: Record<string, RouteHeaderConfig> = {
   '/cronogramas': {
     title: 'Cronograma',
     subtitle: 'Visualize cronograma de projetos',
+    showHeader: false, // Em construção
   },
   '/configuracoes': {
     title: 'Configurações',
@@ -117,6 +121,7 @@ export const routeHeaderConfig: Record<string, RouteHeaderConfig> = {
   '/simulador': {
     title: 'Simulador',
     subtitle: 'Simule o cálculo de valor de obra',
+    showHeader: false, // Em construção
   },
   
   // English routes (backward compatibility)
@@ -170,6 +175,7 @@ export const routeHeaderConfig: Record<string, RouteHeaderConfig> = {
   '/reports': {
     title: 'Relatórios',
     subtitle: 'Visualize relatórios e análises',
+    showHeader: false, // Em construção
   },
   '/budgets': {
     title: 'Orçamentos',
@@ -178,10 +184,12 @@ export const routeHeaderConfig: Record<string, RouteHeaderConfig> = {
   '/contracts': {
     title: 'Contratos',
     subtitle: 'Gerencie contratos e documentos',
+    showHeader: false, // Em construção
   },
   '/finance': {
     title: 'Financeiro',
     subtitle: 'Controle financeiro do sistema',
+    showHeader: false, // Em construção
   },
   '/works': {
     title: 'Obras',
@@ -197,10 +205,12 @@ export const routeHeaderConfig: Record<string, RouteHeaderConfig> = {
   '/timeline': {
     title: 'Cronograma',
     subtitle: 'Visualize cronograma de projetos',
+    showHeader: false, // Em construção
   },
   '/schedule': {
     title: 'Cronograma',
     subtitle: 'Visualize cronograma de projetos',
+    showHeader: false, // Em construção
   },
   '/settings': {
     title: 'Configurações',
@@ -213,6 +223,7 @@ export const routeHeaderConfig: Record<string, RouteHeaderConfig> = {
   '/simulator': {
     title: 'Simulador',
     subtitle: 'Simule o cálculo de valor de obra',
+    showHeader: false, // Em construção
   },
 };
 

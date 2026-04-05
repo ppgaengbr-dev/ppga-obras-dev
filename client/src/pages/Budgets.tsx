@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Folder, LayoutGrid, List, Plus, Pencil, Trash2, ChevronDown } from 'lucide-react';
 import { usePermission } from '../_core/hooks/usePermission';
 import AccessDenied from '../components/AccessDenied';
-import PageHeader from '@/components/PageHeader';
 
 const MOCKED_BUDGETS = [
   { id: '1', name: 'ORC.709/2026 - JOÃO E SILVA ENGENHARIA E ARQUITETURA' },
@@ -30,7 +28,7 @@ const MOCKED_BUDGETS = [
 
 export default function Budgets() {
   const { canAccessPage } = usePermission();
-  const [layout, setLayout] = useState<'grid' | 'list'>('grid'); // 'grid' or 'list'
+  const [layout, setLayout] = useState<'grid' | 'list'>('grid');
 
   if (!canAccessPage('orcamentos')) {
     return <AccessDenied />;
