@@ -144,104 +144,102 @@ export function AdminUsersPage() {
   };
 
   return (
-    <div className="p-6">
-      <div className="max-w-6xl mx-auto">
-        {/* Pending Users Section */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">
-            Usuários Pendentes ({pendingUsers.length})
-          </h2>
+    <div className="space-y-8">
+      {/* Pending Users Section */}
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          Usuários Pendentes ({pendingUsers.length})
+        </h2>
 
-          {pendingUsers.length === 0 ? (
-            <p className="text-gray-500">Nenhum usuário pendente de aprovação</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Nome</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Email</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Data de Cadastro</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Ações</th>
+        {pendingUsers.length === 0 ? (
+          <p className="text-gray-500">Nenhum usuário pendente de aprovação</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b">
+                <tr>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Nome</th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Email</th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Data de Cadastro</th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pendingUsers.map((user: any) => (
+                  <tr key={user.id} className="border-b hover:bg-gray-50">
+                    <td className="px-6 py-4 text-sm text-gray-900">{user.name}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      {new Date(user.createdAt).toLocaleDateString('pt-BR')}
+                    </td>
+                    <td className="px-6 py-4 text-sm space-x-2">
+                      <button
+                        onClick={() => handleApprove(user)}
+                        className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-semibold"
+                      >
+                        Aprovar
+                      </button>
+                      <button
+                        onClick={() => handleBlock(user.id)}
+                        className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-semibold"
+                      >
+                        Bloquear
+                      </button>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {pendingUsers.map((user: any) => (
-                    <tr key={user.id} className="border-b hover:bg-gray-50">
-                      <td className="px-6 py-4 text-sm text-gray-900">{user.name}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {new Date(user.createdAt).toLocaleDateString('pt-BR')}
-                      </td>
-                      <td className="px-6 py-4 text-sm space-x-2">
-                        <button
-                          onClick={() => handleApprove(user)}
-                          className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-semibold"
-                        >
-                          Aprovar
-                        </button>
-                        <button
-                          onClick={() => handleBlock(user.id)}
-                          className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-semibold"
-                        >
-                          Bloquear
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
-        {/* All Users Section */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">
-            Todos os Usuários ({allUsers.length})
-          </h2>
+      {/* All Users Section */}
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          Todos os Usuários ({allUsers.length})
+        </h2>
 
-          {allUsers.length === 0 ? (
-            <p className="text-gray-500">Nenhum usuário cadastrado</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Nome</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Email</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Função</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Vínculo</th>
+        {allUsers.length === 0 ? (
+          <p className="text-gray-500">Nenhum usuário cadastrado</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b">
+                <tr>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Nome</th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Email</th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Função</th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Vínculo</th>
+                </tr>
+              </thead>
+              <tbody>
+                {allUsers.map((user: any) => (
+                  <tr key={user.id} className="border-b hover:bg-gray-50">
+                    <td className="px-6 py-4 text-sm text-gray-900">{user.name}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {translateRole(user.role)}
+                    </td>
+                    <td className="px-6 py-4 text-sm">
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        user.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
+                        user.status === 'BLOCKED' ? 'bg-red-100 text-red-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {translateStatus(user.status)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      {getLinkedEntityName(user)}
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {allUsers.map((user: any) => (
-                    <tr key={user.id} className="border-b hover:bg-gray-50">
-                      <td className="px-6 py-4 text-sm text-gray-900">{user.name}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
-                      <td className="px-6 py-4 text-sm text-gray-700">
-                        {translateRole(user.role)}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          user.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
-                          user.status === 'BLOCKED' ? 'bg-red-100 text-red-800' :
-                          'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {translateStatus(user.status)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {getLinkedEntityName(user)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Approval Modal */}

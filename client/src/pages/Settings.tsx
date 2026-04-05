@@ -167,8 +167,7 @@ export default function Settings() {
   }
 
   return (
-    <>
-      <div className="max-w-6xl mx-auto px-8 py-8">
+    <div className="space-y-6">
       {/* Tabs */}
       <div className="flex gap-4 mb-6 border-b border-gray-200">
         <button
@@ -308,7 +307,7 @@ export default function Settings() {
                           <Button
                             onClick={() => handleDeleteCategory(category.id)}
                             variant="destructive"
-                            className="bg-red-600 hover:bg-red-700 text-white text-sm"
+                            className="text-sm"
                           >
                             Deletar
                           </Button>
@@ -337,7 +336,7 @@ export default function Settings() {
                   type="text"
                   value={newItemName}
                   onChange={(e) => setNewItemName(e.target.value)}
-                  placeholder="Ex: Empreitada"
+                  placeholder="Ex: Diária"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-sm mt-1"
                 />
               </div>
@@ -423,7 +422,7 @@ export default function Settings() {
                           <Button
                             onClick={() => handleDeleteRemuneration(remuneration.id)}
                             variant="destructive"
-                            className="bg-red-600 hover:bg-red-700 text-white text-sm"
+                            className="text-sm"
                           >
                             Deletar
                           </Button>
@@ -438,6 +437,5 @@ export default function Settings() {
         </div>
       )}
     </div>
-    </>
   );
 }

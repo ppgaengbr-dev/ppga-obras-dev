@@ -24,6 +24,7 @@ export default function DashboardLayout({
   title = "Dashboard",
   subtitle,
   actionButton,
+  showHeader = true,
 }: DashboardLayoutProps) {
   const { isCollapsed } = useSidebar();
 

@@ -42,6 +42,10 @@ export const routeHeaderConfig: Record<string, RouteHeaderConfig> = {
       },
     },
   },
+  '/clients-summary': {
+    title: 'Resumo de Clientes',
+    subtitle: 'Análise e estatísticas de clientes',
+  },
   '/arquitetos': {
     title: 'Arquitetos',
     subtitle: 'Gerencie seus arquitetos',
@@ -82,12 +86,10 @@ export const routeHeaderConfig: Record<string, RouteHeaderConfig> = {
   '/orcamentos': {
     title: 'Orçamentos',
     subtitle: 'Gerencie orçamentos de projetos',
-    showHeader: false,
   },
   '/contratos': {
     title: 'Contratos',
     subtitle: 'Gerencie contratos e documentos',
-    showHeader: false,
   },
   '/financeiro': {
     title: 'Financeiro',
@@ -111,7 +113,6 @@ export const routeHeaderConfig: Record<string, RouteHeaderConfig> = {
   '/configuracoes': {
     title: 'Configurações',
     subtitle: 'Ajuste as configurações do sistema',
-    showHeader: false,
   },
   '/simulador': {
     title: 'Simulador',

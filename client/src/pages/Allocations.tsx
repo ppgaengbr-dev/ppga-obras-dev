@@ -262,157 +262,157 @@ export default function Allocations() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-8 py-8">
+    <div className="space-y-8">
+      {/* Cabeçalho com Seletores de Mês e Semana */}
+      <div className="flex w-full items-center gap-8">
+        {/* Seção Esquerda: Seletor de Mês */}
+        <div className="flex items-center gap-4 flex-shrink-0">
+          <button
+            onClick={goToPreviousMonth}
+            className="p-2 hover:bg-gray-100 rounded"
+          >
+            <ChevronLeft size={20} className="text-gray-600" />
+          </button>
+          <h2 className="text-lg font-semibold text-gray-900 min-w-[180px] text-center">
+            {monthYear}
+          </h2>
+          <button
+            onClick={goToNextMonth}
+            className="p-2 hover:bg-gray-100 rounded"
+          >
+            <ChevronRight size={20} className="text-gray-600" />
+          </button>
+        </div>
 
-          {/* Cabeçalho com Seletores de Mês e Semana */}
-          <div className="flex w-full items-center mb-8 gap-8">
-            {/* Seção Esquerda: Seletor de Mês */}
-            <div className="flex items-center gap-4 flex-shrink-0">
-              <button
-                onClick={goToPreviousMonth}
-                className="p-2 hover:bg-gray-100 rounded"
-              >
-                <ChevronLeft size={20} className="text-gray-600" />
-              </button>
-              <h2 className="text-lg font-semibold text-gray-900 min-w-[180px] text-center">
-                {monthYear}
-              </h2>
-              <button
-                onClick={goToNextMonth}
-                className="p-2 hover:bg-gray-100 rounded"
-              >
-                <ChevronRight size={20} className="text-gray-600" />
-              </button>
-            </div>
+        {/* Seção Direita: Seletor de Semana */}
+        <div className="flex-1 flex items-center gap-4">
+          <button
+            onClick={handlePreviousWeek}
+            className="p-2 hover:bg-gray-100 rounded flex-shrink-0"
+          >
+            <ChevronLeft size={20} className="text-gray-600" />
+          </button>
 
-            {/* Seção Direita: Seletor de Semana */}
-            <div className="flex-1 flex items-center gap-4">
-              <button
-                onClick={handlePreviousWeek}
-                className="p-2 hover:bg-gray-100 rounded flex-shrink-0"
-              >
-                <ChevronLeft size={20} className="text-gray-600" />
-              </button>
-
-              <div className="flex-1 grid grid-cols-5 gap-4">
-                {weekDays.map((date, index) => {
-                  const allocCount = allocationsThisWeek.filter(a => {
-                    const allocStart = parseLocalDate(a.startDate);
-                    const allocEnd = parseLocalDate(a.endDate);
-                    return allocStart <= date && allocEnd >= date;
-                  }).length;
-                  return (
-                    <div key={index} className="text-center">
-                      <p className="text-xs font-semibold text-gray-600 mb-1">
-                        {dateFormat.format(date)}
-                      </p>
-                      <p className="text-sm font-medium text-gray-900">
-                        {dayNames[index]} <span className="text-xs text-gray-500">({allocCount})</span>
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <button
-                onClick={handleNextWeek}
-                className="p-2 hover:bg-gray-100 rounded flex-shrink-0"
-              >
-                <ChevronRight size={20} className="text-gray-600" />
-              </button>
-            </div>
+          <div className="flex-1 grid grid-cols-5 gap-4">
+            {weekDays.map((date, index) => {
+              const allocCount = allocationsThisWeek.filter(a => {
+                const allocStart = parseLocalDate(a.startDate);
+                const allocEnd = parseLocalDate(a.endDate);
+                return allocStart <= date && allocEnd >= date;
+              }).length;
+              return (
+                <div key={index} className="text-center">
+                  <p className="text-xs font-semibold text-gray-600 mb-1">
+                    {dateFormat.format(date)}
+                  </p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {dayNames[index]} <span className="text-xs text-gray-500">({allocCount})</span>
+                  </p>
+                </div>
+              );
+            })}
           </div>
 
-          {/* Grade de Obras e Alocações */}
-          <div className="space-y-4">
-            {worksWithAllocations.length === 0 ? (
-              <div className="bg-white rounded-lg shadow-sm p-8 text-center">
-                <p className="text-gray-500">
-                  Nenhuma obra com alocações nesta semana
-                </p>
-              </div>
-            ) : (
-              worksWithAllocations.map(work => (
-                <div
-                  key={work.id}
-                  className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
-                >
-                  {/* Linha da Obra - Flex container com duas seções */}
-                  <div className="flex min-h-[120px]">
-                    {/* Seção Esquerda: Detalhes da Obra */}
-                    <div className="w-80 flex-shrink-0 border-r border-gray-200 p-4 flex flex-col justify-center bg-gray-50">
-                      <h3 className="font-semibold text-gray-900 text-sm leading-tight">
-                        {work.name}
-                      </h3>
-                      <p className="text-xs text-gray-600 mt-2 leading-tight">
-                        Origem: {getDisplayOrigin(work.clientOrigin)}
-                      </p>
-                      <p className="text-xs text-gray-600 leading-tight">
-                        Contato: {getDisplayContact(work.clientContact)}
-                      </p>
-                      <p className="text-xs text-gray-600 leading-tight">
-                        Responsável: {work.responsibleName}
-                      </p>
-                    </div>
+          <button
+            onClick={handleNextWeek}
+            className="p-2 hover:bg-gray-100 rounded flex-shrink-0"
+          >
+            <ChevronRight size={20} className="text-gray-600" />
+          </button>
+        </div>
+      </div>
 
-                    {/* Seção Direita: Grade de Alocações da Obra */}
-                    <div className="flex-1 p-4">
-                      {work.allocations.length === 0 ? (
-                        <p className="text-xs text-gray-500 py-4">
-                          Sem alocações nesta semana
-                        </p>
-                      ) : (
-                        <div className="space-y-2">
-                          {work.allocations.map(allocation => (
-                            <div key={allocation.id} className="grid grid-cols-5 gap-4">
-                              <AllocationBar
-                                allocation={allocation}
-                                weekDays={weekDays}
-                                onClick={() => handleOpenEditModal(allocation)}
-                                onDelete={(alloc) => handleOpenDeleteModal(alloc)}
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+      {/* Board de Alocações */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+        {/* Cabeçalho do Board */}
+        <div className="grid grid-cols-[300px_1fr] border-b border-gray-200 bg-gray-50/50">
+          <div className="p-4 border-r border-gray-200">
+            <p className="text-sm font-semibold text-gray-700">Obra / Responsável</p>
+          </div>
+          <div className="grid grid-cols-5">
+            {dayNames.map((day, index) => (
+              <div key={index} className="p-4 text-center border-r border-gray-200 last:border-r-0">
+                <p className="text-sm font-semibold text-gray-700">{day}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Linhas do Board */}
+        <div className="divide-y divide-gray-200">
+          {worksWithAllocations.length === 0 ? (
+            <div className="p-12 text-center">
+              <p className="text-gray-500">Nenhuma alocação para esta semana.</p>
+            </div>
+          ) : (
+            worksWithAllocations.map((work) => (
+              <div key={work.id} className="grid grid-cols-[300px_1fr] min-h-[100px] hover:bg-gray-50/30 transition-colors">
+                {/* Info da Obra */}
+                <div className="p-4 border-r border-gray-200 flex flex-col justify-center">
+                  <h3 className="font-bold text-gray-900 leading-tight mb-1">{work.workName}</h3>
+                  <p className="text-xs text-gray-500 mb-2">{work.clientName}</p>
+                  <div className="flex flex-wrap gap-1">
+                    <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full text-[10px] font-medium">
+                      {work.responsible}
+                    </span>
+                    <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-[10px] font-medium">
+                      {getDisplayOrigin(work.clientOrigin)}
+                    </span>
                   </div>
                 </div>
-              ))
-            )}
-          </div>
 
+                {/* Grid de Alocações */}
+                <div className="relative grid grid-cols-5">
+                  {/* Linhas verticais de fundo */}
+                  {[0, 1, 2, 3, 4].map(i => (
+                    <div key={i} className="border-r border-gray-100 last:border-r-0 h-full" />
+                  ))}
 
-      {/* Modal Unificado */}
-      {isModalOpen && modalType === 'add' && (
-        <AddAllocationModal
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
-          works={works}
-          providers={providers}
-          onAddAllocation={handleSaveAllocation}
-        />
-      )}
+                  {/* Barras de Alocação */}
+                  <div className="absolute inset-0 p-2 space-y-2 overflow-y-auto">
+                    {work.allocations.map((allocation) => (
+                      <AllocationBar
+                        key={allocation.id}
+                        allocation={allocation}
+                        weekDays={weekDays}
+                        onEdit={handleOpenEditModal}
+                        onDelete={handleOpenDeleteModal}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
 
-      {isModalOpen && modalType === 'edit' && selectedAllocation && (
-        <EditAllocationModal
-          open={isModalOpen}
-          onOpenChange={handleCloseModal}
-          allocation={selectedAllocation}
-          works={works}
-          providers={providers}
-          onSuccess={handleSaveAllocation}
-        />
-      )}
+      {/* Modais */}
+      <AddAllocationModal
+        isOpen={isModalOpen && modalType === 'add'}
+        onClose={handleCloseModal}
+        onSave={handleSaveAllocation}
+        works={works}
+        providers={providers}
+      />
 
-      {isModalOpen && modalType === 'delete' && selectedAllocation && (
-        <ConfirmDeleteModal
-          open={isModalOpen}
-          onOpenChange={handleCloseModal}
-          title="Remover alocação"
-          message={`Tem certeza que deseja remover a alocação de ${selectedAllocation.providerName}?`}
-          onConfirm={handleConfirmDelete}
-        />
+      {selectedAllocation && (
+        <>
+          <EditAllocationModal
+            isOpen={isModalOpen && modalType === 'edit'}
+            onClose={handleCloseModal}
+            onSave={handleSaveAllocation}
+            allocation={selectedAllocation}
+            works={works}
+            providers={providers}
+          />
+          <ConfirmDeleteModal
+            isOpen={isModalOpen && modalType === 'delete'}
+            onClose={handleCloseModal}
+            onConfirm={handleConfirmDelete}
+            allocationName={`${selectedAllocation.providerName} - ${selectedAllocation.service}`}
+          />
+        </>
       )}
     </div>
   );
