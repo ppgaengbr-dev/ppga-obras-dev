@@ -52,6 +52,7 @@ function InternalRouter() {
         title={headerConfig.title}
         subtitle={headerConfig.subtitle}
         actionButton={getActionButton()}
+        showHeader={headerConfig.showHeader}
       >
         <Switch>
           {/* Portuguese routes (primary) */}

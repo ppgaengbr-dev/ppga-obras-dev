@@ -262,9 +262,8 @@ export default function Allocations() {
   };
 
   return (
-    <>
-      <main className="flex-1 overflow-auto">
-        <div className="max-w-6xl mx-auto px-8 py-8">
+    <div className="max-w-6xl mx-auto px-8 py-8">
+
           {/* Cabeçalho com Seletores de Mês e Semana */}
           <div className="flex w-full items-center mb-8 gap-8">
             {/* Seção Esquerda: Seletor de Mês */}
@@ -382,8 +381,7 @@ export default function Allocations() {
               ))
             )}
           </div>
-        </div>
-      </main>
+
 
       {/* Modal Unificado */}
       {isModalOpen && modalType === 'add' && (
@@ -416,6 +414,6 @@ export default function Allocations() {
           onConfirm={handleConfirmDelete}
         />
       )}
-    </>
+    </div>
   );
 }

@@ -8,9 +8,21 @@ export interface RouteHeaderConfig {
     icon?: ReactNode;
     onClick?: () => void;
   };
+  showHeader?: boolean;
 }
 
 export const routeHeaderConfig: Record<string, RouteHeaderConfig> = {
+  '/access-denied': {
+    title: 'Acesso Negado',
+    subtitle: 'Você não tem permissão para acessar esta página.',
+    showHeader: false,
+  },
+  '/em-construcao': {
+    title: 'Em Construção',
+    subtitle: 'Esta página está em desenvolvimento.',
+    showHeader: false,
+  },
+
   // Portuguese routes (primary)
   '/painel': {
     title: 'Dashboard',
@@ -70,10 +82,12 @@ export const routeHeaderConfig: Record<string, RouteHeaderConfig> = {
   '/orcamentos': {
     title: 'Orçamentos',
     subtitle: 'Gerencie orçamentos de projetos',
+    showHeader: false,
   },
   '/contratos': {
     title: 'Contratos',
     subtitle: 'Gerencie contratos e documentos',
+    showHeader: false,
   },
   '/financeiro': {
     title: 'Financeiro',
@@ -97,6 +111,7 @@ export const routeHeaderConfig: Record<string, RouteHeaderConfig> = {
   '/configuracoes': {
     title: 'Configurações',
     subtitle: 'Ajuste as configurações do sistema',
+    showHeader: false,
   },
   '/simulador': {
     title: 'Simulador',

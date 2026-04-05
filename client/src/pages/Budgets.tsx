@@ -43,16 +43,14 @@ export default function Budgets() {
   );
 
   return (
-    <div className="flex flex-col h-full px-4">
-      <PageHeader title="Orçamentos" subtitle="Gerencie orçamentos de projetos" actionButton={newBudgetButton} />
-
+    <div className="flex flex-col h-full">
       {/* Barra de Ferramentas com Filtros e Botões de Layout */}
-      <div className="flex items-center justify-between pb-4 bg-background">
+      <div className="flex items-center justify-between pt-4 pb-4 bg-background">
         {/* Filtros */}
         <div className="flex items-center space-x-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center border border-gray-300 rounded-lg px-3 py-1 h-auto text-sm text-gray-700 hover:bg-gray-100">
+              <Button variant="outline" className="flex items-center rounded-lg px-3 py-1 h-auto text-sm text-gray-700 hover:bg-gray-100">
                 Status <ChevronDown size={16} className="ml-1 text-gray-500" />
               </Button>
             </DropdownMenuTrigger>
@@ -64,7 +62,7 @@ export default function Budgets() {
           </DropdownMenu>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center border border-gray-300 rounded-lg px-3 py-1 h-auto text-sm text-gray-700 hover:bg-gray-100">
+              <Button variant="outline" className="flex items-center rounded-lg px-3 py-1 h-auto text-sm text-gray-700 hover:bg-gray-100">
                 Origem <ChevronDown size={16} className="ml-1 text-gray-500" />
               </Button>
             </DropdownMenuTrigger>
@@ -75,7 +73,7 @@ export default function Budgets() {
           </DropdownMenu>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center border border-gray-300 rounded-lg px-3 py-1 h-auto text-sm text-gray-700 hover:bg-gray-100">
+              <Button variant="outline" className="flex items-center rounded-lg px-3 py-1 h-auto text-sm text-gray-700 hover:bg-gray-100">
                 Contato <ChevronDown size={16} className="ml-1 text-gray-500" />
               </Button>
             </DropdownMenuTrigger>
@@ -86,7 +84,7 @@ export default function Budgets() {
           </DropdownMenu>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center border border-gray-300 rounded-lg px-3 py-1 h-auto text-sm text-gray-700 hover:bg-gray-100">
+              <Button variant="outline" className="flex items-center rounded-lg px-3 py-1 h-auto text-sm text-gray-700 hover:bg-gray-100">
                 Responsável <ChevronDown size={16} className="ml-1 text-gray-500" />
               </Button>
             </DropdownMenuTrigger>
@@ -97,14 +95,15 @@ export default function Budgets() {
           </DropdownMenu>
         </div>
 
-        {/* Botões de Layout */}
+        {/* Botões de Layout e Novo Orçamento */}
         <div className="flex items-center space-x-2">
-          <Button variant="ghost" size="icon" onClick={() => setLayout('list')} className={layout === 'list' ? 'bg-muted' : ''}>
+          <Button variant="ghost" size="icon" onClick={() => setLayout("list")} className={layout === "list" ? "bg-muted" : ""}>
             <List size={20} />
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => setLayout('grid')} className={layout === 'grid' ? 'bg-muted' : ''}>
+          <Button variant="ghost" size="icon" onClick={() => setLayout("grid")} className={layout === "grid" ? "bg-muted" : ""}>
             <LayoutGrid size={20} />
           </Button>
+          {newBudgetButton}
         </div>
       </div>
 
@@ -114,16 +113,16 @@ export default function Budgets() {
           {MOCKED_BUDGETS.map((budget) => (
             <Card key={budget.id} className="relative flex flex-col justify-between p-4 h-32 group hover:shadow-md transition-shadow duration-200">
               <div className="flex items-start space-x-2 mb-2 pr-10">
-                <Folder size={20} className="text-gray-400 flex-shrink-0 mt-1" />
-                <span className="font-medium text-sm leading-tight break-words">{budget.name}</span>
+                <Folder size={24} className="text-gray-500 flex-shrink-0" />
+                <span className="font-medium text-base leading-tight break-words pr-8">{budget.name}</span>
               </div>
               {/* Ações ao passar o mouse */}
               <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                 <Button variant="ghost" size="icon" className="w-8 h-8 text-gray-500 hover:text-gray-700">
-                  <Pencil size={16} />
+                  <Pencil size={18} />
                 </Button>
                 <Button variant="ghost" size="icon" className="w-8 h-8 text-red-500 hover:text-red-600">
-                  <Trash2 size={16} />
+                  <Trash2 size={18} />
                 </Button>
               </div>
             </Card>

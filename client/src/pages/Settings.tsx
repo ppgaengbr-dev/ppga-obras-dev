@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -166,23 +167,8 @@ export default function Settings() {
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      {activeTab !== 'users' && (
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Configurações</h1>
-          <p className="text-gray-600">
-            {activeTab === 'categories' && 'Gerencie as categorias do sistema'}
-            {activeTab === 'remunerations' && 'Gerencie as remunerações do sistema'}
-          </p>
-        </div>
-      )}
-      {activeTab === 'users' && (
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Configurações</h1>
-          <p className="text-gray-600">Gerencie os usuários do sistema</p>
-        </div>
-      )}
-
+    <>
+      <div className="max-w-6xl mx-auto px-8 py-8">
       {/* Tabs */}
       <div className="flex gap-4 mb-6 border-b border-gray-200">
         <button
@@ -294,7 +280,7 @@ export default function Settings() {
                     )}
                     <div className="flex gap-2 ml-4">
                       {editingId === category.id ? (
-                        <>
+                        <div className="flex gap-2">
                           <Button
                             onClick={() => handleUpdateCategory(category.id)}
                             disabled={updateCategoryMutation.isPending}
@@ -309,9 +295,9 @@ export default function Settings() {
                           >
                             Cancelar
                           </Button>
-                        </>
+                        </div>
                       ) : (
-                        <>
+                        <div className="flex gap-2">
                           <Button
                             onClick={() => startEditCategory(category)}
                             variant="outline"
@@ -321,12 +307,12 @@ export default function Settings() {
                           </Button>
                           <Button
                             onClick={() => handleDeleteCategory(category.id)}
-                            disabled={deleteCategoryMutation.isPending}
+                            variant="destructive"
                             className="bg-red-600 hover:bg-red-700 text-white text-sm"
                           >
                             Deletar
                           </Button>
-                        </>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -409,7 +395,7 @@ export default function Settings() {
                     )}
                     <div className="flex gap-2 ml-4">
                       {editingId === remuneration.id ? (
-                        <>
+                        <div className="flex gap-2">
                           <Button
                             onClick={() => handleUpdateRemuneration(remuneration.id)}
                             disabled={updateRemunerationMutation.isPending}
@@ -424,9 +410,9 @@ export default function Settings() {
                           >
                             Cancelar
                           </Button>
-                        </>
+                        </div>
                       ) : (
-                        <>
+                        <div className="flex gap-2">
                           <Button
                             onClick={() => startEditRemuneration(remuneration)}
                             variant="outline"
@@ -436,12 +422,12 @@ export default function Settings() {
                           </Button>
                           <Button
                             onClick={() => handleDeleteRemuneration(remuneration.id)}
-                            disabled={deleteRemunerationMutation.isPending}
+                            variant="destructive"
                             className="bg-red-600 hover:bg-red-700 text-white text-sm"
                           >
                             Deletar
                           </Button>
-                        </>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -452,5 +438,6 @@ export default function Settings() {
         </div>
       )}
     </div>
+    </>
   );
 }
