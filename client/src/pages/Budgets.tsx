@@ -3,9 +3,10 @@ import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Folder, LayoutGrid, List, Plus, Pencil, Trash2 } from 'lucide-react';
+import { Folder, LayoutGrid, List, Plus, Pencil, Trash2, ChevronDown } from 'lucide-react';
 import { usePermission } from '../_core/hooks/usePermission';
 import AccessDenied from '../components/AccessDenied';
+import PageHeader from '@/components/PageHeader';
 
 const MOCKED_BUDGETS = [
   { id: '1', name: 'ORC.709/2026 - JOÃO E SILVA ENGENHARIA E ARQUITETURA' },
@@ -35,16 +36,24 @@ export default function Budgets() {
     return <AccessDenied />;
   }
 
+  const newBudgetButton = (
+    <Button className="bg-gray-900 hover:bg-gray-800 text-white rounded-lg text-sm font-medium px-4 py-2">
+      <Plus size={16} className="mr-2" /> Novo orçamento
+    </Button>
+  );
+
   return (
-    <div className="flex flex-col h-full">
-      {/* Barra de Ferramentas Principal */}
-      <div className="flex items-center justify-between p-4 border-b bg-background">
+    <div className="flex flex-col h-full px-4">
+      <PageHeader title="Orçamentos" subtitle="Gerencie orçamentos de projetos" actionButton={newBudgetButton} />
+
+      {/* Barra de Ferramentas com Filtros e Botões de Layout */}
+      <div className="flex items-center justify-between pb-4 bg-background">
         {/* Filtros */}
         <div className="flex items-center space-x-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center">
-                Status <Folder size={16} className="ml-1" />
+              <Button variant="ghost" className="flex items-center border border-gray-300 rounded-lg px-3 py-1 h-auto text-sm text-gray-700 hover:bg-gray-100">
+                Status <ChevronDown size={16} className="ml-1 text-gray-500" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
@@ -55,8 +64,8 @@ export default function Budgets() {
           </DropdownMenu>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center">
-                Origem <Folder size={16} className="ml-1" />
+              <Button variant="ghost" className="flex items-center border border-gray-300 rounded-lg px-3 py-1 h-auto text-sm text-gray-700 hover:bg-gray-100">
+                Origem <ChevronDown size={16} className="ml-1 text-gray-500" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
@@ -66,8 +75,8 @@ export default function Budgets() {
           </DropdownMenu>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center">
-                Contato <Folder size={16} className="ml-1" />
+              <Button variant="ghost" className="flex items-center border border-gray-300 rounded-lg px-3 py-1 h-auto text-sm text-gray-700 hover:bg-gray-100">
+                Contato <ChevronDown size={16} className="ml-1 text-gray-500" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
@@ -77,8 +86,8 @@ export default function Budgets() {
           </DropdownMenu>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center">
-                Responsável <Folder size={16} className="ml-1" />
+              <Button variant="ghost" className="flex items-center border border-gray-300 rounded-lg px-3 py-1 h-auto text-sm text-gray-700 hover:bg-gray-100">
+                Responsável <ChevronDown size={16} className="ml-1 text-gray-500" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
@@ -88,7 +97,7 @@ export default function Budgets() {
           </DropdownMenu>
         </div>
 
-        {/* Botões de Layout e Novo Orçamento */}
+        {/* Botões de Layout */}
         <div className="flex items-center space-x-2">
           <Button variant="ghost" size="icon" onClick={() => setLayout('list')} className={layout === 'list' ? 'bg-muted' : ''}>
             <List size={20} />
@@ -96,24 +105,21 @@ export default function Budgets() {
           <Button variant="ghost" size="icon" onClick={() => setLayout('grid')} className={layout === 'grid' ? 'bg-muted' : ''}>
             <LayoutGrid size={20} />
           </Button>
-          <Button className="bg-gray-900 hover:bg-gray-800 text-white rounded-lg text-sm font-medium px-4 py-2">
-            <Plus size={16} className="mr-2" /> Novo orçamento
-          </Button>
         </div>
       </div>
 
       {/* Área Principal em Grade */}
-      <div className="flex-1 p-4 overflow-auto">
+      <div className="flex-1 pb-4 overflow-auto">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {MOCKED_BUDGETS.map((budget) => (
             <Card key={budget.id} className="relative flex flex-col justify-between p-4 h-32 group hover:shadow-md transition-shadow duration-200">
-              <div className="flex items-center space-x-3 mb-2">
-                <Folder size={24} className="text-gray-500" />
-                <span className="font-medium text-base leading-tight">{budget.name}</span>
+              <div className="flex items-start space-x-2 mb-2 pr-10">
+                <Folder size={20} className="text-gray-400 flex-shrink-0 mt-1" />
+                <span className="font-medium text-sm leading-tight break-words">{budget.name}</span>
               </div>
               {/* Ações ao passar o mouse */}
               <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                <Button variant="ghost" size="icon" className="w-8 h-8">
+                <Button variant="ghost" size="icon" className="w-8 h-8 text-gray-500 hover:text-gray-700">
                   <Pencil size={16} />
                 </Button>
                 <Button variant="ghost" size="icon" className="w-8 h-8 text-red-500 hover:text-red-600">
