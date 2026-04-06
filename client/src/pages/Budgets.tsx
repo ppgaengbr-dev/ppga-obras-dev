@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Folder, LayoutGrid, List, SquarePen, Trash2, ChevronDown } from 'lucide-react';
+import { Folder, SquarePen, Trash2 } from 'lucide-react';
 import { usePermission } from '../_core/hooks/usePermission';
 import AccessDenied from '../components/AccessDenied';
+import { PageToolbar, FilterOption } from '../components/PageToolbar';
 
 const MOCKED_BUDGETS = [
   { id: '1', number: 'ORC.709/2026', clientName: 'JOÃO E SILVA ENGENHARIA E ARQUITETURA', contact: 'João Silva' },
@@ -34,78 +33,26 @@ export default function Budgets() {
     return <AccessDenied />;
   }
 
+  const filters: FilterOption[] = [
+    { label: 'Status', options: ['Prospecção', 'Orçamento', 'Perdido'] },
+    { label: 'Origem', options: ['Google', 'Indicação'] },
+    { label: 'Contato', options: ['Telefone', 'Email'] },
+    { label: 'Responsável', options: ['Renato Araújo', 'Rodrigo Silva'] },
+  ];
+
   return (
     <div className="flex flex-col h-full">
-      {/* Barra de Ferramentas com Filtros e Botões de Layout */}
-      <div className="flex items-center justify-between pt-4 pb-4 bg-background">
-        {/* Filtros - Visual leve e transparente */}
-        <div className="flex items-center space-x-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center bg-transparent border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                Status <ChevronDown size={14} className="ml-1.5 text-gray-400" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem>Prospecção</DropdownMenuItem>
-              <DropdownMenuItem>Orçamento</DropdownMenuItem>
-              <DropdownMenuItem>Perdido</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center bg-transparent border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                Origem <ChevronDown size={14} className="ml-1.5 text-gray-400" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem>Google</DropdownMenuItem>
-              <DropdownMenuItem>Indicação</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center bg-transparent border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                Contato <ChevronDown size={14} className="ml-1.5 text-gray-400" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem>Telefone</DropdownMenuItem>
-              <DropdownMenuItem>Email</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center bg-transparent border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                Responsável <ChevronDown size={14} className="ml-1.5 text-gray-400" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem>Renato Araújo</DropdownMenuItem>
-              <DropdownMenuItem>Rodrigo Silva</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
-        {/* Botões de Layout */}
-        <div className="flex items-center space-x-1">
-          <Button variant="ghost" size="icon" onClick={() => setLayout("list")} className={`w-9 h-9 ${layout === "list" ? "bg-muted" : ""}`}>
-            <List size={18} className="text-gray-600" />
-          </Button>
-          <Button variant="ghost" size="icon" onClick={() => setLayout("grid")} className={`w-9 h-9 ${layout === "grid" ? "bg-muted" : ""}`}>
-            <LayoutGrid size={18} className="text-gray-600" />
-          </Button>
-        </div>
-      </div>
-
-      {/* Linha fina separadora */}
-      <div className="border-b border-gray-100 mb-6"></div>
+      <PageToolbar 
+        filters={filters} 
+        layout={layout} 
+        onLayoutChange={setLayout} 
+      />
 
       {/* Área Principal em Grade */}
       <div className="flex-1 pb-4 overflow-auto">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {MOCKED_BUDGETS.map((budget) => (
-            <Card key={budget.id} className="relative flex flex-col p-4 h-36 group hover:shadow-md transition-shadow duration-200 cursor-pointer">
+            <Card key={budget.id} className="relative flex flex-col p-4 group hover:shadow-md transition-shadow duration-200 cursor-pointer">
               {/* Ações ao passar o mouse - Padrão Clients.tsx */}
               <div className="absolute top-3 right-3 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                 <button
@@ -122,7 +69,7 @@ export default function Budgets() {
                 </button>
               </div>
 
-              {/* Conteúdo do Card em 3 linhas */}
+              {/* Conteúdo do Card em 3 linhas - Altura automática (sem h-36) */}
               <div className="flex items-start space-x-3 pr-8">
                 <Folder size={20} className="text-gray-400 mt-0.5 flex-shrink-0" />
                 <div className="flex flex-col flex-1 min-w-0">

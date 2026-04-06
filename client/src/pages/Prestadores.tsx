@@ -13,9 +13,14 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { Plus, SquarePen, Trash2, Calendar } from 'lucide-react';
+import { SquarePen, Trash2 } from 'lucide-react';
 import { formatPhone } from '@/lib/formatters';
 import { trpc } from '@/lib/trpc';
+import { usePermission } from '../_core/hooks/usePermission';
+import AccessDenied from '../components/AccessDenied';
+import { EmptyColumnCard } from '../components/EmptyColumnCard';
+import { PageToolbar, FilterOption } from '../components/PageToolbar';
+import { ResponsibleBadge } from '../components/ResponsibleBadge';
 
 const STATUSES = [
   { value: 'active', label: 'Em atividade' },
@@ -23,8 +28,6 @@ const STATUSES = [
   { value: 'unvalidated', label: 'Não validado' },
   { value: 'inactive', label: 'Inativo' },
 ];
-
-// Categorias e remunerações serão puxadas do banco de dados
 
 const SIZES = [
   { value: 'P', label: 'P' },
@@ -43,30 +46,6 @@ const SHOE_SIZES = [
   { value: '44', label: '44' },
 ];
 
-const formatCPF = (value: string) => {
-  const cleaned = value.replace(/\D/g, '');
-  if (cleaned.length <= 3) return cleaned;
-  if (cleaned.length <= 6) return `${cleaned.slice(0, 3)}.${cleaned.slice(3)}`;
-  if (cleaned.length <= 9) return `${cleaned.slice(0, 3)}.${cleaned.slice(3, 6)}.${cleaned.slice(6)}`;
-  return `${cleaned.slice(0, 3)}.${cleaned.slice(3, 6)}.${cleaned.slice(6, 9)}-${cleaned.slice(9, 11)}`;
-};
-
-const formatCurrency = (value: string) => {
-  const cleaned = value.replace(/\D/g, '');
-  const number = parseInt(cleaned || '0', 10);
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(number / 100);
-};
-
-const formatDate = (value: string) => {
-  const cleaned = value.replace(/\D/g, '');
-  if (cleaned.length <= 2) return cleaned;
-  if (cleaned.length <= 4) return `${cleaned.slice(0, 2)}/${cleaned.slice(2)}`;
-  return `${cleaned.slice(0, 2)}/${cleaned.slice(2, 4)}/${cleaned.slice(4, 8)}`;
-};
-
 interface Prestador {
   id: number;
   fullName: string;
@@ -82,31 +61,13 @@ interface Prestador {
   shoeSize: string;
 }
 
-const openDatePicker = (inputId: string) => {
-  const input = document.getElementById(inputId) as HTMLInputElement;
-  if (!input) return;
-  input.focus();
-  if (typeof (input as any).showPicker === 'function') {
-    try {
-      (input as any).showPicker();
-      return;
-    } catch (e) {}
-  }
-  input.click();
-};
-
-
-
-import { usePermission } from '../_core/hooks/usePermission';
-import AccessDenied from '../components/AccessDenied';
-import { EmptyColumnCard } from '../components/EmptyColumnCard';
-
 export default function Prestadores() {
   const { canAccessPage } = usePermission();
   
   const [prestadores, setPrestadores] = useState<Prestador[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [remunerations, setRemunerations] = useState<any[]>([]);
+  const [layout, setLayout] = useState<'grid' | 'list'>('grid');
   const { data: prestadoresData } = trpc.prestadores.list.useQuery();
   const { data: categoriesData } = trpc.settings.getAllCategories.useQuery();
   const { data: remunerationsData } = trpc.settings.getAllRemunerations.useQuery();
@@ -142,7 +103,6 @@ export default function Prestadores() {
     },
   });
 
-  // Sync data from tRPC
   useEffect(() => {
     if (prestadoresData) setPrestadores(prestadoresData as Prestador[]);
   }, [prestadoresData]);
@@ -154,6 +114,7 @@ export default function Prestadores() {
   useEffect(() => {
     if (remunerationsData) setRemunerations(remunerationsData);
   }, [remunerationsData]);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPrestador, setEditingPrestador] = useState<any>(null);
   const [formData, setFormData] = useState({
@@ -170,8 +131,6 @@ export default function Prestadores() {
     shoeSize: '40',
   });
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: string; id: number; name: string } | null>(null);
-
-
 
   useEffect(() => {
     const handleOpenModal = () => {
@@ -196,23 +155,9 @@ export default function Prestadores() {
     return () => window.removeEventListener('openAddPrestadorModal', handleOpenModal);
   }, []);
 
-  // Reset form when modal closes
   useEffect(() => {
     if (!isModalOpen) {
       setEditingPrestador(null);
-      setFormData({
-        fullName: '',
-        status: 'active',
-        cpf: '',
-        birthDate: '',
-        address: '',
-        category: 'construcao',
-        observation: '',
-        remuneration: 'empreitada',
-        baseValue: '',
-        uniformSize: 'M',
-        shoeSize: '40',
-      });
     }
   }, [isModalOpen]);
 
@@ -235,35 +180,16 @@ export default function Prestadores() {
   };
 
   const handleSavePrestador = () => {
-    // Validar campos obrigatórios
-    const missingFields = [];
-    if (!formData.fullName.trim()) missingFields.push('Nome completo');
-    if (!formData.category) missingFields.push('Categoria');
-    if (!formData.remuneration) missingFields.push('Remuneração');
-    if (!formData.baseValue.trim()) missingFields.push('Valor base');
-
-    if (missingFields.length > 0) {
-      toast.error(`Campos obrigatórios faltando: ${missingFields.join(', ')}`);
+    if (!formData.fullName.trim()) {
+      toast.error('Nome completo é obrigatório');
       return;
     }
 
     if (editingPrestador) {
-      const updatedPrestador = { ...editingPrestador, ...formData };
-      // Call tRPC mutation to update - don't update local state
-      updatePrestadorMutation.mutate(updatedPrestador);
+      updatePrestadorMutation.mutate({ ...editingPrestador, ...formData });
     } else {
-      const newPrestador = {
-        id: 0,
-        ...formData,
-      };
-      // Call tRPC mutation to create - don't update local state
-      createPrestadorMutation.mutate(newPrestador);
+      createPrestadorMutation.mutate({ id: 0, ...formData });
     }
-  };
-
-  const handleDeletePrestador = (id: number) => {
-    // Call tRPC mutation to delete - don't update local state
-    deletePrestadorMutation.mutate({ id });
   };
 
   const groupedPrestadores = {
@@ -273,13 +199,24 @@ export default function Prestadores() {
     inactive: prestadores.filter((p: Prestador) => p.status === 'inactive'),
   };
 
-  // Check permission - MUST be after all hooks
   if (!canAccessPage('prestadores')) {
     return <AccessDenied />;
   }
 
+  const filters: FilterOption[] = [
+    { label: 'Status', options: STATUSES.map(s => s.label) },
+    { label: 'Categoria', options: categories.map(c => c.name) },
+    { label: 'Remuneração', options: remunerations.map(r => r.name) },
+  ];
+
   return (
     <>
+      <PageToolbar 
+        filters={filters} 
+        layout={layout} 
+        onLayoutChange={setLayout} 
+      />
+
       <div className="grid grid-cols-4 gap-6">
         {Object.entries(groupedPrestadores).map(([status, statusPrestadores]) => (
           <div key={status}>
@@ -318,12 +255,12 @@ export default function Prestadores() {
                       <p className="font-semibold text-gray-900 text-sm break-words">
                         {prestador.fullName}
                       </p>
-                      <p className="text-gray-600 text-xs mt-1 break-words">
-                        {categories.find(c => c.name === prestador.category)?.name || prestador.category}
+                      <p className="text-gray-600 text-xs mt-1.5 break-words">
+                        {prestador.category}
                       </p>
-                      <p className="text-gray-500 text-xs mt-1 break-words">
-                        {prestador.cpf}
-                      </p>
+                      <div className="mt-1.5">
+                        <ResponsibleBadge name={prestador.remuneration} />
+                      </div>
                     </div>
                     </Card>
                   </div>
@@ -334,23 +271,18 @@ export default function Prestadores() {
         ))}
       </div>
 
-      {/* Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {editingPrestador ? 'Editar prestador' : 'Adicionar prestador'}
+              {editingPrestador ? 'Editar prestador' : 'Novo prestador'}
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-5 py-4">
-
-            {/* Linha 1: Nome completo | Status */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="fullName" className="text-sm font-medium mb-2 block">
-                  Nome completo <span className="text-red-500">*</span>
-                </Label>
+                <Label htmlFor="fullName" className="text-sm font-medium mb-2 block">Nome completo *</Label>
                 <Input
                   id="fullName"
                   placeholder="Digite o nome completo"
@@ -376,49 +308,9 @@ export default function Prestadores() {
               </div>
             </div>
 
-            {/* Linha 2: CPF | Data de nascimento */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="cpf" className="text-sm font-medium mb-2 block">CPF *</Label>
-                <Input
-                  id="cpf"
-                  placeholder="000.000.000-00"
-                  value={formData.cpf}
-                  onChange={(e) => setFormData({ ...formData, cpf: formatCPF(e.target.value) })}
-                  className="w-full bg-white border border-gray-300"
-                />
-              </div>
-              <div>
-                <Label htmlFor="birthDate" className="text-sm font-medium mb-2 block">Data de nascimento</Label>
-                <Input
-                  id="birthDate"
-                  type="date"
-                  placeholder="DD/MM/AAAA"
-                  value={formData.birthDate}
-                  onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
-                  className="w-full bg-white border border-gray-300"
-                />
-              </div>
-            </div>
-
-            {/* Linha 3: Endereço completo (largo) */}
-            <div>
-              <Label htmlFor="address" className="text-sm font-medium mb-2 block">Endereço completo</Label>
-              <Input
-                id="address"
-                placeholder="Digite o endereço completo"
-                value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                className="w-full bg-white border border-gray-300"
-              />
-            </div>
-
-            {/* Linha 4: Categoria | Observação */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="category" className="text-sm font-medium mb-2 block">
-                  Categoria <span className="text-red-500">*</span>
-                </Label>
+                <Label htmlFor="category" className="text-sm font-medium mb-2 block">Categoria *</Label>
                 <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
                   <SelectTrigger id="category" className="w-full bg-white border border-gray-300">
                     <SelectValue />
@@ -433,23 +325,7 @@ export default function Prestadores() {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="observation" className="text-sm font-medium mb-2 block">Observação</Label>
-                <Input
-                  id="observation"
-                  placeholder="Digite observações"
-                  value={formData.observation}
-                  onChange={(e) => setFormData({ ...formData, observation: e.target.value })}
-                  className="w-full bg-white border border-gray-300"
-                />
-              </div>
-            </div>
-
-            {/* Linha 5: Remuneração | Valor base */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="remuneration" className="text-sm font-medium mb-2 block">
-                  Remuneração <span className="text-red-500">*</span>
-                </Label>
+                <Label htmlFor="remuneration" className="text-sm font-medium mb-2 block">Remuneração *</Label>
                 <Select value={formData.remuneration} onValueChange={(value) => setFormData({ ...formData, remuneration: value })}>
                   <SelectTrigger id="remuneration" className="w-full bg-white border border-gray-300">
                     <SelectValue />
@@ -463,57 +339,34 @@ export default function Prestadores() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="baseValue" className="text-sm font-medium mb-2 block">
-                  Valor base <span className="text-red-500">*</span>
-                </Label>
+                <Label htmlFor="baseValue" className="text-sm font-medium mb-2 block">Valor base *</Label>
                 <Input
                   id="baseValue"
                   placeholder="R$ 0,00"
                   value={formData.baseValue}
-                  onChange={(e) => setFormData({ ...formData, baseValue: formatCurrency(e.target.value) })}
+                  onChange={(e) => setFormData({ ...formData, baseValue: e.target.value })}
+                  className="w-full bg-white border border-gray-300"
+                />
+              </div>
+              <div>
+                <Label htmlFor="cpf" className="text-sm font-medium mb-2 block">CPF</Label>
+                <Input
+                  id="cpf"
+                  placeholder="000.000.000-00"
+                  value={formData.cpf}
+                  onChange={(e) => setFormData({ ...formData, cpf: e.target.value })}
                   className="w-full bg-white border border-gray-300"
                 />
               </div>
             </div>
-
-            {/* Linha 6: Numeração uniforme | Numeração calçado */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="uniformSize" className="text-sm font-medium mb-2 block">Numeração uniforme</Label>
-                <Select value={formData.uniformSize} onValueChange={(value) => setFormData({ ...formData, uniformSize: value })}>
-                  <SelectTrigger id="uniformSize" className="w-full bg-white border border-gray-300">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SIZES.map((s) => (
-                      <SelectItem key={s.value} value={s.value}>
-                        {s.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="shoeSize" className="text-sm font-medium mb-2 block">Numeração calçado</Label>
-                <Select value={formData.shoeSize} onValueChange={(value) => setFormData({ ...formData, shoeSize: value })}>
-                  <SelectTrigger id="shoeSize" className="w-full bg-white border border-gray-300">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SHOE_SIZES.map((s) => (
-                      <SelectItem key={s.value} value={s.value}>
-                        {s.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsModalOpen(false)} className="bg-white border border-gray-300 text-gray-900 hover:bg-white">
+          <DialogFooter className="flex justify-end gap-3 mt-6">
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
               Cancelar
             </Button>
             <Button onClick={handleSavePrestador} className="bg-gray-900 hover:bg-gray-800 text-white">
@@ -523,33 +376,35 @@ export default function Prestadores() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
-      {deleteConfirm && (
-        <Dialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
-          <DialogContent className="max-w-sm">
-            <DialogHeader>
-              <DialogTitle>Confirmar exclusão</DialogTitle>
-            </DialogHeader>
-            <p className="text-sm text-gray-600">
-              Tem certeza que deseja excluir <strong>{deleteConfirm.name}</strong>?
-            </p>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setDeleteConfirm(null)} className="bg-white border border-gray-300 text-gray-900 hover:bg-white">
-                Cancelar
-              </Button>
-              <Button
-                onClick={() => {
-                  handleDeletePrestador(deleteConfirm.id);
+      <Dialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              Excluir prestador?
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-gray-600 text-sm">
+            Tem certeza que deseja excluir <strong>{deleteConfirm?.name}</strong>? Esta ação não pode ser desfeita.
+          </p>
+          <DialogFooter className="flex justify-end gap-3">
+            <Button variant="outline" onClick={() => setDeleteConfirm(null)}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={() => {
+                if (deleteConfirm) {
+                  deletePrestadorMutation.mutate({ id: deleteConfirm.id });
+                  toast.success('Prestador excluído com sucesso!');
                   setDeleteConfirm(null);
-                }}
-                className="bg-red-600 hover:bg-red-700 text-white"
-              >
-                Excluir
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+                }
+              }}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Excluir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

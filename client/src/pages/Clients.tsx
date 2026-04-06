@@ -19,6 +19,8 @@ import { formatPhone } from '@/lib/formatters';
 import { usePermission } from '../_core/hooks/usePermission';
 import AccessDenied from '../components/AccessDenied';
 import { EmptyColumnCard } from '../components/EmptyColumnCard';
+import { PageToolbar, FilterOption } from '../components/PageToolbar';
+import { ResponsibleBadge } from '../components/ResponsibleBadge';
 
 const STATUSES = [
   { value: 'prospect', label: 'Prospecção' },
@@ -57,6 +59,7 @@ export default function Clients() {
   
   const [clients, setClients] = useState<any[]>([]);
   const [works, setWorks] = useState<any[]>([]);
+  const [layout, setLayout] = useState<'grid' | 'list'>('grid');
   const { data: clientsData } = trpc.clients.list.useQuery();
   const { data: worksData } = trpc.works.list.useQuery();
   const { data: architectsData } = trpc.architects.list.useQuery();
@@ -250,8 +253,20 @@ export default function Clients() {
     return <AccessDenied />;
   }
 
+  const filters: FilterOption[] = [
+    { label: 'Status', options: STATUSES.map(s => s.label) },
+    { label: 'Origem', options: ORIGINS.map(o => o.label) },
+    { label: 'Responsável', options: RESPONSIBLE.map(r => r.label) },
+  ];
+
   return (
     <>
+      <PageToolbar 
+        filters={filters} 
+        layout={layout} 
+        onLayoutChange={setLayout} 
+      />
+
       <div className="grid grid-cols-4 gap-6">
         {Object.entries(groupedClients).map(([status, statusClients]) => (
           <div key={status}>
@@ -290,12 +305,12 @@ export default function Clients() {
                         <p className="font-semibold text-gray-900 text-sm break-words">
                           {client.fullName}
                         </p>
-                        <p className="text-gray-600 text-xs mt-1 break-words">
+                        <p className="text-gray-600 text-xs mt-1.5 break-words">
                           {client.contact}
                         </p>
-                        <p className="text-gray-500 text-xs mt-1 break-words">
-                          {client.responsible}
-                        </p>
+                        <div className="mt-1.5">
+                          <ResponsibleBadge name={client.responsible} />
+                        </div>
                       </div>
 
                       {!!client.reminder && (

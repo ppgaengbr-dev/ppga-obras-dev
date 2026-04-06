@@ -8,6 +8,9 @@ import AllocationBar from '@/components/allocations/AllocationBar';
 import { toast } from 'sonner';
 import { trpc } from '@/lib/trpc';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { usePermission } from '../_core/hooks/usePermission';
+import AccessDenied from '../components/AccessDenied';
+import { ResponsibleBadge } from '../components/ResponsibleBadge';
 
 interface Work {
   id: string;
@@ -17,6 +20,9 @@ interface Work {
   status: string;
   clientOrigin?: string;
   clientContact?: string;
+  workName?: string;
+  clientName?: string;
+  responsible?: string;
 }
 
 interface Provider {
@@ -60,23 +66,16 @@ const contactMap: Record<string, string> = {
 
 // Função auxiliar para calcular o início da semana (segunda-feira)
 const getWeekStart = (date: Date): Date => {
-  // Converter para string YYYY-MM-DD para garantir que é uma data local
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
-  const dateStr = `${year}-${month}-${day}`;
   
-  // Usar parseLocalDate para garantir que é uma data local
   const d = new Date(year, parseInt(month) - 1, parseInt(day));
   const dayOfWeek = d.getDay();
   const diff = d.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
   
-  // Retornar como data local
   return new Date(year, parseInt(month) - 1, diff);
 };
-
-import { usePermission } from '../_core/hooks/usePermission';
-import AccessDenied from '../components/AccessDenied';
 
 export default function Allocations() {
   const { canAccessPage, filterAllocations: filterAllocationsByRole } = usePermission();
@@ -131,7 +130,6 @@ export default function Allocations() {
 
   // Allocations desta semana
   const allocationsThisWeek = useMemo(() => {
-    // Aplicar filtro de role primeiro
     const filteredAllocations = filterAllocationsByRole(allocations);
     
     return filteredAllocations.filter(a => {
@@ -143,7 +141,7 @@ export default function Allocations() {
 
   // Obras com alocações nesta semana
   const worksWithAllocations = useMemo(() => {
-    return works
+    return (works as any[])
       .filter(work => allocationsThisWeek.some(a => a.workId === work.id))
       .map(work => ({
         ...work,
@@ -249,18 +247,6 @@ export default function Allocations() {
     return () => window.removeEventListener('openAddAllocationModal', handleOpenEvent);
   }, []);
 
-  // Helper para exibir origem
-  const getDisplayOrigin = (origin?: string) => {
-    if (!origin) return 'N/A';
-    return originMap[origin] || origin;
-  };
-
-  // Helper para exibir contato
-  const getDisplayContact = (contact?: string) => {
-    if (!contact) return 'N/A';
-    return contactMap[contact] || contact;
-  };
-
   return (
     <div className="space-y-8">
       {/* Cabeçalho com Seletores de Mês e Semana */}
@@ -347,17 +333,12 @@ export default function Allocations() {
           ) : (
             worksWithAllocations.map((work) => (
               <div key={work.id} className="grid grid-cols-[300px_1fr] min-h-[100px] hover:bg-gray-50/30 transition-colors">
-                {/* Info da Obra */}
+                {/* Info da Obra - Padronizado v1.0.67 */}
                 <div className="p-4 border-r border-gray-200 flex flex-col justify-center">
                   <h3 className="font-bold text-gray-900 leading-tight mb-1">{work.workName}</h3>
-                  <p className="text-xs text-gray-500 mb-2">{work.clientName}</p>
+                  <p className="text-xs text-gray-600 mb-2">{work.clientContact || work.clientName}</p>
                   <div className="flex flex-wrap gap-1">
-                    <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full text-[10px] font-medium">
-                      {work.responsible}
-                    </span>
-                    <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-[10px] font-medium">
-                      {getDisplayOrigin(work.clientOrigin)}
-                    </span>
+                    <ResponsibleBadge name={work.responsible} />
                   </div>
                 </div>
 
@@ -370,7 +351,7 @@ export default function Allocations() {
 
                   {/* Barras de Alocação */}
                   <div className="absolute inset-0 p-2 space-y-2 overflow-y-auto">
-                    {work.allocations.map((allocation) => (
+                    {work.allocations.map((allocation: any) => (
                       <AllocationBar
                         key={allocation.id}
                         allocation={allocation}
@@ -392,8 +373,8 @@ export default function Allocations() {
         isOpen={isModalOpen && modalType === 'add'}
         onClose={handleCloseModal}
         onSave={handleSaveAllocation}
-        works={works}
-        providers={providers}
+        works={works as any[]}
+        providers={providers as any[]}
       />
 
       {selectedAllocation && (
@@ -403,8 +384,8 @@ export default function Allocations() {
             onClose={handleCloseModal}
             onSave={handleSaveAllocation}
             allocation={selectedAllocation}
-            works={works}
-            providers={providers}
+            works={works as any[]}
+            providers={providers as any[]}
           />
           <ConfirmDeleteModal
             isOpen={isModalOpen && modalType === 'delete'}

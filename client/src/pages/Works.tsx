@@ -14,11 +14,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { SquarePen, Trash2, Bell, Calendar, ChevronDown } from 'lucide-react';
-import { formatPhone } from '@/lib/formatters';
+import { SquarePen, Trash2, Bell } from 'lucide-react';
 import { usePermission } from '@/_core/hooks/usePermission';
 import AccessDenied from '@/components/AccessDenied';
 import { EmptyColumnCard } from '@/components/EmptyColumnCard';
+import { PageToolbar, FilterOption } from '../components/PageToolbar';
+import { ResponsibleBadge } from '../components/ResponsibleBadge';
 
 const WORK_STATUSES = [
   { value: 'Aguardando', label: 'Aguardando' },
@@ -34,11 +35,6 @@ const ORIGINS = [
   { value: 'Instagram', label: 'Instagram' },
   { value: 'Facebook', label: 'Facebook' },
   { value: 'Indicação', label: 'Indicação' },
-];
-
-const ARCHITECTS = [
-  { value: 'Arquiteto 01', label: 'Arquiteto 01' },
-  { value: 'Arquiteto 02', label: 'Arquiteto 02' },
 ];
 
 // Tipo Work
@@ -63,41 +59,6 @@ type Work = {
   reminder?: boolean;
 };
 
-// Funcoes de sincronizacao
-const syncClientFromWork = (work: any) => {
-  return {
-    fullName: work.clientName,
-    phone: work.clientPhone,
-    birthDate: work.clientBirthDate,
-    address: work.clientAddress,
-    origin: work.clientOrigin,
-    contact: work.clientContact,
-    responsible: work.responsible,
-    commission: work.commission,
-  };
-};
-
-// Helper para abrir seletor de data
-const openDatePicker = (inputId: string) => {
-  const input = document.getElementById(inputId) as HTMLInputElement;
-  if (!input) return;
-  
-  input.focus();
-  
-  // Tentar showPicker() para Chrome moderno
-  if (typeof (input as any).showPicker === 'function') {
-    try {
-      (input as any).showPicker();
-      return;
-    } catch (e) {
-      // Fallback se showPicker falhar
-    }
-  }
-  
-  // Fallback: click() para outros navegadores
-  input.click();
-};
-
 // Formatadores
 const formatCurrency = (value: string) => {
   const cleaned = value.replace(/\D/g, '');
@@ -108,12 +69,11 @@ const formatCurrency = (value: string) => {
   }).format(number / 100);
 };
 
-
-
 export default function Works() {
   const { canAccessPage, filterWorks, canEdit, canDelete } = usePermission();
   
   const [works, setWorks] = useState<Work[]>([]);
+  const [layout, setLayout] = useState<'grid' | 'list'>('grid');
   const { data: worksData } = trpc.works.list.useQuery();
   const { data: architectsData } = trpc.architects.list.useQuery();
   const utils = trpc.useUtils();
@@ -123,10 +83,9 @@ export default function Works() {
   });
   const updateWorkMutation = trpc.works.update.useMutation({
     onSuccess: () => {
-      console.log('updateWorkMutation success');
       utils.works.list.invalidate();
     },
-    onError: (error) => {
+    onError: () => {
       toast.error('Erro ao atualizar obra');
     },
   });
@@ -137,17 +96,12 @@ export default function Works() {
   const updateClientMutation = trpc.clients.update.useMutation({
     onSuccess: () => {
       utils.clients.list.invalidate();
-      utils.works.list.invalidate(); // Invalidar works porque clientes convertidos aparecem em obras
+      utils.works.list.invalidate();
     },
-  });
-  const deleteClientMutation = trpc.clients.delete.useMutation({
-    onSuccess: () => utils.clients.list.invalidate(),
   });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingWork, setEditingWork] = useState<Work | null>(null);
-  const [showDetails, setShowDetails] = useState(false);
-  const [editClientDetails, setEditClientDetails] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: 'client' | 'work'; id: number; name: string } | null>(null);
 
   const [formData, setFormData] = useState({
@@ -181,8 +135,6 @@ export default function Works() {
     }
   }, [worksData, filterWorks]);
 
-
-
   // Listen for custom event from header button
   useEffect(() => {
     const handleOpenAddModal = () => {
@@ -196,8 +148,6 @@ export default function Works() {
 
   const openAddModal = () => {
     setEditingWork(null);
-    setShowDetails(false);
-    setEditClientDetails(false);
     setFormData({
       clientName: '',
       status: 'Aguardando',
@@ -219,8 +169,6 @@ export default function Works() {
 
   const openEditModal = (work: Work) => {
     setEditingWork(work);
-    setShowDetails(false);
-    setEditClientDetails(false);
     
     const commission = work.commission || '';
     const clientCommission = work.clientCommission || '';
@@ -254,7 +202,6 @@ export default function Works() {
       return;
     }
 
-    // Se selecionou "Voltar para Cliente", validações mínimas
     if (formData.status === 'back_to_client') {
       if (!formData.clientName.trim()) {
         toast.error('Nome do cliente é obrigatório');
@@ -269,7 +216,6 @@ export default function Works() {
         return;
       }
     } else {
-      // Validações completas para salvar como obra
       if (!formData.workName.trim()) {
         toast.error('Nome da obra é obrigatório');
         return;
@@ -296,10 +242,8 @@ export default function Works() {
       }
     }
 
-    // Se selecionou "Voltar para Cliente", remover da lista de obras
     if (formData.status === 'back_to_client') {
       if (editingWork) {
-        // Revert work back to client status via tRPC
         const clientData = {
           id: editingWork.clientId || editingWork.id,
           fullName: formData.clientName,
@@ -315,7 +259,6 @@ export default function Works() {
         };
         
         updateClientMutation.mutate(clientData);
-        
         setWorks(works.filter((w: Work) => w.id !== editingWork.id));
         toast.success('Obra revertida para cliente com sucesso!');
       }
@@ -324,9 +267,7 @@ export default function Works() {
     }
 
     if (editingWork) {
-      // Se a obra tem clientId, significa que e um cliente convertido para obra
       if (editingWork.clientId) {
-        // Atualizar como cliente
         const clientData = {
           id: editingWork.clientId,
           fullName: formData.clientName,
@@ -336,20 +277,15 @@ export default function Works() {
           origin: formData.clientOrigin || '',
           contact: formData.clientContact || '',
           responsible: formData.responsible || '',
-          status: formData.status === 'back_to_client' ? 'prospect' : 'work',
-          workName: formData.workName || '',
-          workValue: formData.workValue || '',
-          startDate: formData.startDate || '',
-          endDate: formData.endDate || '',
-          workStatus: formData.status === 'back_to_client' ? 'Aguardando' : formData.status,
-          commission: formData.clientCommission || '',
-          reminder: 0,
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          status: 'work',
+          commission: formData.commission || '',
+          workName: formData.workName,
+          workValue: formData.workValue,
+          startDate: formData.startDate,
+          endDate: formData.endDate,
         };
         updateClientMutation.mutate(clientData);
       } else {
-        // Atualizar como obra (tabela works)
         const updatedWork = { 
           ...editingWork, 
           clientName: formData.clientName,
@@ -368,7 +304,6 @@ export default function Works() {
         };
         updateWorkMutation.mutate(updatedWork);
       }
-      
       toast.success('Obra atualizada com sucesso!');
     } else {
       const newId = works.length > 0 ? Math.max(...works.map((w: any) => w.id)) + 1 : 1;
@@ -389,29 +324,13 @@ export default function Works() {
         responsible: formData.responsible,
         commission: formData.clientCommission,
       };
-      // Call tRPC mutation to create
       createWorkMutation.mutate(newWork);
-      // NÃO adicionar ao estado local - deixar que a invalidate query retorne do servidor
       toast.success('Obra criada com sucesso!');
     }
 
     setIsModalOpen(false);
   };
 
-  const handleDeleteWork = async (id: number) => {
-    try {
-      // Call tRPC mutation to delete
-      await deleteWorkMutation.mutateAsync({ id });
-      // Invalidate and refetch to ensure persistence
-      await utils.works.list.invalidate();
-      await utils.works.list.refetch();
-      toast.success('Obra removida com sucesso!');
-    } catch (error) {
-      toast.error('Erro ao remover obra');
-    }
-  };
-
-  // Agrupar obras por status
   const groupedWorks = {
     waiting: works.filter((w: Work) => w.status === 'Aguardando'),
     in_progress: works.filter((w: Work) => w.status === 'Em andamento'),
@@ -419,13 +338,24 @@ export default function Works() {
     completed: works.filter((w: Work) => w.status === 'Finalizado'),
   };
 
-  // Check permission - MUST be after all hooks
   if (!canAccessPage('obras')) {
     return <AccessDenied />;
   }
 
+  const filters: FilterOption[] = [
+    { label: 'Status', options: WORK_STATUSES.map(s => s.label) },
+    { label: 'Origem', options: ORIGINS.map(o => o.label) },
+    { label: 'Responsável', options: ['Renato Araújo', 'Rodrigo Silva'] },
+  ];
+
   return (
     <>
+      <PageToolbar 
+        filters={filters} 
+        layout={layout} 
+        onLayoutChange={setLayout} 
+      />
+
       <div className="grid grid-cols-4 gap-6">
         {Object.entries(groupedWorks).map(([status, statusWorks]) => (
           <div key={status}>
@@ -443,7 +373,6 @@ export default function Works() {
                 statusWorks.map((work: Work) => (
                   <div key={work.id}>
                     <Card className="p-4 cursor-pointer hover:shadow-md transition-shadow relative group flex flex-col">
-                    {/* Ações do Card - Lado a lado (Editar e Excluir) */}
                     {canEdit() && canDelete() && (
                       <div className="absolute top-3 right-3 flex items-center gap-2">
                         <button
@@ -463,30 +392,18 @@ export default function Works() {
                       </div>
                     )}
 
-                    {/* Conteúdo do Card */}
                     <div className="flex flex-col flex-1 pr-8">
-                      {/* Nome da Obra - Título Principal */}
                       <p className="font-semibold text-gray-900 text-sm break-words">
                         {work.workName}
                       </p>
-
-                      {/* Cliente - Subtítulo */}
-                      <p className="text-gray-600 text-xs mt-1 break-words">
-                        {work.clientName}
+                      <p className="text-gray-600 text-xs mt-1.5 break-words">
+                        {work.clientContact || work.clientName}
                       </p>
-
-                      {/* Responsável - Subtítulo */}
-                      <p className="text-gray-500 text-xs mt-1 break-words">
-                        {work.responsible}
-                      </p>
-
-                      {/* Valor - Subtítulo */}
-                      <p className="text-gray-500 text-xs mt-1 break-words">
-                        {work.workValue}
-                      </p>
+                      <div className="mt-1.5">
+                        <ResponsibleBadge name={work.responsible} />
+                      </div>
                     </div>
 
-                    {/* Lembrete - Canto inferior direito */}
                     {work.reminder && (
                       <div className="absolute bottom-3 right-3">
                         <Bell size={14} className="text-red-500 flex-shrink-0" />
@@ -501,8 +418,6 @@ export default function Works() {
         ))}
       </div>
 
-      {/* Modal */}
-      {isModalOpen && (
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
@@ -511,13 +426,10 @@ export default function Works() {
             </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-5 py-4 max-h-[70vh] overflow-y-auto">
-            {/* SEÇÃO SUPERIOR - SEMPRE VISÍVEL */}
-
-            {/* LINHA 1: Nome completo | Status */}
+          <div className="space-y-5 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="clientName" className="text-sm font-medium mb-2 block">Nome completo *</Label>
+                <Label htmlFor="clientName" className="text-sm font-medium mb-2 block">Nome do cliente *</Label>
                 <Input
                   id="clientName"
                   placeholder="Digite o nome do cliente"
@@ -543,7 +455,6 @@ export default function Works() {
               </div>
             </div>
 
-            {/* LINHA 2: Nome da obra | Valor total da obra */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="workName" className="text-sm font-medium mb-2 block">Nome da obra *</Label>
@@ -567,7 +478,6 @@ export default function Works() {
               </div>
             </div>
 
-            {/* LINHA 3: Data de início | Data de término */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="startDate" className="text-sm font-medium mb-2 block">Data de início *</Label>
@@ -591,84 +501,11 @@ export default function Works() {
               </div>
             </div>
 
-            {/* Checkbox "Mostrar detalhes" logo após linha 3 */}
-            <div className="flex items-center gap-4 pt-2">
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="showDetails"
-                  checked={showDetails}
-                  onCheckedChange={(checked) => {
-                    setShowDetails(checked as boolean);
-                    if (!checked) {
-                      setEditClientDetails(false);
-                    }
-                  }}
-                />
-                <Label htmlFor="showDetails" className="text-sm font-medium cursor-pointer">Mostrar detalhes</Label>
-              </div>
-
-              {showDetails && (
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="editClientDetails"
-                    checked={editClientDetails}
-                    onChange={(e) => setEditClientDetails(e.target.checked)}
-                    className="w-4 h-4 rounded border-gray-300"
-                  />
-                  <Label htmlFor="editClientDetails" className="text-sm font-medium cursor-pointer">Editar cliente</Label>
-                </div>
-              )}
-            </div>
-
-            {/* SEÇÃO COLAPSÁVEL - Campos do cliente */}
-            {showDetails && (
-              <>
-            {/* LINHA 4: Telefone | Data de nascimento */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="clientPhone" className="text-sm font-medium mb-2 block">Telefone</Label>
-                <Input
-                   id="clientPhone"
-                   placeholder="(00) 99999-9999"
-                   value={formData.clientPhone}
-                   onChange={(e) => setFormData({ ...formData, clientPhone: formatPhone(e.target.value) })}
-                   disabled={!editClientDetails && showDetails}
-                   className={!editClientDetails && showDetails ? "w-full bg-gray-100 border border-gray-300 text-gray-600" : "w-full bg-white border border-gray-300"}
-                 />
-              </div>
-              <div>
-                <Label htmlFor="clientBirthDate" className="text-sm font-medium mb-2 block">Data de nascimento</Label>
-                <Input
-                  id="clientBirthDate"
-                  type="date"
-                  value={formData.clientBirthDate}
-                  onChange={(e) => setFormData({ ...formData, clientBirthDate: e.target.value })}
-                  disabled={!editClientDetails && showDetails}
-                  className={!editClientDetails && showDetails ? "w-full bg-gray-100 border border-gray-300 text-gray-600" : "w-full bg-white border border-gray-300"}
-                />
-              </div>
-            </div>
-
-            {/* LINHA 5: Endereço completo (full width) */}
-            <div>
-              <Label htmlFor="clientAddress" className="text-sm font-medium mb-2 block">Endereço completo</Label>
-              <Input
-                id="clientAddress"
-                placeholder="Rua A, 123"
-                value={formData.clientAddress}
-                onChange={(e) => setFormData({ ...formData, clientAddress: e.target.value })}
-                disabled={!editClientDetails && showDetails}
-                className={!editClientDetails && showDetails ? "w-full bg-gray-100 border border-gray-300 text-gray-600" : "w-full bg-white border border-gray-300"}
-              />
-            </div>
-
-            {/* LINHA 6: Origem | Contato */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="clientOrigin" className="text-sm font-medium mb-2 block">Origem *</Label>
-                <Select value={formData.clientOrigin} onValueChange={(value) => setFormData({ ...formData, clientOrigin: value })} disabled={!editClientDetails && showDetails}>
-                  <SelectTrigger id="clientOrigin" className={!editClientDetails && showDetails ? "w-full bg-gray-100 border border-gray-300 text-gray-600" : "w-full bg-white border border-gray-300"}>
+                <Select value={formData.clientOrigin} onValueChange={(value) => setFormData({ ...formData, clientOrigin: value })}>
+                  <SelectTrigger id="clientOrigin" className="w-full bg-white border border-gray-300">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -681,81 +518,20 @@ export default function Works() {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="clientContact" className="text-sm font-medium mb-2 block">Contato *</Label>
-                {formData.clientOrigin === 'Arquiteto' ? (
-                  <Select value={formData.clientContact} onValueChange={(value) => {
-                    // Buscar dados do arquiteto selecionado
-                    const selectedArchitect = (architectsData || []).find((a: any) => a.officeNameName === value);
-                    
-                    // Se arquiteto tem comissão = yes, preencher automaticamente com o nome do escritório
-                    const newCommission = selectedArchitect && selectedArchitect.commission === 'yes' ? selectedArchitect.officeNameName : '';
-                    
-                    setFormData({ ...formData, clientContact: value, clientCommission: newCommission });
-                  }} disabled={!editClientDetails && showDetails}>
-                    <SelectTrigger id="clientContact" className={!editClientDetails && showDetails ? "w-full bg-gray-100 border border-gray-300 text-gray-600" : "w-full bg-white border border-gray-300"}>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {(architectsData || []).map((a: any) => (
-                        <SelectItem key={a.id} value={a.officeNameName}>
-                          {a.officeNameName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Input
-                    id="clientContact"
-                    placeholder="Google"
-                    value={formData.clientContact}
-                    onChange={(e) => setFormData({ ...formData, clientContact: e.target.value })}
-                    disabled={!editClientDetails && showDetails}
-                    className={!editClientDetails && showDetails ? "w-full bg-gray-100 border border-gray-300 text-gray-600" : "w-full bg-white border border-gray-300"}
-                  />
-                )}
-              </div>
-            </div>
-
-            {/* LINHA 7: Responsável | Comissão */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
                 <Label htmlFor="responsible" className="text-sm font-medium mb-2 block">Responsável *</Label>
-                <Input
-                  id="responsible"
-                  placeholder="Digite o responsável"
-                  value={formData.responsible}
-                  onChange={(e) => setFormData({ ...formData, responsible: e.target.value })}
-                  disabled={!editClientDetails && showDetails}
-                  className={!editClientDetails && showDetails ? "w-full bg-gray-100 border border-gray-300 text-gray-600" : "w-full bg-white border border-gray-300"}
-                />
-              </div>
-              <div>
-                <Label htmlFor="commission" className="text-sm font-medium mb-2 block">Comissão</Label>
-                {(() => {
-                  // Verificar se o arquiteto selecionado tem comissão = yes
-                  const selectedArchitect = (architectsData || []).find((a: any) => a.officeNameName === formData.clientContact);
-                  const isCommissionLocked = selectedArchitect && selectedArchitect.commission === 'yes';
-                  
-                  return (
-                    <Input
-                      id="commission"
-                      placeholder="Nome do beneficiário"
-                      value={formData.clientCommission}
-                      onChange={(e) => setFormData({ ...formData, clientCommission: e.target.value })}
-                      disabled={isCommissionLocked || (!editClientDetails && showDetails)}
-                      className={`w-full bg-white border border-gray-300 ${
-                        (isCommissionLocked || (!editClientDetails && showDetails)) ? 'bg-gray-100 cursor-not-allowed opacity-60' : ''
-                      }`}
-                    />
-                  );
-                })()}
+                <Select value={formData.responsible} onValueChange={(value) => setFormData({ ...formData, responsible: value })}>
+                  <SelectTrigger id="responsible" className="w-full bg-white border border-gray-300">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Renato Araújo">Renato Araújo</SelectItem>
+                    <SelectItem value="Rodrigo Silva">Rodrigo Silva</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
-              </>
-            )}
           </div>
 
-          {/* Rodapé do Modal */}
           <DialogFooter className="flex justify-end gap-3 mt-6">
             <Button variant="outline" onClick={() => setIsModalOpen(false)}>
               Cancelar
@@ -766,37 +542,26 @@ export default function Works() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      )}
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {deleteConfirm?.type === 'client' ? 'Excluir cliente?' : 'Excluir obra?'}
+              Excluir obra?
             </DialogTitle>
           </DialogHeader>
           <p className="text-gray-600 text-sm">
-            Tem certeza que deseja excluir <strong>{deleteConfirm?.name}</strong>? Esta acao nao pode ser desfeita.
+            Tem certeza que deseja excluir <strong>{deleteConfirm?.name}</strong>? Esta ação não pode ser desfeita.
           </p>
           <DialogFooter className="flex justify-end gap-3">
             <Button variant="outline" onClick={() => setDeleteConfirm(null)}>
               Cancelar
             </Button>
             <Button 
-              onClick={async () => {
+              onClick={() => {
                 if (deleteConfirm) {
-                  try {
-                    if (deleteConfirm.type === 'work') {
-                      await deleteWorkMutation.mutateAsync({ id: deleteConfirm.id });
-                      setWorks(works.filter((w: Work) => w.id !== deleteConfirm.id));
-                    } else if (deleteConfirm.type === 'client') {
-                      await deleteClientMutation.mutateAsync({ id: deleteConfirm.id });
-                    }
-                    toast.success('Item excluido com sucesso!');
-                  } catch (error) {
-                    toast.error('Erro ao excluir item');
-                  }
+                  deleteWorkMutation.mutate({ id: deleteConfirm.id });
+                  toast.success('Obra excluída com sucesso!');
                   setDeleteConfirm(null);
                 }
               }}

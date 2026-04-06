@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, SquarePen, Trash2 } from 'lucide-react';
+import { SquarePen, Trash2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,8 @@ import { toast } from 'sonner';
 import { trpc } from '@/lib/trpc';
 import { usePermission } from '@/_core/hooks/usePermission';
 import AccessDenied from '../components/AccessDenied';
+import { PageToolbar, FilterOption } from '../components/PageToolbar';
+import { ResponsibleBadge } from '../components/ResponsibleBadge';
 
 interface Architect {
   id: number;
@@ -39,6 +41,7 @@ export default function Architects() {
   const { canAccessPage } = usePermission();
   
   const [architects, setArchitects] = useState<Architect[]>([]);
+  const [layout, setLayout] = useState<'grid' | 'list'>('grid');
   const { data: architectsData } = trpc.architects.list.useQuery();
   const utils = trpc.useUtils();
   
@@ -95,7 +98,6 @@ export default function Architects() {
     };
   }, []);
 
-  // Check permission - MUST be after all hooks
   if (!canAccessPage('arquitetos')) {
     return <AccessDenied />;
   }
@@ -151,17 +153,6 @@ export default function Architects() {
     }
   };
 
-  const handleDelete = async () => {
-    if (deleteConfirm) {
-      try {
-        await deleteArchitectMutation.mutateAsync({ id: deleteConfirm.id });
-        setDeleteConfirm(null);
-      } catch (error) {
-        toast.error('Erro ao deletar arquiteto');
-      }
-    }
-  };
-
   const groupedArchitects = {
     active: (architects || []).filter((a: Architect) => a.status === 'active' || (!a.status && a.commission === 'yes')),
     inactive: (architects || []).filter((a: Architect) => a.status === 'inactive' || (!a.status && a.commission === 'no')),
@@ -169,8 +160,19 @@ export default function Architects() {
     recovery: (architects || []).filter((a: Architect) => a.status === 'recovery'),
   };
 
+  const filters: FilterOption[] = [
+    { label: 'Status', options: STATUSES.map(s => s.label) },
+    { label: 'Comissão', options: ['Sim', 'Não'] },
+  ];
+
   return (
     <>
+      <PageToolbar 
+        filters={filters} 
+        layout={layout} 
+        onLayoutChange={setLayout} 
+      />
+
       <div className="grid grid-cols-4 gap-6">
         {STATUSES.map((status) => {
           const columnArchitects = groupedArchitects[status.value as keyof typeof groupedArchitects];
@@ -192,43 +194,41 @@ export default function Architects() {
                   columnArchitects.map((architect: Architect) => (
                     <Card 
                       key={architect.id} 
-                      className="p-4 hover:shadow-md transition-shadow cursor-pointer group"
+                      className="p-4 hover:shadow-md transition-shadow cursor-pointer group relative flex flex-col"
                       onClick={() => openEditModal(architect)}
                     >
-                      <div className="flex items-start justify-between">
-                        <div className="flex flex-col flex-1 pr-8">
-                          <p className="font-semibold text-gray-900 text-sm break-words">
-                            {architect.officeNameName}
-                          </p>
-                          <p className="text-gray-600 text-xs mt-1 break-words">
-                            {architect.architectName}
-                          </p>
-                          <p className="text-gray-500 text-xs mt-1 break-words">
-                            {architect.phone}
-                          </p>
-                        </div>
+                      <div className="absolute top-3 right-3 flex items-center gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openEditModal(architect);
+                          }}
+                          title="Editar arquiteto"
+                          className="text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <SquarePen size={16} />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleteConfirm({ id: architect.id, name: architect.officeNameName });
+                          }}
+                          title="Excluir arquiteto"
+                          className="text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
 
-                        <div className="flex gap-2 flex-shrink-0">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openEditModal(architect);
-                            }}
-                            title="Editar arquiteto"
-                            className="text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <SquarePen size={16} />
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setDeleteConfirm({ id: architect.id, name: architect.officeNameName });
-                            }}
-                            title="Excluir arquiteto"
-                            className="text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <Trash2 size={16} />
-                          </button>
+                      <div className="flex flex-col flex-1 pr-8">
+                        <p className="font-semibold text-gray-900 text-sm break-words">
+                          {architect.officeNameName}
+                        </p>
+                        <p className="text-gray-600 text-xs mt-1.5 break-words">
+                          {architect.architectName}
+                        </p>
+                        <div className="mt-1.5">
+                          <ResponsibleBadge name={architect.phone} />
                         </div>
                       </div>
                     </Card>
@@ -240,12 +240,12 @@ export default function Architects() {
         })}
       </div>
 
-      {isModalOpen && (
-        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-          <DialogContent className="sm:max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>{editingId ? 'Editar Arquiteto' : 'Adicionar Arquiteto'}</DialogTitle>
-            </DialogHeader>       <div className="space-y-4 py-4">
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{editingId ? 'Editar Arquiteto' : 'Adicionar Arquiteto'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="officeNameName" className="text-sm font-medium mb-2 block">Nome do escritório *</Label>
@@ -272,89 +272,13 @@ export default function Architects() {
                 </select>
               </div>
             </div>
-
-            <div>
-              <Label htmlFor="address" className="text-sm font-medium mb-2 block">Endereço completo</Label>
-              <Input
-                id="address"
-                placeholder="Digite o endereço completo"
-                value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                className="w-full bg-white border border-gray-300"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="architectName" className="text-sm font-medium mb-2 block">Nome do arquiteto</Label>
-                <Input
-                  id="architectName"
-                  placeholder="Digite o nome do arquiteto"
-                  value={formData.architectName}
-                  onChange={(e) => setFormData({ ...formData, architectName: e.target.value })}
-                  className="w-full bg-white border border-gray-300"
-                />
-              </div>
-              <div>
-                <Label htmlFor="phone" className="text-sm font-medium mb-2 block">Telefone</Label>
-                <Input
-                  id="phone"
-                  placeholder="(XX) XXXXX-XXXX"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full bg-white border border-gray-300"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="birthDate" className="text-sm font-medium mb-2 block">Data de nascimento</Label>
-                <Input
-                  id="birthDate"
-                  type="date"
-                  value={formData.birthDate}
-                  onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
-                  className="w-full bg-white border border-gray-300"
-                />
-              </div>
-              <div>
-                <Label htmlFor="commission" className="text-sm font-medium mb-2 block">Comissão</Label>
-                <select
-                  id="commission"
-                  value={formData.commission}
-                  onChange={(e) => setFormData({ ...formData, commission: e.target.value })}
-                  className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-sm h-10"
-                >
-                  <option value="no">Não</option>
-                  <option value="yes">Sim</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="observation" className="text-sm font-medium mb-2 block">Observação</Label>
-              <textarea
-                id="observation"
-                placeholder="Adicione observações..."
-                value={formData.observation}
-                onChange={(e) => setFormData({ ...formData, observation: e.target.value })}
-                className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-sm min-h-[100px] resize-y"
-              />
-            </div>
           </div>
-
-          <DialogFooter className="flex justify-end gap-3 mt-6">
-            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={handleSave} className="bg-gray-900 hover:bg-gray-800 text-white">
-              {editingId ? 'Atualizar' : 'Adicionar'}
-            </Button>
+          <DialogFooter className="flex gap-3">
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSave} className="bg-gray-900 hover:bg-gray-800 text-white">Salvar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      )}
 
       <Dialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
         <DialogContent>
@@ -365,10 +289,16 @@ export default function Architects() {
             Tem certeza que deseja excluir <strong>{deleteConfirm?.name}</strong>? Esta ação não pode ser desfeita.
           </p>
           <DialogFooter className="flex justify-end gap-3">
-            <Button variant="outline" onClick={() => setDeleteConfirm(null)}>
-              Cancelar
-            </Button>
-            <Button onClick={handleDelete} className="bg-red-600 hover:bg-red-700 text-white">
+            <Button variant="outline" onClick={() => setDeleteConfirm(null)}>Cancelar</Button>
+            <Button 
+              onClick={async () => {
+                if (deleteConfirm) {
+                  await deleteArchitectMutation.mutateAsync({ id: deleteConfirm.id });
+                  setDeleteConfirm(null);
+                }
+              }}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
               Excluir
             </Button>
           </DialogFooter>
