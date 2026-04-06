@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { Check, X, SquarePen, Trash2 } from 'lucide-react';
 
 export function AdminUsersPage() {
   const [selectedUser, setSelectedUser] = useState<any>(null);
@@ -19,16 +20,17 @@ export function AdminUsersPage() {
   const [selectedRole, setSelectedRole] = useState('CLIENTE');
   const [selectedLinkedId, setSelectedLinkedId] = useState<number | null>(null);
 
-  // Fetch pending users
-  const { data: pendingUsers = [], refetch: refetchPending } = trpc.auth.getPendingUsers.useQuery();
-
   // Fetch all users
-  const { data: allUsers = [] } = trpc.auth.getAllUsers.useQuery();
+  const { data: allUsers = [], refetch: refetchAll } = trpc.auth.getAllUsers.useQuery();
 
   // Fetch entities for linking
   const { data: architects = [] } = trpc.auth.getArchitects.useQuery();
   const { data: clients = [] } = trpc.auth.getClients.useQuery();
   const { data: providers = [] } = trpc.auth.getProviders.useQuery();
+
+  // Filter users
+  const pendingUsers = useMemo(() => allUsers.filter((u: any) => u.status === 'PENDING'), [allUsers]);
+  const approvedUsers = useMemo(() => allUsers.filter((u: any) => u.status !== 'PENDING'), [allUsers]);
 
   // Get linked entities based on selected role
   const linkedEntities = useMemo(() => {
@@ -48,7 +50,7 @@ export function AdminUsersPage() {
   const approveMutation = trpc.auth.approveUser.useMutation({
     onSuccess: () => {
       setShowApprovalModal(false);
-      refetchPending();
+      refetchAll();
       setSelectedUser(null);
       setSelectedRole('CLIENTE');
       setSelectedLinkedId(null);
@@ -61,7 +63,7 @@ export function AdminUsersPage() {
 
   const blockMutation = trpc.auth.blockUser.useMutation({
     onSuccess: () => {
-      refetchPending();
+      refetchAll();
       toast.success('Usuário bloqueado com sucesso');
     },
     onError: (error) => {
@@ -122,27 +124,6 @@ export function AdminUsersPage() {
     return translations[status] || status;
   };
 
-  // Função para obter o nome da entidade vinculada
-  const getLinkedEntityName = (user: any) => {
-    if (!user.linkedType || !user.linkedId) return 'Sem vínculo';
-    
-    let entities: any[] = [];
-    switch (user.linkedType) {
-      case 'ARQUITETO':
-        entities = architects;
-        break;
-      case 'CLIENTE':
-        entities = clients;
-        break;
-      case 'PRESTADOR':
-        entities = providers;
-        break;
-    }
-    
-    const entity = entities.find(e => e.id === user.linkedId);
-    return entity ? entity.name : 'Sem vínculo';
-  };
-
   return (
     <div className="space-y-8">
       {/* Pending Users Section */}
@@ -160,7 +141,8 @@ export function AdminUsersPage() {
                 <tr>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Nome</th>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Email</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Data de Cadastro</th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Função</th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Ações</th>
                 </tr>
               </thead>
@@ -169,22 +151,29 @@ export function AdminUsersPage() {
                   <tr key={user.id} className="border-b hover:bg-gray-50">
                     <td className="px-6 py-4 text-sm text-gray-900">{user.name}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {new Date(user.createdAt).toLocaleDateString('pt-BR')}
+                    <td className="px-6 py-4 text-sm text-gray-500 italic">A definir</td>
+                    <td className="px-6 py-4 text-sm">
+                      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">
+                        Pendente
+                      </span>
                     </td>
-                    <td className="px-6 py-4 text-sm space-x-2">
-                      <button
-                        onClick={() => handleApprove(user)}
-                        className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-semibold"
-                      >
-                        Aprovar
-                      </button>
-                      <button
-                        onClick={() => handleBlock(user.id)}
-                        className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-semibold"
-                      >
-                        Bloquear
-                      </button>
+                    <td className="px-6 py-4 text-sm">
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => handleApprove(user)}
+                          title="Aprovar"
+                          className="text-green-600 hover:text-green-800 transition-colors"
+                        >
+                          <Check size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleBlock(user.id)}
+                          title="Rejeitar"
+                          className="text-red-600 hover:text-red-800 transition-colors"
+                        >
+                          <X size={18} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -197,10 +186,10 @@ export function AdminUsersPage() {
       {/* All Users Section */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">
-          Todos os Usuários ({allUsers.length})
+          Todos os Usuários ({approvedUsers.length})
         </h2>
 
-        {allUsers.length === 0 ? (
+        {approvedUsers.length === 0 ? (
           <p className="text-gray-500">Nenhum usuário cadastrado</p>
         ) : (
           <div className="overflow-x-auto">
@@ -211,11 +200,11 @@ export function AdminUsersPage() {
                   <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Email</th>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Função</th>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Vínculo</th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Ações</th>
                 </tr>
               </thead>
               <tbody>
-                {allUsers.map((user: any) => (
+                {approvedUsers.map((user: any) => (
                   <tr key={user.id} className="border-b hover:bg-gray-50">
                     <td className="px-6 py-4 text-sm text-gray-900">{user.name}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
@@ -231,8 +220,23 @@ export function AdminUsersPage() {
                         {translateStatus(user.status)}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {getLinkedEntityName(user)}
+                    <td className="px-6 py-4 text-sm">
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => handleApprove(user)}
+                          title="Editar"
+                          className="text-gray-400 hover:text-gray-600 transition-colors"
+                        >
+                          <SquarePen size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleBlock(user.id)}
+                          title="Excluir"
+                          className="text-gray-400 hover:text-red-600 transition-colors"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -246,7 +250,7 @@ export function AdminUsersPage() {
       <Dialog open={showApprovalModal} onOpenChange={setShowApprovalModal}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Aprovar Usuário: {selectedUser?.name}</DialogTitle>
+            <DialogTitle>Configurar Usuário: {selectedUser?.name}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
@@ -308,7 +312,7 @@ export function AdminUsersPage() {
               disabled={approveMutation.isPending}
               className="bg-green-600 hover:bg-green-700"
             >
-              {approveMutation.isPending ? 'Aprovando...' : 'Aprovar'}
+              {approveMutation.isPending ? 'Salvando...' : 'Salvar'}
             </Button>
           </DialogFooter>
         </DialogContent>

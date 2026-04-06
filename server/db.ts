@@ -161,7 +161,11 @@ export async function createUser(data: InsertUser) {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
   try {
-    const result = await db.insert(users).values(data);
+    const userData = { ...data };
+    if (userData.password) {
+      userData.password = await hashPassword(userData.password);
+    }
+    const result = await db.insert(users).values(userData);
     return result;
   } catch (error) {
     console.error('[Database] Failed to create user:', error);
