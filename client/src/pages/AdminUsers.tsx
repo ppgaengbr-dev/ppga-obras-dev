@@ -124,6 +124,19 @@ export function AdminUsersPage() {
     return translations[status] || status;
   };
 
+  // Shared table header component to ensure identical structure
+  const TableHeader = () => (
+    <thead className="bg-gray-50 border-b">
+      <tr>
+        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 w-[25%]">Nome</th>
+        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 w-[30%]">Email</th>
+        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 w-[20%]">Função</th>
+        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 w-[15%]">Status</th>
+        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 w-[10%]">Ações</th>
+      </tr>
+    </thead>
+  );
+
   return (
     <div className="space-y-8">
       {/* Pending Users Section */}
@@ -136,22 +149,14 @@ export function AdminUsersPage() {
           <p className="text-gray-500">Nenhum usuário pendente de aprovação</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b">
-                <tr>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Nome</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Email</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Função</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Ações</th>
-                </tr>
-              </thead>
+            <table className="w-full table-fixed">
+              <TableHeader />
               <tbody>
                 {pendingUsers.map((user: any) => (
                   <tr key={user.id} className="border-b hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm text-gray-900">{user.name}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
-                    <td className="px-6 py-4 text-sm text-gray-500 italic">A definir</td>
+                    <td className="px-6 py-4 text-sm text-gray-900 truncate">{user.name}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600 truncate">{user.email}</td>
+                    <td className="px-6 py-4 text-sm text-gray-500 italic truncate">A definir</td>
                     <td className="px-6 py-4 text-sm">
                       <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">
                         Pendente
@@ -193,22 +198,14 @@ export function AdminUsersPage() {
           <p className="text-gray-500">Nenhum usuário cadastrado</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b">
-                <tr>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Nome</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Email</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Função</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Ações</th>
-                </tr>
-              </thead>
+            <table className="w-full table-fixed">
+              <TableHeader />
               <tbody>
                 {approvedUsers.map((user: any) => (
                   <tr key={user.id} className="border-b hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm text-gray-900">{user.name}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
+                    <td className="px-6 py-4 text-sm text-gray-900 truncate">{user.name}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600 truncate">{user.email}</td>
+                    <td className="px-6 py-4 text-sm text-gray-700 truncate">
                       {translateRole(user.role)}
                     </td>
                     <td className="px-6 py-4 text-sm">
