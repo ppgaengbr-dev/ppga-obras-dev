@@ -906,3 +906,85 @@ export async function getAllRemunerations() {
     throw error;
   }
 }
+
+// Categories mutations
+export async function createCategory(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  try {
+    const result = await db.insert(categories).values({
+      name: data.name,
+      description: data.description,
+    });
+    return result;
+  } catch (error) {
+    console.error('[Database] Failed to create category:', error);
+    throw error;
+  }
+}
+
+export async function updateCategory(id: number, data: any) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  try {
+    await db.update(categories).set({
+      name: data.name,
+      description: data.description,
+    }).where(eq(categories.id, id));
+  } catch (error) {
+    console.error('[Database] Failed to update category:', error);
+    throw error;
+  }
+}
+
+export async function deleteCategory(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  try {
+    await db.delete(categories).where(eq(categories.id, id));
+  } catch (error) {
+    console.error('[Database] Failed to delete category:', error);
+    throw error;
+  }
+}
+
+// Remunerations mutations
+export async function createRemuneration(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  try {
+    const result = await db.insert(remunerations).values({
+      name: data.name,
+      description: data.description,
+    });
+    return result;
+  } catch (error) {
+    console.error('[Database] Failed to create remuneration:', error);
+    throw error;
+  }
+}
+
+export async function updateRemuneration(id: number, data: any) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  try {
+    await db.update(remunerations).set({
+      name: data.name,
+      description: data.description,
+    }).where(eq(remunerations.id, id));
+  } catch (error) {
+    console.error('[Database] Failed to update remuneration:', error);
+    throw error;
+  }
+}
+
+export async function deleteRemuneration(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  try {
+    await db.delete(remunerations).where(eq(remunerations.id, id));
+  } catch (error) {
+    console.error('[Database] Failed to delete remuneration:', error);
+    throw error;
+  }
+}

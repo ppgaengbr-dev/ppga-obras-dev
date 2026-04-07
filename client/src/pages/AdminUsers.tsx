@@ -128,9 +128,10 @@ export function AdminUsersPage() {
   const TableHeader = () => (
     <thead className="bg-gray-50 border-b">
       <tr>
-        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 w-[25%]">Nome</th>
-        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 w-[30%]">Email</th>
-        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 w-[20%]">Função</th>
+        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 w-[20%]">Nome</th>
+        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 w-[25%]">Email</th>
+        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 w-[15%]">Cadastro</th>
+        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 w-[15%]">Função</th>
         <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 w-[15%]">Status</th>
         <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 w-[10%]">Ações</th>
       </tr>
@@ -156,6 +157,9 @@ export function AdminUsersPage() {
                   <tr key={user.id} className="border-b hover:bg-gray-50">
                     <td className="px-6 py-4 text-sm text-gray-900 truncate">{user.name}</td>
                     <td className="px-6 py-4 text-sm text-gray-600 truncate">{user.email}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600 truncate">
+                      {user.createdAt ? new Date(user.createdAt).toLocaleDateString('pt-BR') : '-'}
+                    </td>
                     <td className="px-6 py-4 text-sm text-gray-500 italic truncate">A definir</td>
                     <td className="px-6 py-4 text-sm">
                       <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">
@@ -167,14 +171,14 @@ export function AdminUsersPage() {
                         <button
                           onClick={() => handleApprove(user)}
                           title="Aprovar"
-                          className="text-green-600 hover:text-green-800 transition-colors"
+                          className="text-gray-400 hover:text-green-600 transition-colors"
                         >
                           <Check size={18} />
                         </button>
                         <button
                           onClick={() => handleBlock(user.id)}
                           title="Rejeitar"
-                          className="text-red-600 hover:text-red-800 transition-colors"
+                          className="text-gray-400 hover:text-red-600 transition-colors"
                         >
                           <X size={18} />
                         </button>
@@ -205,6 +209,9 @@ export function AdminUsersPage() {
                   <tr key={user.id} className="border-b hover:bg-gray-50">
                     <td className="px-6 py-4 text-sm text-gray-900 truncate">{user.name}</td>
                     <td className="px-6 py-4 text-sm text-gray-600 truncate">{user.email}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600 truncate">
+                      {user.createdAt ? new Date(user.createdAt).toLocaleDateString('pt-BR') : '-'}
+                    </td>
                     <td className="px-6 py-4 text-sm text-gray-700 truncate">
                       {translateRole(user.role)}
                     </td>

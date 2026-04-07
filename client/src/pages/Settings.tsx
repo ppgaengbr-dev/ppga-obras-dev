@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { trpc } from '@/lib/trpc';
 import { AdminUsersPage } from './AdminUsers';
+import { SquarePen, Trash2 } from 'lucide-react';
 
 import { usePermission } from '../_core/hooks/usePermission';
 import AccessDenied from '../components/AccessDenied';
@@ -253,7 +254,7 @@ export default function Settings() {
                 <p className="text-gray-500">Nenhuma categoria cadastrada</p>
               ) : (
                 categories.map((category: any) => (
-                  <div key={category.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                  <div key={category.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg group hover:shadow-sm transition-shadow">
                     {editingId === category.id ? (
                       <div className="flex-1 space-y-2">
                         <input
@@ -282,34 +283,34 @@ export default function Settings() {
                           <Button
                             onClick={() => handleUpdateCategory(category.id)}
                             disabled={updateCategoryMutation.isPending}
-                            className="bg-green-600 hover:bg-green-700 text-white text-sm"
+                            className="bg-green-600 hover:bg-green-700 text-white text-sm h-8"
                           >
                             Salvar
                           </Button>
                           <Button
                             onClick={cancelEdit}
                             variant="outline"
-                            className="text-sm"
+                            className="text-sm h-8"
                           >
                             Cancelar
                           </Button>
                         </div>
                       ) : (
-                        <div className="flex gap-2">
-                          <Button
+                        <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
                             onClick={() => startEditCategory(category)}
-                            variant="outline"
-                            className="text-sm"
+                            title="Editar categoria"
+                            className="text-gray-400 hover:text-gray-600 transition-colors"
                           >
-                            Editar
-                          </Button>
-                          <Button
+                            <SquarePen size={18} />
+                          </button>
+                          <button
                             onClick={() => handleDeleteCategory(category.id)}
-                            variant="destructive"
-                            className="text-sm"
+                            title="Excluir categoria"
+                            className="text-gray-400 hover:text-red-600 transition-colors"
                           >
-                            Deletar
-                          </Button>
+                            <Trash2 size={18} />
+                          </button>
                         </div>
                       )}
                     </div>
@@ -335,7 +336,7 @@ export default function Settings() {
                   type="text"
                   value={newItemName}
                   onChange={(e) => setNewItemName(e.target.value)}
-                  placeholder="Ex: Empreitada"
+                  placeholder="Ex: Diária"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-sm mt-1"
                 />
               </div>
@@ -368,7 +369,7 @@ export default function Settings() {
                 <p className="text-gray-500">Nenhuma remuneração cadastrada</p>
               ) : (
                 remunerations.map((remuneration: any) => (
-                  <div key={remuneration.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                  <div key={remuneration.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg group hover:shadow-sm transition-shadow">
                     {editingId === remuneration.id ? (
                       <div className="flex-1 space-y-2">
                         <input
@@ -397,34 +398,34 @@ export default function Settings() {
                           <Button
                             onClick={() => handleUpdateRemuneration(remuneration.id)}
                             disabled={updateRemunerationMutation.isPending}
-                            className="bg-green-600 hover:bg-green-700 text-white text-sm"
+                            className="bg-green-600 hover:bg-green-700 text-white text-sm h-8"
                           >
                             Salvar
                           </Button>
                           <Button
                             onClick={cancelEdit}
                             variant="outline"
-                            className="text-sm"
+                            className="text-sm h-8"
                           >
                             Cancelar
                           </Button>
                         </div>
                       ) : (
-                        <div className="flex gap-2">
-                          <Button
+                        <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
                             onClick={() => startEditRemuneration(remuneration)}
-                            variant="outline"
-                            className="text-sm"
+                            title="Editar remuneração"
+                            className="text-gray-400 hover:text-gray-600 transition-colors"
                           >
-                            Editar
-                          </Button>
-                          <Button
+                            <SquarePen size={18} />
+                          </button>
+                          <button
                             onClick={() => handleDeleteRemuneration(remuneration.id)}
-                            variant="destructive"
-                            className="text-sm"
+                            title="Excluir remuneração"
+                            className="text-gray-400 hover:text-red-600 transition-colors"
                           >
-                            Deletar
-                          </Button>
+                            <Trash2 size={18} />
+                          </button>
                         </div>
                       )}
                     </div>
